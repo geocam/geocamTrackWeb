@@ -106,6 +106,8 @@ class ResourcePosition(AbstractResourcePosition):
 class PastResourcePosition(AbstractResourcePosition):
     pass
 
-if settings.GEOCAM_TRACK_LATITUDE_ENABLED:
-    # add latitude-related models
-    from geocamTrack.latitude.models import *
+# If settings.GEOCAM_TRACK_LATITUDE_ENABLED is False, we don't need
+# these models... but we'll keep them in at the DB level anyway, to
+# avoid syncdb asking to delete and re-add them when we change the
+# settings.
+from geocamTrack.latitude.models import *
