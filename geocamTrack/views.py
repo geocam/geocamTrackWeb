@@ -14,17 +14,21 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.auth.models import User
 
+from geocamUtil.auth import getAccountWidget
 from geocamUtil import anyjson as json
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition
 from geocamTrack.avatar import renderAvatar
 from geocamTrack import settings
 
+selectedApp = settings.GEOCAM_TRACK_APP_NAME
+
+
 class ExampleError(Exception):
     pass
 
 def getIndex(request):
-    return render_to_response('trackingIndex.html',
-                              {},
+    return render_to_response('trackingIndex1.html',
+                              { 'selectedApp':selectedApp, 'accountWidget':getAccountWidget(request) },
                               context_instance=RequestContext(request))
 
 def getGeoJsonDict():
@@ -141,8 +145,8 @@ def getLiveMap(request):
         userData['loggedIn'] = True
         userData['userName'] = request.user.username
 
-    return render_to_response('liveMap.html',
-                              { 'userData': dumps(userData) },
+    return render_to_response('liveMap1.html',
+                              { 'userData': dumps(userData), 'selectedApp':selectedApp, 'accountWidget':getAccountWidget(request) },
                               context_instance=RequestContext(request))
 
 def getIcon(request, userName):
