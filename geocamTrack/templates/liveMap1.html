@@ -1,7 +1,6 @@
-{% extends "base1.html" %}
+{% extends "base2.html" %}
 
-{% block pagecss %}
-<style type="text/css" media="screen">
+{% block css %}
     *:focus { outline-style :none; -webkit-tap-highlight-color: rgba(0,0,0,0);}
      img{margin:0;padding:0;border:none;}
 
@@ -90,20 +89,12 @@
        text-shadow: 0 -1px 0 #000;
        z-index: 2000;
      }
-    
-</style>
 {% endblock %}
 
 {% block scripts %}
-<script type="text/javascript"
-    src="{{ settings.MEDIA_URL }}external/js/jquery-1.4.4.min.js">
-</script>
-<script type="text/javascript"
-    src="{{ settings.MEDIA_URL }}external/js/timeUtils.js">
-</script>
-<script type="text/javascript"
-    src="{{ settings.MEDIA_URL }}external/js/infobubble-compiled.js">
-</script>
+    <script type="text/javascript" src="{{ settings.MEDIA_URL }}external/js/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="{{ settings.MEDIA_URL }}external/js/timeUtils.js"></script>
+    <script type="text/javascript" src="{{ settings.MEDIA_URL }}external/js/infobubble-compiled.js"></script>
 {% endblock %}
 
 {% block jsInit  %}

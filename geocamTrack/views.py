@@ -14,7 +14,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.auth.models import User
 
-from geocamUtil.auth import getAccountWidget
+from geocamUtil.auth import get_account_widget
 from geocamUtil import anyjson as json
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition
 from geocamTrack.avatar import renderAvatar
@@ -28,7 +28,7 @@ class ExampleError(Exception):
 
 def getIndex(request):
     return render_to_response('trackingIndex1.html',
-                              { 'selectedApp':selectedApp, 'accountWidget':getAccountWidget(request) },
+                              { 'selectedApp':selectedApp, 'account_widget':get_account_widget(request) },
                               context_instance=RequestContext(request))
 
 def getGeoJsonDict():
@@ -146,7 +146,7 @@ def getLiveMap(request):
         userData['userName'] = request.user.username
 
     return render_to_response('liveMap1.html',
-                              { 'userData': dumps(userData), 'selectedApp':selectedApp, 'accountWidget':getAccountWidget(request) },
+                              { 'userData': dumps(userData), 'selectedApp':selectedApp, 'account_widget':get_account_widget(request) },
                               context_instance=RequestContext(request))
 
 def getIcon(request, userName):
