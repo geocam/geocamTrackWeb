@@ -4,36 +4,231 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
+import sys
+
 from django.db import models
 from django.contrib.auth.models import User
 import pytz
 
+from geocamUtil.models.UuidField import UuidField
+from geocamUtil.models.ExtrasDotField import ExtrasDotField
+from geocamUtil import geomath
+
 from geocamTrack import settings
+
+latestRequestG = None
+        
+def getModClass(name):
+    """converts 'app_name.ModelName' to ['stuff.module', 'ClassName']"""
+    try:
+        dot = name.rindex('.')
+    except ValueError:
+        return name, ''
+    return name[:dot], name[dot+1:]
+
+def getClassByName(qualifiedName):
+    """
+    converts 'module_name.ClassName' to a class object
+    """
+    appName, className = qualifiedName.split('.', 1)
+    modelsName = '%s.models' % appName
+    __import__(modelsName)
+    mod = sys.modules[modelsName]
+    return getattr(mod, className)
 
 class Resource(models.Model):
     name = models.CharField(max_length=32)
-    user = models.ForeignKey(User)
-    uuid = models.CharField(max_length=128)
-
-    def getUserNameAbbreviated(self):
-        if self.user.first_name:
-            if not self.user.last_name or self.user.last_name == 'group':
-                abbrevName = self.user.first_name
-            else:
-                abbrevName = '%s. %s' % (self.user.first_name[0], self.user.last_name)
-        else:
-            abbrevName = self.user.username
-        return abbrevName
+    user = models.ForeignKey(User, null=True, blank=True)
+    uuid = UuidField()
+    extras = ExtrasDotField()
 
     def __unicode__(self):
-        return '%s %s' % (self.__class__.__name__, self.user.username)
+        return '%s %s' % (self.__class__.__name__, self.name)
+
+class IconStyle(models.Model):
+    name = models.CharField(max_length=40, blank=True)
+    url = models.CharField(max_length=1024, blank=True)
+    width = models.PositiveIntegerField(default=0)
+    height = models.PositiveIntegerField(default=0)
+    scale = models.FloatField(default=1)
+    color = models.CharField(max_length=16, blank=True,
+                             help_text='Optional KML color specification, hex in AABBGGRR order')
+    uuid = UuidField()
+    extras = ExtrasDotField()
+
+    def __unicode__(self):
+        return '%s %s' % (self.__class__.__name__, self.name)
+
+    def writeKml(self, out, heading=None):
+        if self.color:
+            colorStr = '<color>%s</color>' % self.color
+        else:
+            colorStr = ''
+        if self.scale != 1:
+            scaleStr = '<scale>%s</scale>' % self.scale
+        else:
+            scaleStr = ''
+        if heading != None:
+            headingStr = '<heading>%s</heading>' % heading
+        else:
+            headingStr = ''
+        out.write("""
+<IconStyle>
+  %(headingStr)s
+  <Icon>
+    %(colorStr)s
+    %(scaleStr)s
+    <href>%(url)s</href>
+  </Icon>
+</IconStyle>
+""" % dict(url=latestRequestG.build_absolute_uri(self.url),
+           scaleStr=scaleStr,
+           colorStr=colorStr,
+           headingStr=headingStr))
+
+class LineStyle(models.Model):
+    name = models.CharField(max_length=40, blank=True)
+    color = models.CharField(max_length=16, blank=True,
+                             help_text='Optional KML color specification, hex in AABBGGRR order')
+    width = models.PositiveIntegerField(default=1, null=True, blank=True)
+    uuid = UuidField()
+    extras = ExtrasDotField()
+
+    def __unicode__(self):
+        return '%s %s' % (self.__class__.__name__, self.name)
+
+    def writeKml(self, out):
+        if self.color:
+            colorStr = '<color>%s</color>' % self.color
+        else:
+            colorStr = ''
+        if self.width != None:
+            widthStr = '<width>%s</width>' % self.width
+        else:
+            widthStr = ''
+        out.write("""
+<LineStyle>
+  %(colorStr)s
+  %(widthStr)s
+</LineStyle>
+""" % dict(colorStr=colorStr,
+           widthStr=widthStr))
+
+class Track(models.Model):
+    name = models.CharField(max_length=40, blank=True)
+    resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL)
+    iconStyle = models.ForeignKey(settings.GEOCAM_TRACK_ICON_STYLE_MODEL, null=True, blank=True)
+    lineStyle = models.ForeignKey(settings.GEOCAM_TRACK_LINE_STYLE_MODEL, null=True, blank=True)
+    uuid = UuidField()
+    extras = ExtrasDotField()
+
+    def __unicode__(self):
+        return '%s %s' % (self.__class__.__name__, self.name)
+
+    def getPositions(self):
+        PositionModel = getClassByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
+        return PositionModel.objects.filter(track=self)
+
+    def getCurrentPosition(self):
+        PositionModel = getClassByName(settings.GEOCAM_TRACK_POSITION_MODEL)
+        positions = PositionModel.objects.filter(track=self)
+        if positions:
+            return positions[0]
+        else:
+            return None
+
+    def writeCurrentKml(self, out, pos=None, iconStyle=None):
+        if pos == None:
+            pos = self.getCurrentPosition()
+        if pos == None:
+            return
+        if iconStyle == None:
+            iconStyle = self.iconStyle
+
+        out.write("""
+<Placemark>
+  <name>%(name)s</name>
+""" % dict(name=self.name))
+        if iconStyle:
+            out.write("<Style>\n")
+            iconStyle.writeKml(out, pos.getHeading())
+            out.write("</Style>\n")
+        
+        out.write("""
+  <Point>
+    <coordinates>
+""")
+        pos.writeCoordinatesKml(out)
+        out.write("""
+    </coordinates>
+  </Point>
+</Placemark>
+""")
+
+    def writeTrackKml(self, out, positions=None, lineStyle=None):
+        if positions == None:
+            positions = self.getPositions()
+        if lineStyle == None:
+            lineStyle = self.lineStyle
+
+        if len(positions) < 2:
+            # kml LineString requires 2 or more positions
+            return
+
+        out.write("""
+<Placemark>
+  <name>%(name)s path</name>
+""" % dict(name=self.name))
+        if lineStyle:
+            out.write("<Style>")
+            lineStyle.writeKml(out)
+            out.write("</Style>")
+
+        out.write("""
+  <MultiGeometry>
+    <LineString>
+      <tessellate>1</tessellate>
+      <coordinates>
+""")
+        lastPos = None
+        breakDist = settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS
+        for pos in positions:
+            if lastPos and breakDist != None:
+                diff = geomath.calculateDiffMeters([lastPos.longitude, lastPos.latitude],
+                                                   [pos.longitude, pos.latitude])
+                dist = geomath.getLength(diff)
+                print 'dist=%s breakDist=%s' % (dist, breakDist)
+                if dist > breakDist:
+                    # start new line string
+                    out.write("""
+      </coordinates>
+    </LineString>                        
+    <LineString>
+      <tessellate>1</tessellate>
+      <coordinates>
+""")
+            pos.writeCoordinatesKml(out)
+            lastPos = pos
+
+        out.write("""
+      </coordinates>
+    </LineString>
+  </MultiGeometry>
+</Placemark>
+""")
 
 class AbstractResourcePosition(models.Model):
-    resource = models.ForeignKey(Resource)
-    timestamp = models.DateTimeField()
+    track = models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True)
+    timestamp = models.DateTimeField(db_index=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
-    altitude = models.FloatField(null=True)
+    uuid = UuidField()
+
+    def getHeading(self):
+        return None
+
+    def writeCoordinatesKml(self, out):
+        out.write('%.6f,%.6f,0\n' % (self.longitude, self.latitude))
 
     def getGeometry(self):
         return dict(type='Point',
@@ -92,7 +287,7 @@ class AbstractResourcePosition(models.Model):
     def __unicode__(self):
         return ('%s %s %s %s %s'
                 % (self.__class__.__name__,
-                   self.resource.user.username,
+                   unicode(self.track),
                    self.timestamp,
                    self.latitude,
                    self.longitude))

@@ -33,6 +33,9 @@ urlpatterns = patterns(
     (r'^post/$', views.postPosition,
      {'challenge': 'digest' # for best support of future mobile apps
       }),
+    (r'^allTracks.kml$', views.getAllTracks,
+     {'challenge': 'digest' # for best support of future mobile apps
+      }),
 
 )
 

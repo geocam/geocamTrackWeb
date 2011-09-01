@@ -10,6 +10,9 @@ from geocamTrack.models import *
 from geocamTrack import settings
 
 admin.site.register(Resource)
+admin.site.register(IconStyle)
+admin.site.register(LineStyle)
+admin.site.register(Track)
 admin.site.register(ResourcePosition)
 admin.site.register(PastResourcePosition)
 

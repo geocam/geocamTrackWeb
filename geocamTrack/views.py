@@ -15,7 +15,8 @@ from django.template import RequestContext
 from django.contrib.auth.models import User
 
 from geocamUtil import anyjson as json
-from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition
+from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Track
+import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from geocamTrack import settings
 
@@ -148,3 +149,20 @@ def getLiveMap(request):
 def getIcon(request, userName):
     return HttpResponse(renderAvatar(request, userName),
                         mimetype='image/png')
+
+def getAllTracks(request):
+    geocamTrack.models.latestRequestG = request
+    
+    out = StringIO()
+    out.write("""<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+""")
+    for track in Track.objects.all():
+        track.writeCurrentKml(out)
+        track.writeTrackKml(out)
+    out.write("""
+</Document>
+</kml>
+""")
+    return HttpResponse(out.getvalue(), mimetype='application/vnd.google-earth.kml+xml')
