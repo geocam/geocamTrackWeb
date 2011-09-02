@@ -26,7 +26,7 @@ def getModClass(name):
         return name, ''
     return name[:dot], name[dot+1:]
 
-def getClassByName(qualifiedName):
+def getModelByName(qualifiedName):
     """
     converts 'module_name.ClassName' to a class object
     """
@@ -126,21 +126,19 @@ class Track(models.Model):
         return '%s %s' % (self.__class__.__name__, self.name)
 
     def getPositions(self):
-        PositionModel = getClassByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
+        PositionModel = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
         return PositionModel.objects.filter(track=self)
 
-    def getCurrentPosition(self):
-        PositionModel = getClassByName(settings.GEOCAM_TRACK_POSITION_MODEL)
-        positions = PositionModel.objects.filter(track=self)
-        if positions:
-            return positions[0]
-        else:
-            return None
+    def getCurrentPositions(self):
+        PositionModel = getModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
+        return PositionModel.objects.filter(track=self)
 
-    def writeCurrentKml(self, out, pos=None, iconStyle=None):
-        if pos == None:
-            pos = self.getCurrentPosition()
-        if pos == None:
+    def writeCurrentKml(self, out, positions=None, iconStyle=None):
+        if positions == None:
+            positions = self.getCurrentPositions()
+        if positions:
+            pos = positions[0]
+        else:
             return
         if iconStyle == None:
             iconStyle = self.iconStyle
