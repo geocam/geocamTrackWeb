@@ -162,10 +162,10 @@ def getIcon(request, userName):
                         mimetype='image/png')
 
 def utcToDefaultTime(t):
-    return pytz.utc.localize(t).astimezone(DEFAULT_TZ)
+    return pytz.utc.localize(t).astimezone(DEFAULT_TZ).replace(tzinfo=None)
 
 def defaultToUtcTime(t):
-    return DEFAULT_TZ.localize(t).astimezone(pytz.utc)
+    return DEFAULT_TZ.localize(t).astimezone(pytz.utc).replace(tzinfo=None)
 
 def getDateRange(minDate, maxDate):
     dt = datetime.timedelta(1)
@@ -226,7 +226,7 @@ def getTrackIndexKml(request):
         maxTimeUtc = allPositions.order_by('-timestamp')[0].timestamp
         minDate = utcToDefaultTime(minTimeUtc).date()
         maxDate = utcToDefaultTime(maxTimeUtc).date()
-        dates = getDateRange(minDate, maxDate)
+        dates = list(getDateRange(minDate, maxDate))
     else:
         dates = []
     
@@ -234,6 +234,8 @@ def getTrackIndexKml(request):
 
     now = utcToDefaultTime(datetime.datetime.utcnow())
     today = now.date()
+    if today not in dates:
+        dates.append(today)
 
     out = StringIO()
     out.write("""<?xml version="1.0" encoding="UTF-8"?>
@@ -277,14 +279,14 @@ def getTrackIndexKml(request):
                                       '%s Current' % track.name,
                                       trackName=track.name,
                                       showLine=0,
-                                      viewRefreshSeconds=5)
+                                      viewRefreshTime=settings.GEOCAM_TRACK_KML_REFRESH_TIME_SECONDS)
                 writeTrackNetworkLink(out,
                                       '%s Track' % track.name,
                                       trackName=track.name,
                                       showIcon=0,
                                       startTimeUtc=startTimeUtc,
                                       endTimeUtc=endTimeUtc,
-                                      viewRefreshSeconds=5)
+                                      viewRefreshTime=settings.GEOCAM_TRACK_KML_REFRESH_TIME_SECONDS)
                 out.write("""
     </Folder>
 """)

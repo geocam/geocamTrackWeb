@@ -34,10 +34,12 @@ urlpatterns = patterns(
      {'challenge': 'digest' # for best support of future mobile apps
       }),
     (r'^tracks.kml$', views.getTracksKml,
-     {'challenge': 'digest'},
+     {'challenge': 'digest',
+      'readOnly': True},
      'geocamTrack_tracks'),
     (r'^trackIndex.kml$', views.getTrackIndexKml,
-     {'challenge': 'digest'},
+     {'challenge': 'digest',
+      'readOnly': True},
      'geocamTrack_trackIndex'),
 
 )
