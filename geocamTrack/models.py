@@ -143,12 +143,16 @@ class Track(models.Model):
             return
         if iconStyle == None:
             iconStyle = self.iconStyle
-        age = TimeUtil.getTimeShort(pos.timestamp)
+        if settings.GEOCAM_TRACK_SHOW_CURRENT_POSITION_AGE:
+            age = TimeUtil.getTimeShort(pos.timestamp)
+            ageStr = ' (%s)' % age
+        else:
+            ageStr = ''
 
         out.write("""
 <Placemark>
-  <name>%(name)s (%(age)s)</name>
-""" % dict(name=self.name, age=age))
+  <name>%(name)s%(ageStr)s</name>
+""" % dict(name=self.name, ageStr=ageStr))
         if iconStyle:
             out.write("<Style>\n")
             iconStyle.writeKml(out, pos.getHeading())
