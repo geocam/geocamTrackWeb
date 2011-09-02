@@ -13,6 +13,7 @@ import pytz
 from geocamUtil.models.UuidField import UuidField
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
 from geocamUtil import geomath
+from geocamUtil import TimeUtil
 
 from geocamTrack import settings
 
@@ -142,11 +143,12 @@ class Track(models.Model):
             return
         if iconStyle == None:
             iconStyle = self.iconStyle
+        age = TimeUtil.getTimeShort(pos.timestamp)
 
         out.write("""
 <Placemark>
-  <name>%(name)s</name>
-""" % dict(name=self.name))
+  <name>%(name)s (%(age)s)</name>
+""" % dict(name=self.name, age=age))
         if iconStyle:
             out.write("<Style>\n")
             iconStyle.writeKml(out, pos.getHeading())
