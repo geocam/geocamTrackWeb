@@ -75,8 +75,8 @@ class IconStyle(models.Model):
         out.write("""
 <IconStyle>
   %(headingStr)s
+  %(colorStr)s
   <Icon>
-    %(colorStr)s
     %(scaleStr)s
     <href>%(url)s</href>
   </Icon>
