@@ -5,6 +5,7 @@
 # __END_LICENSE__
 
 import sys
+import datetime
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -115,6 +116,9 @@ class LineStyle(models.Model):
 """ % dict(colorStr=colorStr,
            widthStr=widthStr))
 
+def timeDeltaTotalSeconds(delta):
+    return 86400 * delta.days + delta.seconds + 1e-6 * delta.microseconds
+
 class Track(models.Model):
     name = models.CharField(max_length=40, blank=True)
     resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL)
@@ -201,7 +205,6 @@ class Track(models.Model):
                 diff = geomath.calculateDiffMeters([lastPos.longitude, lastPos.latitude],
                                                    [pos.longitude, pos.latitude])
                 dist = geomath.getLength(diff)
-                print 'dist=%s breakDist=%s' % (dist, breakDist)
                 if dist > breakDist:
                     # start new line string
                     out.write("""
@@ -221,6 +224,39 @@ class Track(models.Model):
 </Placemark>
 """)
 
+    def getInterpolatedPosition(self, utcDt):
+        PositionModel = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
+        positions = PositionModel.objects.filter(track=self)
+
+        # get closest position after utcDt
+        afterPositions = positions.filter(timestamp__gte=utcDt).order_by('timestamp')
+        if afterPositions:
+            afterPos = afterPositions[0]
+        else:
+            return None
+        afterDelta = timeDeltaTotalSeconds(afterPos.timestamp - utcDt)
+
+        # special case -- if we have a position exactly matching utcDt
+        if afterPos.timestamp == utcDt:
+            return PositionModel.getInterpolatedPosition(1, afterPos, 0, afterPos)
+
+        # get closest position before utcDt
+        beforePositions = positions.filter(timestamp__lt=utcDt).order_by('-timestamp')
+        if beforePositions:
+            beforePos = beforePositions[0]
+        else:
+            return None
+        beforeDelta = timeDeltaTotalSeconds(utcDt - beforePos.timestamp)
+        delta = beforeDelta + afterDelta
+
+        if delta > settings.GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS:
+            return None
+
+        # interpolate
+        beforeWeight = afterDelta / delta
+        afterWeight = beforeDelta / delta
+        return PositionModel.getInterpolatedPosition(utcDt, beforeWeight, beforePos, afterWeight, afterPos)
+
 class AbstractResourcePosition(models.Model):
     track = models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True)
     timestamp = models.DateTimeField(db_index=True)
@@ -230,6 +266,36 @@ class AbstractResourcePosition(models.Model):
 
     def getHeading(self):
         return None
+
+    @classmethod
+    def interp(cls, beforeWeight, beforeVal, afterWeight, afterVal):
+        if beforeVal == None or afterVal == None:
+            return None
+        else:
+            return beforeWeight * beforeVal + afterWeight * afterVal
+
+    def getDistance(self, pos):
+        diff = geomath.calculateDiffMeters([self.longitude, self.latitude],
+                                           [pos.longitude, pos.latitude])
+                                           
+        return geomath.getLength(diff)
+
+    @classmethod
+    def getInterpolatedPosition(cls, utcDt, beforeWeight, beforePos, afterWeight, afterPos):
+        print 'utcDt=%s' % utcDt
+        print 'beforeWeight=%s beforePos=%s' % (beforeWeight, beforePos)
+        print 'afterWeight=%s afterPos=%s' % (afterWeight, afterPos)
+        print 'dist=%s' % afterPos.getDistance(beforePos)
+
+        if afterPos.getDistance(beforePos) > settings.GEOCAM_TRACK_INTERPOLATE_MAX_METERS:
+            return None
+
+        result = cls()
+        result.track = beforePos.track
+        result.timestamp = utcDt
+        result.latitude = cls.interp(beforeWeight, beforePos.latitude, afterWeight, afterPos.latitude)
+        result.longitude = cls.interp(beforeWeight, beforePos.longitude, afterWeight, afterPos.longitude)
+        return result
 
     def writeCoordinatesKml(self, out):
         out.write('%.6f,%.6f,0\n' % (self.longitude, self.latitude))
@@ -304,6 +370,42 @@ class ResourcePosition(AbstractResourcePosition):
 
 class PastResourcePosition(AbstractResourcePosition):
     pass
+
+class AbstractResourcePositionWithHeading(AbstractResourcePosition):
+    heading = models.FloatField(null=True, blank=True)
+
+    def getHeading(self):
+        return self.heading
+
+    @classmethod
+    def interpHeading(cls, beforeWeight, beforeHeading, afterWeight, afterHeading):
+        h1 = cls.interp(beforeWeight, beforeHeading, afterWeight, afterHeading)
+        if h1 == None:
+            return None
+
+        # there are two intervals between beforeHeading and
+        # afterHeading on the orientation circle.  their midpoints
+        # are h1 and h2.  we want the midpoint of the shorter interval.
+        if (min(abs(h1 - beforeHeading),
+                abs(h1 - afterHeading)) < 90):
+            return h1
+        else:
+            h2 = h1 + 180
+            if h2 > 360:
+                h2 -= 360
+            return h2
+
+    @classmethod
+    def getInterpolatedPosition(cls, utcDt, beforeWeight, beforePos, afterWeight, afterPos):
+        result = (super(AbstractAssetPosition, cls)
+                  .getInterpolatedPosition(utcDt,
+                                           beforeWeight, beforePos,
+                                           afterWeight, afterPos))
+        result.heading = cls.interpHeading(beforeWeight, beforePos.heading, afterWeight, afterPos.heading)
+        return result
+
+    class Meta:
+        abstract = True
 
 # If settings.GEOCAM_TRACK_LATITUDE_ENABLED is False, we don't need
 # these models... but we'll keep them in at the DB level anyway, to

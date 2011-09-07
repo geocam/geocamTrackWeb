@@ -16,3 +16,13 @@ GEOCAM_TRACK_LINE_STYLE_MODEL = 'geocamTrack.LineStyle'
 GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS = None
 GEOCAM_TRACK_KML_REFRESH_TIME_SECONDS = 5
 GEOCAM_TRACK_SHOW_CURRENT_POSITION_AGE = False
+
+# When interpolating to generate the position for a timestamp, do not
+# interpolate if the positions before and after the timestamp are
+# farther than this distance apart.
+GEOCAM_TRACK_INTERPOLATE_MAX_METERS = 20
+
+# When interpolating to generate the position for a timestamp, do not
+# interpolate if the positions before and after the timestamp have times
+# longer than this apart.
+GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS = 8*60*60
