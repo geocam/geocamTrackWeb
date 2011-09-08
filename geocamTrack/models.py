@@ -238,7 +238,7 @@ class Track(models.Model):
 
         # special case -- if we have a position exactly matching utcDt
         if afterPos.timestamp == utcDt:
-            return PositionModel.getInterpolatedPosition(1, afterPos, 0, afterPos)
+            return PositionModel.getInterpolatedPosition(utcDt, 1, afterPos, 0, afterPos)
 
         # get closest position before utcDt
         beforePositions = positions.filter(timestamp__lt=utcDt).order_by('-timestamp')
@@ -401,7 +401,8 @@ class AbstractResourcePositionWithHeading(AbstractResourcePosition):
                   .getInterpolatedPosition(utcDt,
                                            beforeWeight, beforePos,
                                            afterWeight, afterPos))
-        result.heading = cls.interpHeading(beforeWeight, beforePos.heading, afterWeight, afterPos.heading)
+        if result != None:
+            result.heading = cls.interpHeading(beforeWeight, beforePos.heading, afterWeight, afterPos.heading)
         return result
 
     class Meta:
