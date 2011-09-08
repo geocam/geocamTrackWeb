@@ -397,7 +397,7 @@ class AbstractResourcePositionWithHeading(AbstractResourcePosition):
 
     @classmethod
     def getInterpolatedPosition(cls, utcDt, beforeWeight, beforePos, afterWeight, afterPos):
-        result = (super(AbstractAssetPosition, cls)
+        result = (super(AbstractResourcePositionWithHeading, cls)
                   .getInterpolatedPosition(utcDt,
                                            beforeWeight, beforePos,
                                            afterWeight, afterPos))
