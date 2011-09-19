@@ -8,24 +8,30 @@ var geocamTrack = {
     markersById: {},
     markerCount: 0,
 
+    nullOrUndefined: function (x) {
+        return (x === null) || (x === undefined);
+    },
+
     handleResourcePositionsResponse: function (response) {
-        if (response.result != null) {
+        if (!geocamTrack.nullOrUndefined(response.result)) {
             $.each(response.result.features,
                    function (i, feature) {
                        var pos = new google.maps.LatLng(feature.geometry.coordinates[1],
                                                         feature.geometry.coordinates[0]);
                        var marker = geocamTrack.markersById[feature.id];
-                       if (marker == null) {
+                       if (marker === undefined) {
+                           var icon;
                            if (geocamTrack.markerCount < 26) {
                                var letter = String.fromCharCode(65 + geocamTrack.markerCount);
-                               var icon = 'http://maps.google.com/mapfiles/marker' + letter + '.png';
+                               icon = 'http://maps.google.com/mapfiles/marker' + letter + '.png';
                            } else {
-                               var icon = 'http://maps.google.com/mapfiles/marker.png';
+                               icon = 'http://maps.google.com/mapfiles/marker.png';
                            }
-                           if (feature.properties.displayName != null) {
-                               var title = feature.properties.displayName;
+                           var title;
+                           if (geocamTrack.nullOrUndefined(feature.properties.displayName)) {
+                               title = feature.properties.userName;
                            } else {
-                               var title = feature.properties.userName;
+                               title = feature.properties.displayName;
                            }
                            
                            marker = new google.maps.Marker({
