@@ -7,6 +7,7 @@
 import os
 from setuptools import setup, find_packages
 
+
 def read_file(filename):
     """Read a file into a string"""
     path = os.path.abspath(os.path.dirname(__file__))
@@ -20,17 +21,17 @@ def read_file(filename):
 DESC = " ".join(__import__('geocamTrack').__doc__.splitlines()).strip()
 
 setup(
-    name = "geocamTrackWeb",
-    version = __import__('geocamTrack').get_version().replace(' ', '-'),
-    url = '',
-    author = 'Trey Smith',
-    author_email = '',
-    description = DESC,
-    long_description = read_file('README'),
-    packages = find_packages(),
-    include_package_data = True,
+    name="geocamTrackWeb",
+    version=__import__('geocamTrack').get_version().replace(' ', '-'),
+    url='',
+    author='Trey Smith',
+    author_email='',
+    description=DESC,
+    long_description=read_file('README'),
+    packages=find_packages(),
+    include_package_data=True,
     install_requires=read_file('requirements.txt'),
-    classifiers = [
+    classifiers=[
         'License :: OSI Approved :: NASA Open Source Agreement',
         'Framework :: Django',
     ],
