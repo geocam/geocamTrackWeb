@@ -4,8 +4,6 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-import os
-import sys
 from StringIO import StringIO
 import datetime
 import calendar
@@ -21,7 +19,7 @@ import pytz
 import iso8601
 
 from geocamUtil import anyjson as json
-from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Track, getModelByName
+from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, getModelByName
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from geocamTrack import settings
@@ -31,19 +29,23 @@ RESOURCE_MODEL = getModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
 PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 DEFAULT_TZ = pytz.timezone(settings.DEFAULT_TIME_ZONE['code'])
 
+
 class ExampleError(Exception):
     pass
+
 
 def getIndex(request):
     return render_to_response('trackingIndex.html',
                               {},
                               context_instance=RequestContext(request))
 
+
 def getGeoJsonDict():
     return dict(type='FeatureCollection',
                 crs=dict(type='name',
                          properties=dict(name='urn:ogc:def:crs:OGC:1.3:CRS84')),
                 features=[r.getGeoJson() for r in ResourcePosition.objects.all()])
+
 
 def getGeoJsonDictWithErrorHandling():
     try:
@@ -52,6 +54,7 @@ def getGeoJsonDictWithErrorHandling():
         return dict(error=dict(code=-32099,
                                message='This is how we would signal an err'))
     return dict(result=result)
+
 
 def wrapKml(text):
     # xmlns:gx="http://www.google.com/kml/ext/2.2"
@@ -63,9 +66,11 @@ def wrapKml(text):
 </kml>
 ''' % text
 
+
 def getKmlResponse(text):
     return HttpResponse(wrapKml(text),
                         mimetype='application/vnd.google-earth.kml+xml')
+
 
 def getKmlNetworkLink(request):
     url = request.build_absolute_uri(settings.SCRIPT_NAME + 'geocamTrack/latest.kml')
@@ -80,6 +85,7 @@ def getKmlNetworkLink(request):
 </NetworkLink>
 ''' % dict(url=url))
 
+
 def getKmlLatest(request):
     text = '<Document>\n'
     text += '  <name>GeoCam Track</name>\n'
@@ -89,15 +95,18 @@ def getKmlLatest(request):
     text += '</Document>\n'
     return getKmlResponse(text)
 
+
 def dumps(obj):
     if settings.DEBUG:
-        return json.dumps(obj, indent=4, sort_keys=True) # pretty print
+        return json.dumps(obj, indent=4, sort_keys=True)  # pretty print
     else:
-        return json.dumps(obj, separators=(',',':')) # compact
+        return json.dumps(obj, separators=(',', ':'))  # compact
+
 
 def getResourcesJson(request):
     return HttpResponse(dumps(getGeoJsonDictWithErrorHandling()),
                         mimetype='application/json')
+
 
 def postPosition(request):
     if request.method == 'GET':
@@ -147,25 +156,30 @@ def postPosition(request):
         return HttpResponse(dumps(dict(result='ok')),
                             mimetype='application/json')
 
+
 def getLiveMap(request):
-    userData = { 'loggedIn': False }
+    userData = {'loggedIn': False}
     if request.user.is_authenticated():
         userData['loggedIn'] = True
         userData['userName'] = request.user.username
 
     return render_to_response('liveMap.html',
-                              { 'userData': dumps(userData) },
+                              {'userData': dumps(userData)},
                               context_instance=RequestContext(request))
+
 
 def getIcon(request, userName):
     return HttpResponse(renderAvatar(request, userName),
                         mimetype='image/png')
 
+
 def utcToDefaultTime(t):
     return pytz.utc.localize(t).astimezone(DEFAULT_TZ).replace(tzinfo=None)
 
+
 def defaultToUtcTime(t):
     return DEFAULT_TZ.localize(t).astimezone(pytz.utc).replace(tzinfo=None)
+
 
 def getDateRange(minDate, maxDate):
     dt = datetime.timedelta(1)
@@ -173,6 +187,7 @@ def getDateRange(minDate, maxDate):
     while d <= maxDate:
         yield d
         d += dt
+
 
 def writeTrackNetworkLink(out, name, trackName=None, startTimeUtc=None,
                           endTimeUtc=None, showIcon=1, showLine=1,
@@ -204,7 +219,7 @@ def writeTrackNetworkLink(out, name, trackName=None, startTimeUtc=None,
 """ % viewRefreshTime)
     else:
         refreshStr = ''
-        
+
     out.write("""
 <NetworkLink>
   <name>%(name)s</name>
@@ -216,6 +231,7 @@ def writeTrackNetworkLink(out, name, trackName=None, startTimeUtc=None,
 </NetworkLink>
 """ % dict(name=name, url=url, refreshStr=refreshStr,
            visibilityStr=visibilityStr))
+
 
 def getTrackIndexKml(request):
     geocamTrack.models.latestRequestG = request
@@ -229,7 +245,7 @@ def getTrackIndexKml(request):
         dates = list(getDateRange(minDate, maxDate))
     else:
         dates = []
-    
+
     tracks = TRACK_MODEL.objects.all().order_by('name')
 
     now = utcToDefaultTime(datetime.datetime.utcnow())
@@ -255,7 +271,7 @@ def getTrackIndexKml(request):
         dayStart = datetime.datetime.combine(day, datetime.time())
         startTimeUtc = defaultToUtcTime(dayStart)
         endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
-        
+
         if day != today:
             pathCount = (PAST_POSITION_MODEL
                          .objects.filter
@@ -290,7 +306,7 @@ def getTrackIndexKml(request):
                 out.write("""
     </Folder>
 """)
-            else: # not today
+            else:  # not today
                 pathCount = (PAST_POSITION_MODEL
                              .objects.filter
                              (track=track,
@@ -313,11 +329,11 @@ def getTrackIndexKml(request):
 </kml>
 """)
     return HttpResponse(out.getvalue(), mimetype='application/vnd.google-earth.kml+xml')
-    
+
 
 def getTracksKml(request):
     geocamTrack.models.latestRequestG = request
-    
+
     out = StringIO()
     out.write("""<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -337,7 +353,7 @@ def getTracksKml(request):
     startTime = request.GET.get('start')
     if startTime:
         startTime = datetime.datetime.utcfromtimestamp(float(startTime))
-        
+
     endTime = request.GET.get('end')
     if endTime:
         endTime = datetime.datetime.utcfromtimestamp(float(endTime))

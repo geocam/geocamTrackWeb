@@ -27,46 +27,54 @@ CACHE_DIR = '%s/cache' % AVATAR_DIR
 PLACARD_FRESH = '%s/media_src/mapIcons/placard.png' % trackAppDir
 
 # time to wait to refresh avatar image
-AVATAR_CACHE_SECONDS = 24*60*60
+AVATAR_CACHE_SECONDS = 24 * 60 * 60
 
 # time to wait before retry after failed gravatar fetch
-GRAVATAR_FAIL_RETRY_SECONDS = 24*60*60
+GRAVATAR_FAIL_RETRY_SECONDS = 24 * 60 * 60
 
 # time to wait before refresh after successful gravatar fetch
-GRAVATAR_SUCCESS_REFRESH_SECONDS = 24*60*60
+GRAVATAR_SUCCESS_REFRESH_SECONDS = 24 * 60 * 60
 
-def mkdirP(dir):
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+
+def mkdirP(d):
+    if not os.path.exists(d):
+        os.makedirs(d)
+
 
 def fetchGravatarImage(email, fname):
-    '''Grabs the Gravatar image for the given email address and writes it to 
+    '''Grabs the Gravatar image for the given email address and writes it to
     fname.  Returns False on error.'''
-    hex = hashlib.md5(email.strip().lower()).hexdigest()
-    url = 'http://www.gravatar.com/avatar/%s.jpg?d=404' % hex
+
+    # suppress bogus warning that hashlib.md5 is undefined
+    # pylint: disable=E1101
+    digest = hashlib.md5(email.strip().lower()).hexdigest()
+
+    url = 'http://www.gravatar.com/avatar/%s.jpg?d=404' % digest
     req = urllib2.Request(url)
     try:
         response = urllib2.urlopen(req)
     except urllib2.URLError, e:
         if hasattr(e, 'reason'):
-            print >>sys.stderr, 'fetch %s -- failed to reach a server' % url
-            print >>sys.stderr, 'Reason: ', e.reason
+            print >> sys.stderr, 'fetch %s -- failed to reach a server' % url
+            print >> sys.stderr, 'Reason: ', e.reason
         elif hasattr(e, 'code'):
-            print >>sys.stderr, 'fetch %s -- server couldn\'t fulfill request' % url
-            print >>sys.stderr, 'Error code: ', e.code
+            print >> sys.stderr, 'fetch %s -- server couldn\'t fulfill request' % url
+            print >> sys.stderr, 'Error code: ', e.code
         return False
     mkdirP(os.path.dirname(fname))
     out = file(fname, 'w')
     out.write(response.read())
     out.close()
     return True
-    
+
+
 def getAge(fname):
     if os.path.exists(fname):
         mtime = os.stat(fname)[stat.ST_MTIME]
         return time.time() - mtime
     else:
         return time.time()
+
 
 def getGravatarPath(userName, email):
     """Returns a path on local disk that points to the gravatar icon for
@@ -96,6 +104,7 @@ def getGravatarPath(userName, email):
     else:
         return None
 
+
 def parse_params(params):
     color = None
     if 'color' in params:
@@ -115,6 +124,7 @@ def parse_params(params):
 
     return (color, scale, stale)
 
+
 def getAvatarCacheName(userName, color, scale, stale):
     # See if we can return cached image
     image_name = userName
@@ -125,9 +135,8 @@ def getAvatarCacheName(userName, color, scale, stale):
     if stale:
         image_name += '_stale'
     image_name += '.png'
-    return op.join(CACHE_DIR, image_name);
+    return op.join(CACHE_DIR, image_name)
 
-    return 
 
 def renderAvatar(request, userName):
     # Parse junk
@@ -147,11 +156,11 @@ def renderAvatar(request, userName):
         placard.load()
         bands = placard.split()
         placardGray = placard.convert("L")
-        placardColored = ImageOps.colorize(placardGray, 
-                                           "#000000", 
-                                           "#" + color);
-        placard = placardColored.convert("RGBA");
-        placard.putalpha(bands[3]);
+        placardColored = ImageOps.colorize(placardGray,
+                                           "#000000",
+                                           "#" + color)
+        placard = placardColored.convert("RGBA")
+        placard.putalpha(bands[3])
 
     # Find avatar, gravatar or lettered image
     avatar = None
@@ -166,24 +175,24 @@ def renderAvatar(request, userName):
         else:
             avatar = Image.new("RGB", (8, 8), "#FFFFFF")
             font = ImageFont.load_default()
-            draw  = ImageDraw.Draw(avatar)
+            draw = ImageDraw.Draw(avatar)
             draw.text((1, -2), userName.upper()[0], font=font, fill=0)
             del draw
-    
+
     # Paste generated/opened image into placard
-    avatar = avatar.resize((36,36))
+    avatar = avatar.resize((36, 36))
     placard.paste(avatar, (10, 8))
-    
+
     # Optionally scale image
     if scale:
         new_size = (int(placard.size[0] * scale),
                     int(placard.size[1] * scale))
         placard = placard.resize(new_size)
-    
+
     # Save image in cache
-    dir = os.path.dirname(cachedName)
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    d = os.path.dirname(cachedName)
+    if not os.path.exists(d):
+        os.makedirs(d)
     placard.save(cachedName, "PNG")
 
     # Send image to browser

@@ -6,6 +6,8 @@
 
 from django.contrib import admin
 
+# pylint: disable=W0401
+
 from geocamTrack.models import *
 from geocamTrack import settings
 

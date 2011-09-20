@@ -25,4 +25,4 @@ GEOCAM_TRACK_INTERPOLATE_MAX_METERS = 20
 # When interpolating to generate the position for a timestamp, do not
 # interpolate if the positions before and after the timestamp have times
 # longer than this apart.
-GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS = 8*60*60
+GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS = 8 * 60 * 60

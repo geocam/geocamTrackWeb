@@ -4,7 +4,7 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-from django.conf.urls.defaults import *
+from django.conf.urls.defaults import patterns, include
 
 from geocamTrack import settings
 from geocamTrack import views
@@ -23,15 +23,15 @@ urlpatterns = patterns(
      {'readOnly': True}),
     (r'^liveMap.kml$', views.getKmlNetworkLink,
      {'readOnly': True,
-      'challenge': 'digest' # Google Earth can't handle django challenge
+      'challenge': 'digest'  # Google Earth can't handle django challenge
       }),
     (r'^latest.kml$', views.getKmlLatest,
      {'readOnly': True,
-      'challenge': 'digest' # Google Earth can't handle django challenge
+      'challenge': 'digest'  # Google Earth can't handle django challenge
       }),
 
     (r'^post/$', views.postPosition,
-     {'challenge': 'digest' # for best support of future mobile apps
+     {'challenge': 'digest'  # for best support of future mobile apps
       }),
     (r'^tracks.kml$', views.getTracksKml,
      {'challenge': 'digest',

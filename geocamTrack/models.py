@@ -5,7 +5,6 @@
 # __END_LICENSE__
 
 import sys
-import datetime
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -19,14 +18,16 @@ from geocamUtil import TimeUtil
 from geocamTrack import settings
 
 latestRequestG = None
-        
+
+
 def getModClass(name):
     """converts 'app_name.ModelName' to ['stuff.module', 'ClassName']"""
     try:
         dot = name.rindex('.')
     except ValueError:
         return name, ''
-    return name[:dot], name[dot+1:]
+    return name[:dot], name[dot + 1:]
+
 
 def getModelByName(qualifiedName):
     """
@@ -38,6 +39,7 @@ def getModelByName(qualifiedName):
     mod = sys.modules[modelsName]
     return getattr(mod, className)
 
+
 class Resource(models.Model):
     name = models.CharField(max_length=32)
     user = models.ForeignKey(User, null=True, blank=True)
@@ -46,6 +48,7 @@ class Resource(models.Model):
 
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
+
 
 class IconStyle(models.Model):
     name = models.CharField(max_length=40, blank=True)
@@ -88,6 +91,7 @@ class IconStyle(models.Model):
            colorStr=colorStr,
            headingStr=headingStr))
 
+
 class LineStyle(models.Model):
     name = models.CharField(max_length=40, blank=True)
     color = models.CharField(max_length=16, blank=True,
@@ -116,8 +120,10 @@ class LineStyle(models.Model):
 """ % dict(colorStr=colorStr,
            widthStr=widthStr))
 
+
 def timeDeltaTotalSeconds(delta):
     return 86400 * delta.days + delta.seconds + 1e-6 * delta.microseconds
+
 
 class Track(models.Model):
     name = models.CharField(max_length=40, blank=True)
@@ -161,7 +167,7 @@ class Track(models.Model):
             out.write("<Style>\n")
             iconStyle.writeKml(out, pos.getHeading())
             out.write("</Style>\n")
-        
+
         out.write("""
   <Point>
     <coordinates>
@@ -209,7 +215,7 @@ class Track(models.Model):
                     # start new line string
                     out.write("""
       </coordinates>
-    </LineString>                        
+    </LineString>
     <LineString>
       <tessellate>1</tessellate>
       <coordinates>
@@ -257,6 +263,7 @@ class Track(models.Model):
         afterWeight = beforeDelta / delta
         return PositionModel.getInterpolatedPosition(utcDt, beforeWeight, beforePos, afterWeight, afterPos)
 
+
 class AbstractResourcePosition(models.Model):
     track = models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True)
     timestamp = models.DateTimeField(db_index=True)
@@ -277,7 +284,7 @@ class AbstractResourcePosition(models.Model):
     def getDistance(self, pos):
         diff = geomath.calculateDiffMeters([self.longitude, self.latitude],
                                            [pos.longitude, pos.latitude])
-                                           
+
         return geomath.getLength(diff)
 
     @classmethod
@@ -308,8 +315,7 @@ class AbstractResourcePosition(models.Model):
         timezone = pytz.timezone(settings.TIME_ZONE)
         localTime = timezone.localize(self.timestamp)
         props0 = dict(subtype='ResourcePosition',
-                      userName=self.resource.user.username,
-                      displayName=self.resource.getUserNameAbbreviated(),
+                      displayName=self.track.name,
                       timestamp=localTime.isoformat(),
                       unixstamp=localTime.strftime("%s"))
         props = dict(((k, v) for k, v in props0.iteritems()
@@ -318,7 +324,7 @@ class AbstractResourcePosition(models.Model):
 
     def getGeoJson(self):
         return dict(type='Feature',
-                    id=self.resource.uuid,
+                    id=self.track.uuid,
                     geometry=self.getGeometry(),
                     properties=self.getProperties())
 
@@ -349,8 +355,8 @@ class AbstractResourcePosition(models.Model):
   </Style>
 </Placemark>
 '''
-                % dict(id='resource-' + self.resource.user.username,
-                       displayName=self.resource.getUserNameAbbreviated(),
+                % dict(id=self.track.uuid,
+                       displayName=self.track.name,
                        coords=coords,
                        icon=self.getIconForIndex(index)))
 
@@ -365,11 +371,14 @@ class AbstractResourcePosition(models.Model):
     class Meta:
         abstract = True
 
+
 class ResourcePosition(AbstractResourcePosition):
     pass
 
+
 class PastResourcePosition(AbstractResourcePosition):
     pass
+
 
 class AbstractResourcePositionWithHeading(AbstractResourcePosition):
     heading = models.FloatField(null=True, blank=True)
@@ -407,6 +416,9 @@ class AbstractResourcePositionWithHeading(AbstractResourcePosition):
 
     class Meta:
         abstract = True
+
+# wildcard import is ok:
+# pylint: disable=W0401
 
 # If settings.GEOCAM_TRACK_LATITUDE_ENABLED is False, we don't need
 # these models... but we'll keep them in at the DB level anyway, to
