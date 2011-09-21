@@ -440,7 +440,7 @@ def getCsvTrackIndex(request):
 
 
 def getTrackCsv(request, fname):
-    positions = PAST_POSITION_MODEL.objects
+    positions = PAST_POSITION_MODEL.objects.all().order_by('timestamp')
 
     trackName = request.GET.get('track')
     if not trackName:
