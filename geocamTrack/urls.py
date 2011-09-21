@@ -41,6 +41,12 @@ urlpatterns = patterns(
      {'challenge': 'digest',
       'readOnly': True},
      'geocamTrack_trackIndex'),
+    (r'^csvTrackIndex/$', views.getCsvTrackIndex,
+     {'readOnly': True},
+     'geocamTrack_csvTrackIndex'),
+    (r'^track/([^\./]+\.csv)$', views.getTrackCsv,
+     {'readOnly': True},
+     'geocamTrack_trackCsv'),
 
 )
 

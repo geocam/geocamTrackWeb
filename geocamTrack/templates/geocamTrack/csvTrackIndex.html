@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block cssExtras %}
+<style type="text/css">
+h1 {
+    font-weight: bold;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+}
+.trackLink {
+    margin-left: 1em;
+}
+</style>
+{% endblock %}
+
+{% block siteSection %}Export CSV Tracks{% endblock %}
+
+{% block contents %}
+<h1>Export CSV Tracks</h1>
+<ul>
+{{ index|safe }}
+</ul>
+{% endblock %}

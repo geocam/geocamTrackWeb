@@ -1,12 +1,18 @@
-<head>
+{% extends "base.html" %}
+
+{% block cssExtras %}
 <style type="text/css">
   li {
     font-size: 2em;
     font-family: sans-serif;
   }
 </style>
-<title>GeoCam Track Index</title>
-</head>
+{% endblock %}
+
+{% block siteSection %}Track Index{% endblock %}
+
+{% block contents %}
+<br/>
 <ul>
   <li><a href="liveMap/">Maps API auto-refreshing map</a></li>
   <li><a href="liveMap.kml">KML auto-refreshing NetworkLink</a></li>
@@ -14,3 +20,4 @@
   <li><a href="resources.json">GeoJSON feed</a></li>
   <li><a href="trackIndex.kml">Track Index</a></li>
 </ul>
+{% endblock %}

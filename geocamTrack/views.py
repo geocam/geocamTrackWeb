@@ -9,7 +9,7 @@ import datetime
 import calendar
 import urllib
 
-from django.http import HttpResponse, HttpResponseNotAllowed, Http404
+from django.http import HttpResponse, HttpResponseNotAllowed, Http404, HttpResponseBadRequest
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.auth.models import User
@@ -19,6 +19,7 @@ import pytz
 import iso8601
 
 from geocamUtil import anyjson as json
+from geocamUtil import geomath
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, getModelByName
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
@@ -233,19 +234,21 @@ def writeTrackNetworkLink(out, name, trackName=None, startTimeUtc=None,
            visibilityStr=visibilityStr))
 
 
-def getTrackIndexKml(request):
-    geocamTrack.models.latestRequestG = request
-
+def getPositionDataDateRange():
     allPositions = PAST_POSITION_MODEL.objects.all()
     if allPositions.count():
         minTimeUtc = allPositions.order_by('timestamp')[0].timestamp
         maxTimeUtc = allPositions.order_by('-timestamp')[0].timestamp
         minDate = utcToDefaultTime(minTimeUtc).date()
         maxDate = utcToDefaultTime(maxTimeUtc).date()
-        dates = list(getDateRange(minDate, maxDate))
+        return list(getDateRange(minDate, maxDate))
     else:
-        dates = []
+        return []
 
+
+def getTrackIndexKml(request):
+    geocamTrack.models.latestRequestG = request
+    dates = getPositionDataDateRange()
     tracks = TRACK_MODEL.objects.all().order_by('name')
 
     now = utcToDefaultTime(datetime.datetime.utcnow())
@@ -382,3 +385,102 @@ def getTracksKml(request):
 </kml>
 """)
     return HttpResponse(out.getvalue(), mimetype='application/vnd.google-earth.kml+xml')
+
+
+def getCsvTrackLink(day, trackName, startTimeUtc=None, endTimeUtc=None):
+    fname = '%s_%s.csv' % (day.strftime('%Y%m%d'), trackName)
+    url = reverse('geocamTrack_trackCsv', args=[fname])
+    params = {}
+    params['track'] = trackName
+    if startTimeUtc:
+        params['start'] = str(calendar.timegm(startTimeUtc.timetuple()))
+    if endTimeUtc:
+        params['end'] = str(calendar.timegm(endTimeUtc.timetuple()))
+    urlParams = urllib.urlencode(params)
+    if urlParams:
+        url += '?' + urlParams
+    return url
+
+
+def getCsvTrackIndex(request):
+    dates = getPositionDataDateRange()
+    tracks = TRACK_MODEL.objects.all().order_by('name')
+
+    out = StringIO()
+    for day in dates:
+        dayStart = datetime.datetime.combine(day, datetime.time())
+        startTimeUtc = defaultToUtcTime(dayStart)
+        endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
+
+        dayPoints = (PAST_POSITION_MODEL
+                     .objects.filter
+                     (timestamp__gte=startTimeUtc,
+                      timestamp__lte=endTimeUtc))
+        if not dayPoints.count():
+            continue
+
+        out.write('<li>%s ' % day.strftime('%Y%m%d'))
+
+        for track in tracks:
+            trackPoints = dayPoints.filter(track=track)
+            if not trackPoints.count():
+                continue
+            link = getCsvTrackLink(day, track.name, startTimeUtc, endTimeUtc)
+            out.write('<a class="trackLink" href="%s">%s</a> '
+                      % (link, track.name))
+
+        out.write('</li>\n')
+    index = out.getvalue()
+
+    return render_to_response('geocamTrack/csvTrackIndex.html',
+                              {'index': index},
+                              context_instance=RequestContext(request))
+
+
+def getTrackCsv(request, fname):
+    positions = PAST_POSITION_MODEL.objects
+
+    trackName = request.GET.get('track')
+    if not trackName:
+        return HttpResponseBadRequest('track parameter is required')
+    track = TRACK_MODEL.objects.get(name=trackName)
+    positions = positions.filter(track=track)
+
+    request.GET.get('start')
+    startTimeEpoch = request.GET.get('start')
+    if startTimeEpoch:
+        startTime = datetime.datetime.utcfromtimestamp(float(startTimeEpoch))
+        positions = positions.filter(timestamp__gte=startTime)
+
+    endTimeEpoch = request.GET.get('end')
+    if endTimeEpoch:
+        endTime = datetime.datetime.utcfromtimestamp(float(endTimeEpoch))
+        positions = positions.filter(timestamp__lte=endTime)
+
+    out = StringIO()
+    out.write('"epoch timestamp","timestamp","latitude","longitude","distance (m)","capped distance (m)","cumulative distance (m)"\n')
+    prevPos = None
+    cumDist = 0
+    for pos in positions:
+        epoch = calendar.timegm(pos.timestamp.timetuple())
+        timestamp = pos.timestamp.isoformat() + 'Z'
+        if prevPos:
+            diff = geomath.calculateDiffMeters([pos.longitude, pos.latitude],
+                                               [prevPos.longitude, prevPos.latitude])
+            dist = geomath.getLength(diff)
+        else:
+            dist = 0
+        if (settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS
+            and dist > settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS):
+            cappedDist = 0
+        else:
+            cappedDist = dist
+        cumDist += cappedDist
+        out.write('%d,"%s",%.6f,%.6f,%.2f,%.2f,%.2f\n'
+                  % (epoch, timestamp, pos.latitude, pos.longitude, dist, cappedDist, cumDist))
+
+        prevPos = pos
+    response = HttpResponse(out.getvalue(),
+                            mimetype='text/csv')
+    response['Content-disposition'] = 'attachment; filename=%s' % fname
+    return response
