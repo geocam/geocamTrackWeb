@@ -419,15 +419,17 @@ def getCsvTrackIndex(request):
         if not dayPoints.count():
             continue
 
-        out.write('<li>%s ' % day.strftime('%Y%m%d'))
+        out.write('<li><span class="trackDate">%s</span> ' % day.strftime('%Y%m%d'))
 
         for track in tracks:
             trackPoints = dayPoints.filter(track=track)
-            if not trackPoints.count():
-                continue
-            link = getCsvTrackLink(day, track.name, startTimeUtc, endTimeUtc)
-            out.write('<a class="trackLink" href="%s">%s</a> '
-                      % (link, track.name))
+            if trackPoints.count():
+                link = getCsvTrackLink(day, track.name, startTimeUtc, endTimeUtc)
+                out.write('<a class="trackLink" href="%s"><span>%s</span></a> '
+                          % (link, track.name))
+            else:
+                out.write('<span class="disabledTrackLink">%s</span>'
+                          % track.name)
 
         out.write('</li>\n')
     index = out.getvalue()
