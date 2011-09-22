@@ -1,0 +1,27 @@
+[
+    {
+        "pk": 1,
+        "model": "geocamTrack.iconstyle",
+        "fields": {
+            "scale": 1.0,
+            "name": "default",
+            "url": "http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png",
+            "height": 64,
+            "width": 64,
+            "extras": "{}",
+            "color": "",
+            "uuid": "e3f596e6-e68d-4fcd-b927-27cd251d381a"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "geocamTrack.linestyle",
+        "fields": {
+            "color": "ff0000ff",
+            "width": 2,
+            "extras": "{}",
+            "name": "default",
+            "uuid": "e83ebad6-f4e0-4557-97fa-a910a5833e11"
+        }
+    }
+]
