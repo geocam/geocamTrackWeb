@@ -265,6 +265,11 @@ class Track(models.Model):
 
 
 class AbstractResourcePosition(models.Model):
+    """
+    AbstractResourcePosition is the most minimal position model
+    geocamTrack supports.  Other apps building on geocamTrack may want
+    to derive their position model from this.
+    """
     track = models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True)
     timestamp = models.DateTimeField(db_index=True)
     latitude = models.FloatField()
@@ -289,11 +294,6 @@ class AbstractResourcePosition(models.Model):
 
     @classmethod
     def getInterpolatedPosition(cls, utcDt, beforeWeight, beforePos, afterWeight, afterPos):
-        print 'utcDt=%s' % utcDt
-        print 'beforeWeight=%s beforePos=%s' % (beforeWeight, beforePos)
-        print 'afterWeight=%s afterPos=%s' % (afterWeight, afterPos)
-        print 'dist=%s' % afterPos.getDistance(beforePos)
-
         if afterPos.getDistance(beforePos) > settings.GEOCAM_TRACK_INTERPOLATE_MAX_METERS:
             return None
 
@@ -372,15 +372,10 @@ class AbstractResourcePosition(models.Model):
         abstract = True
 
 
-class ResourcePosition(AbstractResourcePosition):
-    pass
-
-
-class PastResourcePosition(AbstractResourcePosition):
-    pass
-
-
 class AbstractResourcePositionWithHeading(AbstractResourcePosition):
+    """
+    Adds heading support to AbstractResourcePosition.
+    """
     heading = models.FloatField(null=True, blank=True)
 
     def getHeading(self):
@@ -416,6 +411,26 @@ class AbstractResourcePositionWithHeading(AbstractResourcePosition):
 
     class Meta:
         abstract = True
+
+
+class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
+    """
+    This abstract position model has the set of fields we usually use with
+    GeoCam.
+    """
+    altitude = models.FloatField(null=True)
+    precisionMeters = models.FloatField(null=True) # estimated position error
+
+    class Meta:
+        abstract = True
+
+class ResourcePosition(GeoCamResourcePosition):
+    pass
+
+
+class PastResourcePosition(GeoCamResourcePosition):
+    pass
+
 
 # wildcard import is ok:
 # pylint: disable=W0401
