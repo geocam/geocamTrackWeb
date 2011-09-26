@@ -419,10 +419,11 @@ class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
     GeoCam.
     """
     altitude = models.FloatField(null=True)
-    precisionMeters = models.FloatField(null=True) # estimated position error
+    precisionMeters = models.FloatField(null=True)  # estimated position error
 
     class Meta:
         abstract = True
+
 
 class ResourcePosition(GeoCamResourcePosition):
     pass

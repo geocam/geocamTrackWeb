@@ -6,7 +6,7 @@
 
 from django.conf.urls.defaults import patterns
 
-import views
+from geocamTrack.latitude import views
 
 urlpatterns = patterns(
     '',
