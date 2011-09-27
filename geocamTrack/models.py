@@ -12,8 +12,10 @@ import pytz
 
 from geocamUtil.models.UuidField import UuidField
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
+from geocamUtil.models.managers import AbstractModelManager, FinalModelManager
 from geocamUtil import geomath
 from geocamUtil import TimeUtil
+from geocamCore.models import ExtentFeature
 
 from geocamTrack import settings
 
@@ -125,13 +127,14 @@ def timeDeltaTotalSeconds(delta):
     return 86400 * delta.days + delta.seconds + 1e-6 * delta.microseconds
 
 
-class Track(models.Model):
-    name = models.CharField(max_length=40, blank=True)
+class AbstractTrack(ExtentFeature):
     resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL)
     iconStyle = models.ForeignKey(settings.GEOCAM_TRACK_ICON_STYLE_MODEL, null=True, blank=True)
     lineStyle = models.ForeignKey(settings.GEOCAM_TRACK_LINE_STYLE_MODEL, null=True, blank=True)
-    uuid = UuidField()
-    extras = ExtrasDotField()
+    objects = AbstractModelManager(parentModel=ExtentFeature)
+
+    class Meta:
+        abstract = True
 
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
@@ -262,6 +265,10 @@ class Track(models.Model):
         beforeWeight = afterDelta / delta
         afterWeight = beforeDelta / delta
         return PositionModel.getInterpolatedPosition(utcDt, beforeWeight, beforePos, afterWeight, afterPos)
+
+
+class Track(AbstractTrack):
+    objects = FinalModelManager(parentModel=AbstractTrack)
 
 
 class AbstractResourcePosition(models.Model):
@@ -419,10 +426,11 @@ class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
     GeoCam.
     """
     altitude = models.FloatField(null=True)
-    precisionMeters = models.FloatField(null=True) # estimated position error
+    precisionMeters = models.FloatField(null=True)  # estimated position error
 
     class Meta:
         abstract = True
+
 
 class ResourcePosition(GeoCamResourcePosition):
     pass
