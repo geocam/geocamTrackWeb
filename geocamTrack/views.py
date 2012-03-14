@@ -28,7 +28,7 @@ from geocamTrack import settings
 TRACK_MODEL = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 RESOURCE_MODEL = getModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
 PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
-DEFAULT_TZ = pytz.timezone(settings.DEFAULT_TIME_ZONE['code'])
+GEOCAM_TRACK_OPS_TZ = pytz.timezone(settings.GEOCAM_TRACK_OPS_TIME_ZONE)
 
 
 class ExampleError(Exception):
@@ -175,11 +175,11 @@ def getIcon(request, userName):
 
 
 def utcToDefaultTime(t):
-    return pytz.utc.localize(t).astimezone(DEFAULT_TZ).replace(tzinfo=None)
+    return pytz.utc.localize(t).astimezone(GEOCAM_TRACK_OPS_TZ).replace(tzinfo=None)
 
 
 def defaultToUtcTime(t):
-    return DEFAULT_TZ.localize(t).astimezone(pytz.utc).replace(tzinfo=None)
+    return GEOCAM_TRACK_OPS_TZ.localize(t).astimezone(pytz.utc).replace(tzinfo=None)
 
 
 def getDateRange(minDate, maxDate):

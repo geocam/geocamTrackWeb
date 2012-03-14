@@ -26,3 +26,11 @@ GEOCAM_TRACK_INTERPOLATE_MAX_METERS = 20
 # interpolate if the positions before and after the timestamp have times
 # longer than this apart.
 GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS = 8 * 60 * 60
+
+# All timestamps in geocamTrack data tables should always use the UTC
+# time zone.  GEOCAM_TRACK_OPS_TIME_ZONE is currently used only to
+# choose how to split up days in the daily track index. We split at
+# midnight in the specified time zone. Since ops are usually idle at
+# night and we want to split during the idle period, we usually set this
+# to the time zone where most ops actually occur.
+GEOCAM_TRACK_OPS_TIME_ZONE = 'UTC'
