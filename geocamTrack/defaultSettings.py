@@ -34,3 +34,5 @@ GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS = 8 * 60 * 60
 # night and we want to split during the idle period, we usually set this
 # to the time zone where most ops actually occur.
 GEOCAM_TRACK_OPS_TIME_ZONE = 'UTC'
+
+GEOCAM_TRACK_FEED_NAME = 'GeoCam Track'

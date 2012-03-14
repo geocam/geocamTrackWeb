@@ -27,6 +27,7 @@ from geocamTrack import settings
 
 TRACK_MODEL = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 RESOURCE_MODEL = getModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
+POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
 PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 GEOCAM_TRACK_OPS_TZ = pytz.timezone(settings.GEOCAM_TRACK_OPS_TIME_ZONE)
 
@@ -45,7 +46,7 @@ def getGeoJsonDict():
     return dict(type='FeatureCollection',
                 crs=dict(type='name',
                          properties=dict(name='urn:ogc:def:crs:OGC:1.3:CRS84')),
-                features=[r.getGeoJson() for r in ResourcePosition.objects.all()])
+                features=[r.getGeoJson() for r in POSITION_MODEL.objects.all()])
 
 
 def getGeoJsonDictWithErrorHandling():
@@ -77,20 +78,21 @@ def getKmlNetworkLink(request):
     url = request.build_absolute_uri(settings.SCRIPT_NAME + 'geocamTrack/latest.kml')
     return getKmlResponse('''
 <NetworkLink>
-  <name>GeoCam Track</name>
+  <name>%(name)s</name>
   <Link>
     <href>%(url)s</href>
     <refreshMode>onInterval</refreshMode>
     <refreshInterval>5</refreshInterval>
   </Link>
 </NetworkLink>
-''' % dict(url=url))
+''' % dict(name=settings.GEOCAM_TRACK_FEED_NAME,
+           url=url))
 
 
 def getKmlLatest(request):
     text = '<Document>\n'
-    text += '  <name>GeoCam Track</name>\n'
-    positions = ResourcePosition.objects.all().order_by('resource__user__username')
+    text += '  <name>%s</name>\n' % settings.GEOCAM_TRACK_FEED_NAME
+    positions = POSITION_MODEL.objects.all()
     for i, pos in enumerate(positions):
         text += pos.getKml(i)
     text += '</Document>\n'
