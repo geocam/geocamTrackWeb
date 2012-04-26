@@ -81,8 +81,8 @@ class IconStyle(models.Model):
 <IconStyle>
   %(headingStr)s
   %(colorStr)s
+  %(scaleStr)s
   <Icon>
-    %(scaleStr)s
     <href>%(url)s</href>
   </Icon>
 </IconStyle>
