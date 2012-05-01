@@ -300,14 +300,14 @@ def getTrackIndexKml(request):
                                       '%s Current' % track.name,
                                       trackName=track.name,
                                       showLine=0,
-                                      viewRefreshTime=settings.GEOCAM_TRACK_KML_REFRESH_TIME_SECONDS)
+                                      viewRefreshTime=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
                 writeTrackNetworkLink(out,
                                       '%s Track' % track.name,
                                       trackName=track.name,
                                       showIcon=0,
                                       startTimeUtc=startTimeUtc,
                                       endTimeUtc=endTimeUtc,
-                                      viewRefreshTime=settings.GEOCAM_TRACK_KML_REFRESH_TIME_SECONDS)
+                                      viewRefreshTime=settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
                 out.write("""
     </Folder>
 """)
