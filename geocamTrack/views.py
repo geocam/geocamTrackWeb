@@ -202,7 +202,7 @@ def writeTrackNetworkLink(out, name,
                           showLine=1,
                           recent=None,
                           caching='cached',
-                          viewRefreshTime=None,
+                          refreshInterval=None,
                           visibility=0,
                           openable=False):
     if caching == 'current':
@@ -234,11 +234,11 @@ def writeTrackNetworkLink(out, name,
         visibilityStr = ''
     else:
         visibilityStr = '<visibility>0</visibility>'
-    if viewRefreshTime:
+    if refreshInterval:
         refreshStr = ("""
     <refreshMode>onInterval</refreshMode>
-    <viewRefreshTime>%s</viewRefreshTime>
-""" % viewRefreshTime)
+    <refreshInterval>%s</refreshInterval>
+""" % refreshInterval)
     else:
         refreshStr = ''
     if openable:
@@ -333,21 +333,21 @@ def getTrackIndexKml(request):
                                       caching='current',
                                       trackName=track.name,
                                       showLine=0,
-                                      viewRefreshTime=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
+                                      refreshInterval=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
                 writeTrackNetworkLink(out,
                                       '%s Recent Tracks' % track.name,
                                       caching='recent',
                                       trackName=track.name,
                                       showIcon=0,
                                       recent=settings.GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS,
-                                      viewRefreshTime=settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
+                                      refreshInterval=settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
                 writeTrackNetworkLink(out,
                                       '%s Old Tracks' % track.name,
                                       caching='cached',
                                       trackName=track.name,
                                       showIcon=0,
                                       startTimeUtc=startTimeUtc,
-                                      viewRefreshTime=settings.GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS)
+                                      refreshInterval=settings.GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS)
                 out.write("""
     </Folder>
 """)
