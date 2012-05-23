@@ -5,6 +5,8 @@
 # __END_LICENSE__
 
 import sys
+import time
+import calendar
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -125,6 +127,12 @@ def timeDeltaTotalSeconds(delta):
     return 86400 * delta.days + delta.seconds + 1e-6 * delta.microseconds
 
 
+def getTimeSpinner(timestamp):
+    secondSinceEpoch = calendar.timegm(timestamp.timetuple())
+    index = int(secondSinceEpoch) % 4
+    return '|/-\\'[index]
+
+
 class Track(models.Model):
     name = models.CharField(max_length=40, blank=True)
     resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL)
@@ -153,11 +161,13 @@ class Track(models.Model):
             return
         if iconStyle == None:
             iconStyle = self.iconStyle
+        ageStr = ''
         if settings.GEOCAM_TRACK_SHOW_CURRENT_POSITION_AGE:
             age = TimeUtil.getTimeShort(pos.timestamp)
-            ageStr = ' (%s)' % age
-        else:
-            ageStr = ''
+            if age == 'seconds ago':
+                ageStr = ' %s' % getTimeSpinner(pos.timestamp)
+            else:
+                ageStr = ' (%s)' % age
 
         out.write("""
 <Placemark>
