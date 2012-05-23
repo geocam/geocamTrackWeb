@@ -9,6 +9,7 @@ import datetime
 import calendar
 import urllib
 
+from django.views.decorators.cache import cache_page
 from django.http import HttpResponse, HttpResponseNotAllowed, Http404, HttpResponseBadRequest
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -192,9 +193,14 @@ def getDateRange(minDate, maxDate):
         d += dt
 
 
-def writeTrackNetworkLink(out, name, trackName=None, startTimeUtc=None,
-                          endTimeUtc=None, showIcon=1, showLine=1,
-                          viewRefreshTime=None, visibility=0):
+def writeTrackNetworkLink(out, name,
+                          trackName=None,
+                          startTimeUtc=None,
+                          endTimeUtc=None,
+                          showIcon=1,
+                          showLine=1,
+                          viewRefreshTime=None,
+                          visibility=0):
     url = reverse('geocamTrack_tracks')
     params = {}
     if trackName:
@@ -275,7 +281,10 @@ def getTrackIndexKml(request):
 
         dayStart = datetime.datetime.combine(day, datetime.time())
         startTimeUtc = defaultToUtcTime(dayStart)
-        endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
+        if day == today:
+            endTimeUtc = None
+        else:
+            endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
 
         if day != today:
             pathCount = (PAST_POSITION_MODEL
@@ -336,7 +345,15 @@ def getTrackIndexKml(request):
     return HttpResponse(out.getvalue(), mimetype='application/vnd.google-earth.kml+xml')
 
 
-def getTracksKml(request):
+@cache_page(0.9 * settings.GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS)
+def getCachedTracksKml(request):
+    return getTracksKml(request, recent=False)
+
+@cache_page(0.9 * settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
+def getRecentTracksKml(request):
+    return getTracksKml(request, recent=True)
+
+def getTracksKml(request, recent=True):
     geocamTrack.models.latestRequestG = request
 
     out = StringIO()
@@ -358,6 +375,11 @@ def getTracksKml(request):
     startTime = request.GET.get('start')
     if startTime:
         startTime = datetime.datetime.utcfromtimestamp(float(startTime))
+    if recent:
+        recentStartFloat = time.time() - settings.GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS
+        recentStartTime = datetime.datetime.utcfromtimestamp(recentStartFloat)
+        if recentStartTime > startTime:
+            startTime = recentStartTime
 
     endTime = request.GET.get('end')
     if endTime:
