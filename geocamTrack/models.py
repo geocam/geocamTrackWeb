@@ -7,6 +7,7 @@
 import sys
 import time
 import calendar
+import datetime
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -164,10 +165,9 @@ class Track(models.Model):
         ageStr = ''
         if settings.GEOCAM_TRACK_SHOW_CURRENT_POSITION_AGE:
             age = TimeUtil.getTimeShort(pos.timestamp)
-            if age == 'seconds ago':
-                ageStr = ' %s' % getTimeSpinner(pos.timestamp)
-            else:
+            if age != 'seconds ago':
                 ageStr = ' (%s)' % age
+            ageStr += ' %s' % getTimeSpinner(datetime.datetime.now())
 
         out.write("""
 <Placemark>
