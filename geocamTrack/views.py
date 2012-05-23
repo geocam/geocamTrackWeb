@@ -6,6 +6,7 @@
 
 from StringIO import StringIO
 import datetime
+import time
 import calendar
 import urllib
 
@@ -199,9 +200,19 @@ def writeTrackNetworkLink(out, name,
                           endTimeUtc=None,
                           showIcon=1,
                           showLine=1,
+                          recent=None,
+                          caching='cached',
                           viewRefreshTime=None,
-                          visibility=0):
-    url = reverse('geocamTrack_tracks')
+                          visibility=0,
+                          openable=False):
+    if caching == 'current':
+        urlName = 'geocamTrack_tracks'
+    elif caching == 'recent':
+        urlName = 'geocamTrack_recentTracks'
+    elif caching == 'cached':
+        urlName = 'geocamTrack_cachedTracks'
+    url = reverse(urlName)
+        
     params = {}
     if trackName:
         params['track'] = trackName
@@ -213,6 +224,8 @@ def writeTrackNetworkLink(out, name,
         params['icon'] = '0'
     if not showLine:
         params['line'] = '0'
+    if recent:
+        params['recent'] = str(recent)
     urlParams = urllib.urlencode(params)
     if urlParams:
         url += '?' + urlParams
@@ -228,18 +241,31 @@ def writeTrackNetworkLink(out, name,
 """ % viewRefreshTime)
     else:
         refreshStr = ''
-
+    if openable:
+        styleStr = ''
+    else:
+        styleStr = ("""
+  <Style>
+    <ListStyle>
+      <listItemType>checkHideChildren</listItemType>
+    </ListStyle>
+  </Style>
+  """)
     out.write("""
 <NetworkLink>
   <name>%(name)s</name>
+  %(styleStr)s
   %(visibilityStr)s
   <Link>
     <href><![CDATA[%(url)s]]></href>
     %(refreshStr)s
   </Link>
 </NetworkLink>
-""" % dict(name=name, url=url, refreshStr=refreshStr,
-           visibilityStr=visibilityStr))
+""" % dict(name=name,
+           url=url,
+           refreshStr=refreshStr,
+           visibilityStr=visibilityStr,
+           styleStr=styleStr))
 
 
 def getPositionDataDateRange():
@@ -281,10 +307,7 @@ def getTrackIndexKml(request):
 
         dayStart = datetime.datetime.combine(day, datetime.time())
         startTimeUtc = defaultToUtcTime(dayStart)
-        if day == today:
-            endTimeUtc = None
-        else:
-            endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
+        endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
 
         if day != today:
             pathCount = (PAST_POSITION_MODEL
@@ -307,16 +330,24 @@ def getTrackIndexKml(request):
 """ % track.name)
                 writeTrackNetworkLink(out,
                                       '%s Current' % track.name,
+                                      caching='current',
                                       trackName=track.name,
                                       showLine=0,
                                       viewRefreshTime=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
                 writeTrackNetworkLink(out,
-                                      '%s Track' % track.name,
+                                      '%s Recent Tracks' % track.name,
+                                      caching='recent',
+                                      trackName=track.name,
+                                      showIcon=0,
+                                      recent=settings.GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS,
+                                      viewRefreshTime=settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
+                writeTrackNetworkLink(out,
+                                      '%s Old Tracks' % track.name,
+                                      caching='cached',
                                       trackName=track.name,
                                       showIcon=0,
                                       startTimeUtc=startTimeUtc,
-                                      endTimeUtc=endTimeUtc,
-                                      viewRefreshTime=settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
+                                      viewRefreshTime=settings.GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS)
                 out.write("""
     </Folder>
 """)
@@ -329,6 +360,7 @@ def getTrackIndexKml(request):
                 if pathCount != 0:
                     writeTrackNetworkLink(out,
                                           '%s Track' % track.name,
+                                          caching='cached',
                                           trackName=track.name,
                                           showIcon=0,
                                           startTimeUtc=startTimeUtc,
@@ -345,13 +377,17 @@ def getTrackIndexKml(request):
     return HttpResponse(out.getvalue(), mimetype='application/vnd.google-earth.kml+xml')
 
 
-@cache_page(0.9 * settings.GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS)
-def getCachedTracksKml(request):
-    return getTracksKml(request, recent=False)
+@cache_page(0.9 * settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
+def getCurrentPosKml(request):
+    return getTracksKml(request)
 
 @cache_page(0.9 * settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
 def getRecentTracksKml(request):
-    return getTracksKml(request, recent=True)
+    return getTracksKml(request)
+
+@cache_page(0.9 * settings.GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS)
+def getCachedTracksKml(request):
+    return getTracksKml(request)
 
 def getTracksKml(request, recent=True):
     geocamTrack.models.latestRequestG = request
@@ -375,10 +411,12 @@ def getTracksKml(request, recent=True):
     startTime = request.GET.get('start')
     if startTime:
         startTime = datetime.datetime.utcfromtimestamp(float(startTime))
+
+    recent = request.GET.get('recent')
     if recent:
         recentStartFloat = time.time() - settings.GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS
         recentStartTime = datetime.datetime.utcfromtimestamp(recentStartFloat)
-        if recentStartTime > startTime:
+        if startTime is None or recentStartTime > startTime:
             startTime = recentStartTime
 
     endTime = request.GET.get('end')
