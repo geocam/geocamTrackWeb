@@ -10,9 +10,8 @@ from geocamTrack import settings
 PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 
 class PositionFilter(object):
-    def __init__(self, distanceMeters, pointAddedHandler=None):
+    def __init__(self, distanceMeters):
         self.distanceMeters = distanceMeters
-        self.pointAddedHandler = pointAddedHandler
 
         pastPositions = PAST_POSITION_MODEL.objects.all().order_by('-timestamp')
         if pastPositions.count():
