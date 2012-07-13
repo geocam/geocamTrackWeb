@@ -246,7 +246,7 @@ class Track(models.Model):
 
         # get closest position after utcDt
         afterPositions = positions.filter(timestamp__gte=utcDt).order_by('timestamp')
-        if afterPositions:
+        if afterPositions.count():
             afterPos = afterPositions[0]
         else:
             return None
@@ -258,7 +258,7 @@ class Track(models.Model):
 
         # get closest position before utcDt
         beforePositions = positions.filter(timestamp__lt=utcDt).order_by('-timestamp')
-        if beforePositions:
+        if beforePositions.count():
             beforePos = beforePositions[0]
         else:
             return None
