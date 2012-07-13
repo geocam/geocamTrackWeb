@@ -22,6 +22,7 @@ class PositionFilter(object):
     def add(self, pos):
         if self.previousPos is not None and pos.getDistance(self.previousPos) > self.distanceMeters:
             pos.save()
+            self.previousPos = pos
             return True
         else:
             return False
