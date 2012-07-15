@@ -10,8 +10,9 @@ from geocamTrack import settings
 PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 
 class PositionFilter(object):
-    def __init__(self, distanceMeters):
+    def __init__(self, distanceMeters, callback=lambda pos: pos.save()):
         self.distanceMeters = distanceMeters
+        self.callback = callback
 
         pastPositions = PAST_POSITION_MODEL.objects.all().order_by('-timestamp')
         if pastPositions.count():
@@ -21,7 +22,7 @@ class PositionFilter(object):
 
     def add(self, pos):
         if self.previousPos is not None and pos.getDistance(self.previousPos) > self.distanceMeters:
-            pos.save()
+            self.callback(pos)
             self.previousPos = pos
             return True
         else:
