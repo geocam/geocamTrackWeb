@@ -5,7 +5,6 @@
 # __END_LICENSE__
 
 import sys
-import time
 import calendar
 import datetime
 

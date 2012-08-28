@@ -9,6 +9,7 @@ from geocamTrack import settings
 
 PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 
+
 class PositionFilter(object):
     def __init__(self, distanceMeters, callback=lambda pos: pos.save()):
         self.distanceMeters = distanceMeters

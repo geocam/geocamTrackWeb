@@ -212,7 +212,7 @@ def writeTrackNetworkLink(out, name,
     elif caching == 'cached':
         urlName = 'geocamTrack_cachedTracks'
     url = reverse(urlName)
-        
+
     params = {}
     if trackName:
         params['track'] = trackName
@@ -381,13 +381,16 @@ def getTrackIndexKml(request):
 def getCurrentPosKml(request):
     return getTracksKml(request)
 
+
 @cache_page(0.9 * settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
 def getRecentTracksKml(request):
     return getTracksKml(request)
 
+
 @cache_page(0.9 * settings.GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS)
 def getCachedTracksKml(request):
     return getTracksKml(request)
+
 
 def getTracksKml(request, recent=True):
     geocamTrack.models.latestRequestG = request
