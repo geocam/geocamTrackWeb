@@ -23,30 +23,30 @@ urlpatterns = patterns(
      {'readOnly': True}),
     (r'^liveMap.kml$', views.getKmlNetworkLink,
      {'readOnly': True,
-      'challenge': 'digest'  # Google Earth can't handle django challenge
+      'challenge': 'basic'  # Google Earth can't handle django challenge
       }),
     (r'^latest.kml$', views.getKmlLatest,
      {'readOnly': True,
-      'challenge': 'digest'  # Google Earth can't handle django challenge
+      'challenge': 'basic'  # Google Earth can't handle django challenge
       }),
 
     (r'^post/$', views.postPosition,
-     {'challenge': 'digest'  # for best support of future mobile apps
+     {'challenge': 'basic'  # for best support of future mobile apps
       }),
     (r'^tracks.kml$', views.getCurrentPosKml,
-     {'challenge': 'digest',
+     {'challenge': 'basic',
       'readOnly': True},
      'geocamTrack_tracks'),
     (r'^recent/tracks.kml$', views.getRecentTracksKml,
-     {'challenge': 'digest',
+     {'challenge': 'basic',
       'readOnly': True},
      'geocamTrack_recentTracks'),
     (r'^cached/tracks.kml$', views.getCachedTracksKml,
-     {'challenge': 'digest',
+     {'challenge': 'basic',
       'readOnly': True},
      'geocamTrack_cachedTracks'),
     (r'^trackIndex.kml$', views.getTrackIndexKml,
-     {'challenge': 'digest',
+     {'challenge': 'basic',
       'readOnly': True},
      'geocamTrack_trackIndex'),
     (r'^csvTrackIndex/$', views.getCsvTrackIndex,
