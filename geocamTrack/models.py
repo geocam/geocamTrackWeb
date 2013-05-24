@@ -273,9 +273,9 @@ class Track(models.Model):
         return PositionModel.getInterpolatedPosition(utcDt, beforeWeight, beforePos, afterWeight, afterPos)
 
 
-class AbstractResourcePosition(models.Model):
+class AbstractResourcePositionNoUuid(models.Model):
     """
-    AbstractResourcePosition is the most minimal position model
+    AbstractResourcePositionNoUuid is the most minimal position model
     geocamTrack supports.  Other apps building on geocamTrack may want
     to derive their position model from this.
     """
@@ -283,7 +283,6 @@ class AbstractResourcePosition(models.Model):
     timestamp = models.DateTimeField(db_index=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
-    uuid = UuidField()
 
     def getHeading(self):
         return None
@@ -381,7 +380,18 @@ class AbstractResourcePosition(models.Model):
         abstract = True
 
 
-class AbstractResourcePositionWithHeading(AbstractResourcePosition):
+class AbstractResourcePosition(AbstractResourcePositionNoUuid):
+    """
+    Adds a uuid field to AbstractResourcePositionNoUuid. You probably don't
+    really want the uuid field, but here it is for backward compatibility.
+    """
+    uuid = UuidField()
+
+    class Meta:
+        abstract = True
+
+
+class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
     """
     Adds heading support to AbstractResourcePosition.
     """
@@ -417,6 +427,18 @@ class AbstractResourcePositionWithHeading(AbstractResourcePosition):
         if result != None:
             result.heading = cls.interpHeading(beforeWeight, beforePos.heading, afterWeight, afterPos.heading)
         return result
+
+    class Meta:
+        abstract = True
+
+
+class AbstractResourcePositionWithHeading(AbstractResourcePositionWithHeadingNoUuid):
+    """
+    Adds a uuid field to AbstractResourcePositionWithHeadingNoUuid. You
+    probably don't really want the uuid field, but here it is for
+    backward compatibility.
+    """
+    uuid = UuidField()
 
     class Meta:
         abstract = True
