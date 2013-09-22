@@ -2,7 +2,7 @@
 
 {% block cssExtras %}
 <style type="text/css">
-  li {
+  li.trackMenu {
     font-size: 2em;
     font-family: sans-serif;
   }
@@ -14,10 +14,10 @@
 {% block contents %}
 <br/>
 <ul>
-  <li><a href="liveMap/">Maps API auto-refreshing map</a></li>
-  <li><a href="liveMap.kml">KML auto-refreshing NetworkLink</a></li>
-  <li><a href="latest.kml">KML current position (no auto-refresh)</a></li>
-  <li><a href="resources.json">GeoJSON feed</a></li>
-  <li><a href="trackIndex.kml">Track Index</a></li>
+  <li class="trackMenu"><a href="liveMap/">Maps API auto-refreshing map</a></li>
+  <li class="trackMenu"><a href="liveMap.kml">KML auto-refreshing NetworkLink</a></li>
+  <li class="trackMenu"><a href="latest.kml">KML current position (no auto-refresh)</a></li>
+  <li class="trackMenu"><a href="resources.json">GeoJSON feed</a></li>
+  <li class="trackMenu"><a href="trackIndex.kml">Track Index</a></li>
 </ul>
 {% endblock %}
