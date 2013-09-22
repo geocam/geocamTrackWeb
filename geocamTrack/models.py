@@ -133,13 +133,20 @@ def getTimeSpinner(timestamp):
     return '|/-\\'[index]
 
 
-class Track(models.Model):
+class AbstractTrack(models.Model):
     name = models.CharField(max_length=40, blank=True)
-    resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL)
-    iconStyle = models.ForeignKey(settings.GEOCAM_TRACK_ICON_STYLE_MODEL, null=True, blank=True)
-    lineStyle = models.ForeignKey(settings.GEOCAM_TRACK_LINE_STYLE_MODEL, null=True, blank=True)
+    resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL,
+                                 related_name='%(app_label)s_%(class)s_related')
+    iconStyle = models.ForeignKey(settings.GEOCAM_TRACK_ICON_STYLE_MODEL, null=True, blank=True,
+                                  related_name='%(app_label)s_%(class)s_related')
+    lineStyle = models.ForeignKey(settings.GEOCAM_TRACK_LINE_STYLE_MODEL, null=True, blank=True,
+                                  related_name='%(app_label)s_%(class)s_related')
     uuid = UuidField()
     extras = ExtrasDotField()
+
+    class Meta:
+        abstract = True
+        ordering = ('name',)
 
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
@@ -273,6 +280,10 @@ class Track(models.Model):
         return PositionModel.getInterpolatedPosition(utcDt, beforeWeight, beforePos, afterWeight, afterPos)
 
 
+class Track(AbstractTrack):
+    pass
+
+
 class AbstractResourcePositionNoUuid(models.Model):
     """
     AbstractResourcePositionNoUuid is the most minimal position model
@@ -283,6 +294,10 @@ class AbstractResourcePositionNoUuid(models.Model):
     timestamp = models.DateTimeField(db_index=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
+
+    class Meta:
+        abstract = True
+        ordering = ('-timestamp',)
 
     def getHeading(self):
         return None
@@ -371,13 +386,10 @@ class AbstractResourcePositionNoUuid(models.Model):
     def __unicode__(self):
         return ('%s %s %s %s %s'
                 % (self.__class__.__name__,
-                   unicode(self.track),
+                   self.track.name,
                    self.timestamp,
                    self.latitude,
                    self.longitude))
-
-    class Meta:
-        abstract = True
 
 
 class AbstractResourcePosition(AbstractResourcePositionNoUuid):
