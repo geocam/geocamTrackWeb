@@ -302,6 +302,23 @@ class AbstractResourcePositionNoUuid(models.Model):
         abstract = True
         ordering = ('-timestamp',)
 
+    def saveCurrent(self):
+        # if there is an existing entry for this track, overwrite
+        oldCpos = self.__class__.objects.filter(track=self.track)
+
+        if len(oldCpos) > 1:
+            logging.warning('more than one position for track %s',
+                            self.track)
+
+        if oldCpos:
+            oldCposPk = oldCpos[0].pk
+        else:
+            oldCposPk = None
+        self.pk = oldCposPk
+
+        self.save()
+
+
     def getHeading(self):
         return None
 
