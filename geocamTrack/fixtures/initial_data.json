@@ -14,6 +14,20 @@
         }
     },
     {
+        "pk": 2,
+        "model": "geocamTrack.iconstyle",
+        "fields": {
+            "scale": 1.2,
+            "name": "pointer",
+            "url": "http://maps.google.com/mapfiles/kml/shapes/track.png",
+            "height": 64,
+            "width": 64,
+            "extras": "{}",
+            "color": "",
+            "uuid": "91bd3f1a-3d3a-4eca-bac8-cdebf97219bd"
+        }
+    },
+    {
         "pk": 1,
         "model": "geocamTrack.linestyle",
         "fields": {

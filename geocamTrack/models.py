@@ -159,6 +159,15 @@ class AbstractTrack(models.Model):
         PositionModel = getModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
         return PositionModel.objects.filter(track=self)
 
+    def getLabelName(self, pos):
+        return self.name
+
+    def getLabelExtra(self, pos):
+        return ''
+
+    def getIconStyle(self, pos):
+        return self.iconStyle
+
     def writeCurrentKml(self, out, positions=None, iconStyle=None):
         if positions == None:
             positions = self.getCurrentPositions()
@@ -167,7 +176,7 @@ class AbstractTrack(models.Model):
         else:
             return
         if iconStyle == None:
-            iconStyle = self.iconStyle
+            iconStyle = self.getIconStyle(pos)
         ageStr = ''
         if settings.GEOCAM_TRACK_SHOW_CURRENT_POSITION_AGE:
             now = datetime.datetime.utcnow()
@@ -178,10 +187,14 @@ class AbstractTrack(models.Model):
                 ageStr = ' (%s)' % age
             ageStr += ' %s' % getTimeSpinner(datetime.datetime.now())
 
+        label = ('%s%s%s' %
+                 (self.getLabelName(pos),
+                  self.getLabelExtra(pos),
+                  ageStr))
         out.write("""
 <Placemark>
-  <name>%(name)s%(ageStr)s</name>
-""" % dict(name=self.name, ageStr=ageStr))
+  <name>%(label)s</name>
+""" % dict(label=label))
         if iconStyle:
             out.write("<Style>\n")
             iconStyle.writeKml(out, pos.getHeading())
