@@ -170,8 +170,11 @@ class AbstractTrack(models.Model):
             iconStyle = self.iconStyle
         ageStr = ''
         if settings.GEOCAM_TRACK_SHOW_CURRENT_POSITION_AGE:
-            age = TimeUtil.getTimeShort(pos.timestamp)
-            if age != 'seconds ago':
+            now = datetime.datetime.utcnow()
+            diff = now - pos.timestamp
+            diffSecs = diff.days * 24 * 60 * 60 + diff.seconds
+            if diffSecs >= settings.GEOCAM_TRACK_CURRENT_POSITION_AGE_MIN_SECONDS:
+                age = TimeUtil.getTimeShort(pos.timestamp)
                 ageStr = ' (%s)' % age
             ageStr += ' %s' % getTimeSpinner(datetime.datetime.now())
 
