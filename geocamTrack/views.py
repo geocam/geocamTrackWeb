@@ -332,13 +332,13 @@ def getTrackIndexKml(request):
       <name>%s</name>
 """ % track.name)
                 writeTrackNetworkLink(out,
-                                      '%s Current' % track.name,
+                                      'Current Position',
                                       caching='current',
                                       trackName=track.name,
                                       showLine=0,
                                       refreshInterval=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
                 writeTrackNetworkLink(out,
-                                      '%s Compass Rose' % track.name,
+                                      'Compass Rose',
                                       caching='current',
                                       trackName=track.name,
                                       showLine=0,
@@ -346,14 +346,14 @@ def getTrackIndexKml(request):
                                       showCompass=1,
                                       refreshInterval=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
                 writeTrackNetworkLink(out,
-                                      '%s Recent Tracks' % track.name,
+                                      'Recent Tracks',
                                       caching='recent',
                                       trackName=track.name,
                                       showIcon=0,
                                       recent=settings.GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS,
                                       refreshInterval=settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
                 writeTrackNetworkLink(out,
-                                      '%s Old Tracks' % track.name,
+                                      'Old Tracks',
                                       caching='cached',
                                       trackName=track.name,
                                       showIcon=0,
