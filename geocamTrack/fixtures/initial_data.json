@@ -19,9 +19,9 @@
         "fields": {
             "scale": 1.2,
             "name": "pointer",
-            "url": "http://maps.google.com/mapfiles/kml/shapes/track.png",
+            "url": "/static/geocamTrack/icons/pointer.png",
             "height": 64,
-            "width": 64,
+            "width": 42,
             "extras": "{}",
             "color": "",
             "uuid": "91bd3f1a-3d3a-4eca-bac8-cdebf97219bd"
