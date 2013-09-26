@@ -194,7 +194,7 @@ class AbstractTrack(models.Model):
 """ % dict(label=label))
         if iconStyle:
             out.write("<Style>\n")
-            iconStyle.writeKml(out, pos.getHeading())
+            iconStyle.writeKml(out, pos.getHeading(), urlFn=urlFn)
             out.write("</Style>\n")
 
         out.write("""
@@ -248,7 +248,7 @@ class AbstractTrack(models.Model):
 """ % dict(name=self.name))
         if lineStyle:
             out.write("<Style>")
-            lineStyle.writeKml(out)
+            lineStyle.writeKml(out, urlFn=urlFn)
             out.write("</Style>")
 
         out.write("""
