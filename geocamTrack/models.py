@@ -66,9 +66,11 @@ class IconStyle(models.Model):
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
 
-    def writeKml(self, out, heading=None, urlFn=None):
-        if self.color:
-            colorStr = '<color>%s</color>' % self.color
+    def writeKml(self, out, heading=None, urlFn=None, color=None):
+        if not color:
+            color = self.color
+        if color:
+            colorStr = '<color>%s</color>' % color
         else:
             colorStr = ''
         if self.scale != 1:
@@ -108,9 +110,11 @@ class LineStyle(models.Model):
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
 
-    def writeKml(self, out, urlFn=None):
-        if self.color:
-            colorStr = '<color>%s</color>' % self.color
+    def writeKml(self, out, urlFn=None, color=None):
+        if not color:
+            color = self.color
+        if color:
+            colorStr = '<color>%s</color>' % color
         else:
             colorStr = ''
         if self.width != None:
@@ -171,6 +175,15 @@ class AbstractTrack(models.Model):
     def getIconStyle(self, pos):
         return self.iconStyle
 
+    def getLineStyle(self):
+        return self.iconStyle
+
+    def getIconColor(self, pos):
+        return self.getIconStyle(pos).color
+
+    def getLineColor(self):
+        return self.getLineStyle().color
+
     def writeCurrentKml(self, out, pos, iconStyle=None, urlFn=None):
         if iconStyle == None:
             iconStyle = self.getIconStyle(pos)
@@ -194,7 +207,7 @@ class AbstractTrack(models.Model):
 """ % dict(label=label))
         if iconStyle:
             out.write("<Style>\n")
-            iconStyle.writeKml(out, pos.getHeading(), urlFn=urlFn)
+            iconStyle.writeKml(out, pos.getHeading(), urlFn=urlFn, color=self.getIconColor(pos))
             out.write("</Style>\n")
 
         out.write("""
@@ -248,7 +261,7 @@ class AbstractTrack(models.Model):
 """ % dict(name=self.name))
         if lineStyle:
             out.write("<Style>")
-            lineStyle.writeKml(out, urlFn=urlFn)
+            lineStyle.writeKml(out, urlFn=urlFn, color=self.getLineColor())
             out.write("</Style>")
 
         out.write("""
