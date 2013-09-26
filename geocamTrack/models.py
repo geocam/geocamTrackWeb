@@ -66,7 +66,7 @@ class IconStyle(models.Model):
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
 
-    def writeKml(self, out, heading=None):
+    def writeKml(self, out, heading=None, urlFn=None):
         if self.color:
             colorStr = '<color>%s</color>' % self.color
         else:
@@ -79,6 +79,9 @@ class IconStyle(models.Model):
             headingStr = '<heading>%s</heading>' % heading
         else:
             headingStr = ''
+        imgUrl = self.url
+        if urlFn:
+            imgUrl = urlFn(imgUrl)
         out.write("""
 <IconStyle>
   %(headingStr)s
@@ -88,7 +91,7 @@ class IconStyle(models.Model):
     <href>%(url)s</href>
   </Icon>
 </IconStyle>
-""" % dict(url=latestRequestG.build_absolute_uri(self.url),
+""" % dict(url=imgUrl,
            scaleStr=scaleStr,
            colorStr=colorStr,
            headingStr=headingStr))
@@ -105,7 +108,7 @@ class LineStyle(models.Model):
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
 
-    def writeKml(self, out):
+    def writeKml(self, out, urlFn=None):
         if self.color:
             colorStr = '<color>%s</color>' % self.color
         else:
@@ -168,13 +171,7 @@ class AbstractTrack(models.Model):
     def getIconStyle(self, pos):
         return self.iconStyle
 
-    def writeCurrentKml(self, out, positions=None, iconStyle=None):
-        if positions == None:
-            positions = self.getCurrentPositions()
-        if positions:
-            pos = positions[0]
-        else:
-            return
+    def writeCurrentKml(self, out, pos, iconStyle=None, urlFn=None):
         if iconStyle == None:
             iconStyle = self.getIconStyle(pos)
         ageStr = ''
@@ -204,6 +201,30 @@ class AbstractTrack(models.Model):
   <Point>
     <coordinates>
 """)
+        pos.writeCoordinatesKml(out)
+        out.write("""
+    </coordinates>
+  </Point>
+</Placemark>
+""")
+
+    def writeCompassKml(self, out, pos, urlFn=None):
+        pngUrl = settings.STATIC_URL + 'geocamTrack/icons/compassRoseLg.png'
+        if urlFn:
+            pngUrl = urlFn(pngUrl)
+        out.write("""
+<Placemark>
+  <Style>
+    <IconStyle>
+      <scale>6.0</scale>
+      <Icon>
+        <href>%(pngUrl)s</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Point>
+    <coordinates>
+""" % {'pngUrl': pngUrl})
         pos.writeCoordinatesKml(out)
         out.write("""
     </coordinates>

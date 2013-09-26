@@ -200,6 +200,7 @@ def writeTrackNetworkLink(out, name,
                           endTimeUtc=None,
                           showIcon=1,
                           showLine=1,
+                          showCompass=0,
                           recent=None,
                           caching='cached',
                           refreshInterval=None,
@@ -224,6 +225,8 @@ def writeTrackNetworkLink(out, name,
         params['icon'] = '0'
     if not showLine:
         params['line'] = '0'
+    if showCompass:
+        params['compass'] = '1'
     if recent:
         params['recent'] = str(recent)
     urlParams = urllib.urlencode(params)
@@ -335,6 +338,14 @@ def getTrackIndexKml(request):
                                       showLine=0,
                                       refreshInterval=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
                 writeTrackNetworkLink(out,
+                                      '%s Compass Rose' % track.name,
+                                      caching='current',
+                                      trackName=track.name,
+                                      showLine=0,
+                                      showIcon=0,
+                                      showCompass=1,
+                                      refreshInterval=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
+                writeTrackNetworkLink(out,
                                       '%s Recent Tracks' % track.name,
                                       caching='recent',
                                       trackName=track.name,
@@ -428,6 +439,7 @@ def getTracksKml(request, recent=True):
 
     showLine = int(request.GET.get('line', 1))
     showIcon = int(request.GET.get('icon', 1))
+    showCompass = int(request.GET.get('compass', 0))
 
     for track in tracks:
         if showLine:
@@ -436,15 +448,24 @@ def getTracksKml(request, recent=True):
                 pastPositions = pastPositions.filter(timestamp__gte=startTime)
             if endTime:
                 pastPositions = pastPositions.filter(timestamp__lte=endTime)
-            track.writeTrackKml(out, positions=pastPositions)
+            track.writeTrackKml(out, positions=pastPositions, urlFn=request.build_absolute_uri)
 
-        if showIcon:
+        if showIcon or showCompass:
             currentPositions = track.getCurrentPositions()
             if startTime:
                 currentPositions = currentPositions.filter(timestamp__gte=startTime)
             if endTime:
                 currentPositions = currentPositions.filter(timestamp__lte=endTime)
-            track.writeCurrentKml(out, positions=currentPositions)
+            currentPositions = currentPositions[:1]
+            if currentPositions:
+                pos = currentPositions[0]
+
+                if showIcon:
+                    track.writeCurrentKml(out, pos, urlFn=request.build_absolute_uri)
+
+                if showCompass:
+                    track.writeCompassKml(out, pos, urlFn=request.build_absolute_uri)
+
     out.write("""
 </Document>
 </kml>
