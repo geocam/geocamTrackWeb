@@ -232,7 +232,7 @@ class AbstractTrack(models.Model):
 </Placemark>
 """)
 
-    def writeTrackKml(self, out, positions=None, lineStyle=None):
+    def writeTrackKml(self, out, positions=None, lineStyle=None, urlFn=None):
         if positions == None:
             positions = self.getPositions()
         if lineStyle == None:
