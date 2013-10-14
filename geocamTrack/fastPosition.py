@@ -29,7 +29,6 @@ if you don't run timestamp queries in increasing order, but the
 performance could be very bad.
 """
 
-import sys
 import datetime
 
 from geocamTrack.models import getModelByName
@@ -94,11 +93,10 @@ class FastPosition(object):
         # do fast search in cache
         n = len(self.cache)
         for i in xrange(self.cacheIndex, n - 1):
-            next = self.cache[i + 1]
-            if utcDt <= next.timestamp:
+            nxt = self.cache[i + 1]
+            if utcDt <= nxt.timestamp:
                 self.cacheIndex = i
                 return self.cache[i], self.cache[i + 1]
-
 
     def getInterpolatedPosition(self, utcDt):
         beforePos, afterPos = self.getBracketingPositions(utcDt)

@@ -558,8 +558,8 @@ def getTrackCsv(request, fname):
             dist = geomath.getLength(diff)
         else:
             dist = 0
-        if (settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS
-            and dist > settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS):
+        if (settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS and
+                dist > settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS):
             cappedDist = 0
         else:
             cappedDist = dist

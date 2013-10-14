@@ -7,6 +7,7 @@
 import sys
 import calendar
 import datetime
+import logging
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -18,6 +19,8 @@ from geocamUtil import geomath
 from geocamUtil import TimeUtil
 
 from geocamTrack import settings
+
+# pylint: disable=C1001
 
 latestRequestG = None
 
@@ -77,7 +80,7 @@ class IconStyle(models.Model):
             scaleStr = '<scale>%s</scale>' % self.scale
         else:
             scaleStr = ''
-        if heading != None:
+        if heading is not None:
             headingStr = '<heading>%s</heading>' % heading
         else:
             headingStr = ''
@@ -117,7 +120,7 @@ class LineStyle(models.Model):
             colorStr = '<color>%s</color>' % color
         else:
             colorStr = ''
-        if self.width != None:
+        if self.width is not None:
             widthStr = '<width>%s</width>' % self.width
         else:
             widthStr = ''
@@ -185,7 +188,7 @@ class AbstractTrack(models.Model):
         return self.getLineStyle().color
 
     def writeCurrentKml(self, out, pos, iconStyle=None, urlFn=None):
-        if iconStyle == None:
+        if iconStyle is None:
             iconStyle = self.getIconStyle(pos)
         ageStr = ''
         if settings.GEOCAM_TRACK_SHOW_CURRENT_POSITION_AGE:
@@ -246,9 +249,9 @@ class AbstractTrack(models.Model):
 """)
 
     def writeTrackKml(self, out, positions=None, lineStyle=None, urlFn=None):
-        if positions == None:
+        if positions is None:
             positions = self.getPositions()
-        if lineStyle == None:
+        if lineStyle is None:
             lineStyle = self.lineStyle
 
         if len(positions) < 2:
@@ -273,7 +276,7 @@ class AbstractTrack(models.Model):
         lastPos = None
         breakDist = settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS
         for pos in positions:
-            if lastPos and breakDist != None:
+            if lastPos and breakDist is not None:
                 diff = geomath.calculateDiffMeters([lastPos.longitude, lastPos.latitude],
                                                    [pos.longitude, pos.latitude])
                 dist = geomath.getLength(diff)
@@ -365,13 +368,12 @@ class AbstractResourcePositionNoUuid(models.Model):
 
         self.save()
 
-
     def getHeading(self):
         return None
 
     @classmethod
     def interp(cls, beforeWeight, beforeVal, afterWeight, afterVal):
-        if beforeVal == None or afterVal == None:
+        if beforeVal is None or afterVal is None:
             return None
         else:
             return beforeWeight * beforeVal + afterWeight * afterVal
@@ -419,7 +421,7 @@ class AbstractResourcePositionNoUuid(models.Model):
                     properties=self.getProperties())
 
     def getIconForIndex(self, index):
-        if index == None or index >= 26:
+        if index is None or index >= 26:
             letter = ''
         else:
             letter = chr(65 + index)
@@ -482,7 +484,7 @@ class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
     @classmethod
     def interpHeading(cls, beforeWeight, beforeHeading, afterWeight, afterHeading):
         h1 = cls.interp(beforeWeight, beforeHeading, afterWeight, afterHeading)
-        if h1 == None:
+        if h1 is None:
             return None
 
         # there are two intervals between beforeHeading and
@@ -499,11 +501,11 @@ class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
 
     @classmethod
     def getInterpolatedPosition(cls, utcDt, beforeWeight, beforePos, afterWeight, afterPos):
-        result = (super(AbstractResourcePositionWithHeading, cls)
+        result = (super(AbstractResourcePositionWithHeadingNoUuid, cls)
                   .getInterpolatedPosition(utcDt,
                                            beforeWeight, beforePos,
                                            afterWeight, afterPos))
-        if result != None:
+        if result is not None:
             result.heading = cls.interpHeading(beforeWeight, beforePos.heading, afterWeight, afterPos.heading)
         return result
 

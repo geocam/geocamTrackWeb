@@ -82,7 +82,7 @@ class LatitudeClient(object):
         expressed as milliseconds since UNIX epoch (like a Java timestamp).
         """
 
-        if params == None:
+        if params is None:
             params = {}
 
         # map from python-friendly param names to the names used by the latitude api
