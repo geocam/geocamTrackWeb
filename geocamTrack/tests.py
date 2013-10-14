@@ -12,10 +12,3 @@ Replace these with more appropriate tests for your application.
 """
 
 from geocamTrack import settings
-
-if settings.GEOCAM_TRACK_LATITUDE_ENABLED:
-    # wildcard import is ok
-    # pylint: disable=W0401
-
-    # add latitude-related tests
-    from geocamTrack.latitude.tests import *

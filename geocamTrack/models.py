@@ -543,13 +543,3 @@ class ResourcePosition(GeoCamResourcePosition):
 
 class PastResourcePosition(GeoCamResourcePosition):
     pass
-
-
-# wildcard import is ok:
-# pylint: disable=W0401
-
-# If settings.GEOCAM_TRACK_LATITUDE_ENABLED is False, we don't need
-# these models... but we'll keep them in at the DB level anyway, to
-# avoid syncdb asking to delete and re-add them when we change the
-# settings.
-from geocamTrack.latitude.models import *

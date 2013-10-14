@@ -4,8 +4,6 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-GEOCAM_TRACK_LATITUDE_ENABLED = False
-
 GEOCAM_TRACK_RESOURCE_MODEL = 'geocamTrack.Resource'
 GEOCAM_TRACK_TRACK_MODEL = 'geocamTrack.Track'
 GEOCAM_TRACK_POSITION_MODEL = 'geocamTrack.ResourcePosition'

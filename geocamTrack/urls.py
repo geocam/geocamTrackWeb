@@ -57,7 +57,3 @@ urlpatterns = patterns(
      'geocamTrack_trackCsv'),
 
 )
-
-if settings.GEOCAM_TRACK_LATITUDE_ENABLED:
-    # make latitude-related urls available
-    urlpatterns += patterns([(r'^latitude/', include('geocamTrack.latitude.urls'))])

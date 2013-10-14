@@ -17,7 +17,3 @@ admin.site.register(LineStyle)
 admin.site.register(Track)
 admin.site.register(ResourcePosition)
 admin.site.register(PastResourcePosition)
-
-if settings.GEOCAM_TRACK_LATITUDE_ENABLED:
-    # register latitude-related models with admin
-    from geocamTrack.latitude import admin
