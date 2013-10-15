@@ -4,9 +4,8 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-from django.conf.urls import patterns, include
+from django.conf.urls import patterns
 
-from geocamTrack import settings
 from geocamTrack import views
 
 urlpatterns = patterns(
