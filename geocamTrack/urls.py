@@ -12,7 +12,7 @@ urlpatterns = patterns(
     '',
 
     (r'^$', views.getIndex,
-     {'readOnly': True}),
+     {'readOnly': True}, 'geocamTrack_index'),
 
     (r'^resources.json$', views.getResourcesJson,
      {'readOnly': True}),
