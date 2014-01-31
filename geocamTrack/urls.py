@@ -54,5 +54,8 @@ urlpatterns = patterns(
     (r'^track/([^\./]+\.csv)$', views.getTrackCsv,
      {'readOnly': True},
      'geocamTrack_trackCsv'),
+    (r'^track/(?P<trackName>[\w-]+)$', views.getTrackKml,
+     {'readOnly': True},
+     'geocamTrack_trackKml'),
 
 )

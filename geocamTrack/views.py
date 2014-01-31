@@ -91,15 +91,18 @@ def getKmlNetworkLink(request):
            url=url))
 
 
-def getKmlLatest(request):
+def getKmlTrack(name, positions):
     text = '<Document>\n'
-    text += '  <name>%s</name>\n' % settings.GEOCAM_TRACK_FEED_NAME
-    positions = POSITION_MODEL.objects.all()
+    text += '  <name>%s</name>\n' % name
     for i, pos in enumerate(positions):
         text += pos.getKml(i)
     text += '</Document>\n'
-    return getKmlResponse(text)
+    return text
 
+def getKmlLatest(request):
+    text = getKmlTrack(settings.GEOCAM_TRACK_FEED_NAME,
+                       POSITION_MODEL.objects.all())
+    return getKmlResponse(text)
 
 def dumps(obj):
     if settings.DEBUG:
@@ -547,15 +550,13 @@ def getCsvTrackIndex(request):
 
 
 def getTrackCsv(request, fname):
-    positions = PAST_POSITION_MODEL.objects.all().order_by('timestamp')
-
     trackName = request.GET.get('track')
     if not trackName:
         return HttpResponseBadRequest('track parameter is required')
     track = TRACK_MODEL.objects.get(name=trackName)
-    positions = positions.filter(track=track)
+    positions = PAST_POSITION_MODEL.objects.filter(track=track).\
+        order_by('timestamp')
 
-    request.GET.get('start')
     startTimeEpoch = request.GET.get('start')
     if startTimeEpoch:
         startTime = datetime.datetime.utcfromtimestamp(float(startTimeEpoch))
@@ -593,3 +594,15 @@ def getTrackCsv(request, fname):
                             mimetype='text/csv')
     response['Content-disposition'] = 'attachment; filename=%s' % fname
     return response
+
+def getTrackKml(request, trackName):
+#    trackName = request.GET.get('track')
+    if not trackName:
+        return HttpResponseBadRequest('track parameter is required')
+    track = TRACK_MODEL.objects.get(name=trackName)
+    output = StringIO()
+    track.writeTrackKml(output)
+    text = output.getvalue()
+    output.close()
+
+    return getKmlResponse(text)
