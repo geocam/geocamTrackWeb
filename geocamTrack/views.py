@@ -283,15 +283,78 @@ def getPositionDataDateRange():
         return []
 
 
+def writeTrackIndexForDay(out, track, day, isToday, startTimeUtc, endTimeUtc):
+    if isToday:
+        out.write("""
+    <Folder>
+      <name>%s</name>
+""" % track.name)
+        writeTrackNetworkLink(out,
+                              'Current Position',
+                              caching='current',
+                              trackName=track.name,
+                              showLine=0,
+                              refreshInterval=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
+        writeTrackNetworkLink(out,
+                              'Compass Rose',
+                              caching='current',
+                              trackName=track.name,
+                              showLine=0,
+                              showIcon=0,
+                              showCompass=1,
+                              refreshInterval=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
+        writeTrackNetworkLink(out,
+                              'Recent Tracks',
+                              caching='recent',
+                              trackName=track.name,
+                              showIcon=0,
+                              recent=settings.GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS,
+                              refreshInterval=settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
+        writeTrackNetworkLink(out,
+                              'Old Tracks',
+                              caching='cached',
+                              trackName=track.name,
+                              showIcon=0,
+                              startTimeUtc=startTimeUtc,
+                              refreshInterval=settings.GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS)
+        out.write("""
+    </Folder>
+""")
+    else:
+        writeTrackNetworkLink(out,
+                              '%s Track' % track.name,
+                              caching='cached',
+                              trackName=track.name,
+                              showIcon=0,
+                              startTimeUtc=startTimeUtc,
+                              endTimeUtc=endTimeUtc,
+                              visibility=0)
+
+
+def getPositionCountForDay(day, track=None):
+    dayStart = datetime.datetime.combine(day, datetime.time())
+    startTimeUtc = defaultToUtcTime(dayStart)
+    endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
+
+    positions = (PAST_POSITION_MODEL
+                 .objects.filter
+                 (timestamp__gte=startTimeUtc,
+                  timestamp__lte=endTimeUtc))
+    if track:
+        positions = positions.filter(track=track)
+    return positions.count()
+
+
 def getTrackIndexKml(request):
     geocamTrack.models.latestRequestG = request
-    dates = getPositionDataDateRange()
+    dates = reversed(getPositionDataDateRange())
+    dates = [day
+             for day in dates
+             if getPositionCountForDay(day)]
     tracks = TRACK_MODEL.objects.all().order_by('name')
 
     now = utcToDefaultTime(datetime.datetime.utcnow())
     today = now.date()
-    if today not in dates:
-        dates.append(today)
 
     out = StringIO()
     out.write("""<?xml version="1.0" encoding="UTF-8"?>
@@ -301,24 +364,30 @@ def getTrackIndexKml(request):
      xmlns:atom="http://www.w3.org/2005/Atom">
 <Document>
   <name>Tracks</name>
+  <open>1</open>
 """)
 
+    if len(dates) >= 4 and dates[0] == today:
+        # Put past days in a separate folder to avoid clutter. The user
+        # is most likely to be interested in today's data.
+        dates = [dates[0]] + ['pastDaysStart'] + dates[1:] + ['pastDaysEnd']
+
     for day in dates:
-        dateStr = day.strftime('%Y%m%d')
+        if day == 'pastDaysStart':
+            out.write('<Folder><name>Past Days</name>\n')
+            continue
+        elif day == 'pastDaysEnd':
+            out.write('</Folder>\n')
+            continue
+
         if day == today:
-            dateStr += ' (today)'
+            dateStr = 'Today'
+        else:
+            dateStr = day.strftime('%Y-%m-%d')
 
         dayStart = datetime.datetime.combine(day, datetime.time())
         startTimeUtc = defaultToUtcTime(dayStart)
         endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
-
-        if day != today:
-            pathCount = (PAST_POSITION_MODEL
-                         .objects.filter
-                         (timestamp__gte=startTimeUtc,
-                          timestamp__lte=endTimeUtc)).count()
-            if not pathCount:
-                continue
 
         out.write("""
   <Folder>
@@ -326,57 +395,9 @@ def getTrackIndexKml(request):
 """ % dateStr)
 
         for track in tracks:
-            if day == today:
-                out.write("""
-    <Folder>
-      <name>%s</name>
-""" % track.name)
-                writeTrackNetworkLink(out,
-                                      'Current Position',
-                                      caching='current',
-                                      trackName=track.name,
-                                      showLine=0,
-                                      refreshInterval=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
-                writeTrackNetworkLink(out,
-                                      'Compass Rose',
-                                      caching='current',
-                                      trackName=track.name,
-                                      showLine=0,
-                                      showIcon=0,
-                                      showCompass=1,
-                                      refreshInterval=settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
-                writeTrackNetworkLink(out,
-                                      'Recent Tracks',
-                                      caching='recent',
-                                      trackName=track.name,
-                                      showIcon=0,
-                                      recent=settings.GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS,
-                                      refreshInterval=settings.GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS)
-                writeTrackNetworkLink(out,
-                                      'Old Tracks',
-                                      caching='cached',
-                                      trackName=track.name,
-                                      showIcon=0,
-                                      startTimeUtc=startTimeUtc,
-                                      refreshInterval=settings.GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS)
-                out.write("""
-    </Folder>
-""")
-            else:  # not today
-                pathCount = (PAST_POSITION_MODEL
-                             .objects.filter
-                             (track=track,
-                              timestamp__gte=startTimeUtc,
-                              timestamp__lte=endTimeUtc)).count()
-                if pathCount != 0:
-                    writeTrackNetworkLink(out,
-                                          '%s Track' % track.name,
-                                          caching='cached',
-                                          trackName=track.name,
-                                          showIcon=0,
-                                          startTimeUtc=startTimeUtc,
-                                          endTimeUtc=endTimeUtc,
-                                          visibility=0)
+            if getPositionCountForDay(day, track):
+                isToday = (day == today)
+                writeTrackIndexForDay(out, track, day, isToday, startTimeUtc, endTimeUtc)
         out.write("""
   </Folder>
 """)
