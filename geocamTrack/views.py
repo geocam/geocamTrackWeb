@@ -23,7 +23,6 @@ import iso8601
 
 from geocamUtil import anyjson as json
 from geocamUtil import geomath
-from geocamUtil.usng import usng
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, getModelByName, Centroid
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
@@ -101,10 +100,12 @@ def getKmlTrack(name, positions):
     text += '</Document>\n'
     return text
 
+
 def getKmlLatest(request):
     text = getKmlTrack(settings.GEOCAM_TRACK_FEED_NAME,
                        POSITION_MODEL.objects.all())
     return getKmlResponse(text)
+
 
 def dumps(obj):
     if settings.DEBUG:
@@ -597,6 +598,7 @@ def getTrackCsv(request, fname):
     response['Content-disposition'] = 'attachment; filename=%s' % fname
     return response
 
+
 def getTrackKml(request, trackName):
 #    trackName = request.GET.get('track')
     if not trackName:
@@ -610,13 +612,16 @@ def getTrackKml(request, trackName):
     return getKmlResponse(text)
 
 
+# TODO implement and test
 # get some kml that has a bunch of centroids on a track
 def getCentroidKml(request, trackName, centroids):
     if not trackName:
         return HttpResponseBadRequest('track parameter is required')
     track = TRACK_MODEL.objects.get(name=trackName)
-    color = track.getLineColor()
-    
+    if track:
+        for centroid in centroids:
+            centroid.writeCentroidKml(track.getLineStyle())
+
 
 # for a track, start time and end time get the centroid
 def getLocationCentroid(trackName, start, end):
@@ -637,9 +642,9 @@ def getLocationCentroid(trackName, start, end):
     totalLat = 0
     totalLon = 0
     for position in positions:
-            totalLat += position.latitude
-            totalLon += position.longitude
-            count += 1
+        totalLat += position.latitude
+        totalLon += position.longitude
+        count += 1
 
     centroid.latitude = totalLat / count
     centroid.longitude = totalLon / count

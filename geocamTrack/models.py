@@ -559,19 +559,19 @@ class Centroid():
 
         leftAngle, rightAngle = 0.0, 2 * pi
 
-        utm = usng.LLtoUTM(self.latitude, self.longitude)
+        UTMEasting, UTMNorthing, zoneNumber, zoneLetter = usng.LLtoUTM(self.latitude, self.longitude)
 
         polygonUtm = []
 
         theta = leftAngle
         dtheta = 3 * pi / 180
         while (theta < rightAngle):
-            polygonUtm.append([utm.UTMEasting + self.distance * sin(theta),
-                               utm.UTMNorthing + self.distance * cos(theta)])
+            polygonUtm.append([UTMEasting + self.distance * sin(theta),
+                               UTMNorthing + self.distance * cos(theta)])
             theta += dtheta
 
         # Convert UTM to lat/lon:
-        polygonLatLon = [usng.UTMtoLL(e, n, self.zonenumber, self.zoneletter) for e, n in polygonUtm]
+        polygonLatLon = [usng.UTMtoLL(e, n, zoneNumber, zoneLetter) for e, n in polygonUtm]
 
         # Write the KML
         out.write("""
@@ -611,4 +611,3 @@ class Centroid():
     </Polygon>
 </Placemark>
 """)
-
