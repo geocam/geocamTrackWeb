@@ -9,6 +9,7 @@ import datetime
 import time
 import calendar
 import urllib
+import math
 
 from django.views.decorators.cache import cache_page
 from django.http import HttpResponse, HttpResponseNotAllowed, Http404, HttpResponseBadRequest
@@ -22,7 +23,8 @@ import iso8601
 
 from geocamUtil import anyjson as json
 from geocamUtil import geomath
-from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, getModelByName
+from geocamUtil.usng import usng
+from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, getModelByName, Centroid
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from geocamTrack import settings
@@ -606,3 +608,47 @@ def getTrackKml(request, trackName):
     output.close()
 
     return getKmlResponse(text)
+
+
+# get some kml that has a bunch of centroids on a track
+def getCentroidKml(request, trackName, centroids):
+    if not trackName:
+        return HttpResponseBadRequest('track parameter is required')
+    track = TRACK_MODEL.objects.get(name=trackName)
+    color = track.getLineColor()
+    
+
+# for a track, start time and end time get the centroid
+def getLocationCentroid(trackName, start, end):
+    track = TRACK_MODEL.objects.get(name=trackName)
+    if not track:
+        return None
+
+    # get all the lats and longs over duration and find average.
+    positions = POSITION_MODEL.objects.filter(track=track, timestamp__gte=start, timestamp__lte=end)
+    if not positions:
+        return None
+
+    # then figure out the distribution
+    centroid = Centroid()
+
+    # iterate through
+    count = 1
+    totalLat = 0
+    totalLon = 0
+    for position in positions:
+            totalLat += position.latitude
+            totalLon += position.longitude
+            count += 1
+
+    centroid.latitude = totalLat / count
+    centroid.longitude = totalLon / count
+
+    # now figure out the standard deviation
+    distance = 0
+    for position in positions:
+        distance += geomath.calculateDiffMeters([position.longitude, position.latitude], [centroid.longitude, centroid.latitude])
+    distance = distance / len(positions)
+    centroid.distance = math.sqrt(distance)
+
+    return centroid

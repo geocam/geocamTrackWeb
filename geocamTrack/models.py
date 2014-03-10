@@ -4,24 +4,25 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-import sys
 import calendar
 import datetime
 import logging
+from math import pi, cos, sin
+import sys
 
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 import pytz
 
-from geocamUtil.models.UuidField import UuidField
-from geocamUtil.models.ExtrasDotField import ExtrasDotField
-from geocamUtil import geomath
-from geocamUtil import TimeUtil
-
 from geocamTrack import settings
+from geocamUtil import TimeUtil
+from geocamUtil import geomath
+from geocamUtil.models.ExtrasDotField import ExtrasDotField
+from geocamUtil.models.UuidField import UuidField
+
+from geocamUtil.usng import usng
 
 # pylint: disable=C1001
-
 latestRequestG = None
 
 
@@ -543,3 +544,71 @@ class ResourcePosition(GeoCamResourcePosition):
 
 class PastResourcePosition(GeoCamResourcePosition):
     pass
+
+
+# a convenience class to hold a UTM position and distance, for storing averages of locations.
+class Centroid():
+    name = None
+    latitude = None
+    longitude = None
+    distance = None
+
+    def writeCentroidKml(self, out, lineStyle):
+        linecolor = 'a0' + lineStyle.color[2:]
+        fillcolor = '66' + lineStyle.color[2:]
+
+        leftAngle, rightAngle = 0.0, 2 * pi
+
+        utm = usng.LLtoUTM(self.latitude, self.longitude)
+
+        polygonUtm = []
+
+        theta = leftAngle
+        dtheta = 3 * pi / 180
+        while (theta < rightAngle):
+            polygonUtm.append([utm.UTMEasting + self.distance * sin(theta),
+                               utm.UTMNorthing + self.distance * cos(theta)])
+            theta += dtheta
+
+        # Convert UTM to lat/lon:
+        polygonLatLon = [usng.UTMtoLL(e, n, self.zonenumber, self.zoneletter) for e, n in polygonUtm]
+
+        # Write the KML
+        out.write("""
+<Placemark>
+   <name>%s</name>
+""" % self.name)
+
+        # write the style
+        out.write("""
+    <Style>
+       <LineStyle>
+          <color>%s</color>
+          <width>%d</width>
+       </LineStyle>
+       <PolyStyle>
+          <color>%s</color>
+       </PolyStyle>
+    </Style>
+""" % linecolor, lineStyle.width, fillcolor)
+
+        #write the polygon
+        out.write("""
+    <Polygon>
+        <tessellate>1</tessellate>
+        <altitudeMode>relativeToGround</altitudeMode>
+        <outerBoundaryIs>
+        <LinearRing>
+            <coordinates>
+""")
+        for ll in polygonLatLon:
+            out.write('                %f,%f,5 ' % (ll.lon, ll.lat))
+
+        out.write("""
+            </coordinates>
+        </LinearRing>
+        </outerBoundaryIs>
+    </Polygon>
+</Placemark>
+""")
+
