@@ -19,6 +19,7 @@ from geocamUtil import TimeUtil
 from geocamUtil import geomath
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
 from geocamUtil.models.UuidField import UuidField
+from geocamUtil.loader import getModelByName
 
 from geocamUtil.usng import usng
 
@@ -33,17 +34,6 @@ def getModClass(name):
     except ValueError:
         return name, ''
     return name[:dot], name[dot + 1:]
-
-
-def getModelByName(qualifiedName):
-    """
-    converts 'module_name.ClassName' to a class object
-    """
-    appName, className = qualifiedName.split('.', 1)
-    modelsName = '%s.models' % appName
-    __import__(modelsName)
-    mod = sys.modules[modelsName]
-    return getattr(mod, className)
 
 
 class Resource(models.Model):

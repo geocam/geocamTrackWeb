@@ -23,7 +23,9 @@ import iso8601
 
 from geocamUtil import anyjson as json
 from geocamUtil import geomath
-from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, getModelByName, Centroid
+from geocamUtil.loader import getModelByName
+
+from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from geocamTrack import settings

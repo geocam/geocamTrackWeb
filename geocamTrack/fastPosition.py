@@ -31,7 +31,7 @@ performance could be very bad.
 
 import datetime
 
-from geocamTrack.models import getModelByName
+from geocamUtil.loader import getModelByName
 from geocamTrack import settings
 
 PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
