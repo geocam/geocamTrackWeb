@@ -9,8 +9,10 @@ import datetime
 import logging
 from math import pi, cos, sin
 import sys
+import urllib
 
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.db import models
 import pytz
 
@@ -134,6 +136,46 @@ def getTimeSpinner(timestamp):
     return '|/-\\'[index]
 
 
+def posixTimestampFromDatetime(dt):
+    return calendar.timegm(dt.timetuple())
+
+
+def getKmlUrl(trackName=None,
+              recent=False, cached=False,
+              startTime=None, endTime=None,
+              showLine=True, showIcon=False, showCompass=False):
+
+    paramsDict = {}
+    if trackName is not None:
+        paramsDict['track'] = trackName
+    if recent:
+        paramsDict['recent'] = '1'
+    if startTime is not None:
+        paramsDict['start'] = str(posixTimestampFromDatetime(startTime))
+    if endTime is not None:
+        paramsDict['end'] = str(posixTimestampFromDatetime(endTime))
+    if not showLine:
+        paramsDict['line'] = '0'
+    if not showIcon:
+        paramsDict['icon'] = '0'
+    if showCompass:
+        paramsDict['compass'] = '1'
+
+    if paramsDict:
+        queryParams = '?' + urllib.urlencode(paramsDict)
+    else:
+        queryParams = ''
+
+    if cached:
+        urlPattern = 'geocamTrack_cachedTracks'
+    elif recent:
+        urlPattern = 'geocamTrack_recentTracks'
+    else:
+        urlPattern = 'geocamTrack_tracks'
+
+    return reverse(urlPattern) + queryParams
+
+
 class AbstractTrack(models.Model):
     name = models.CharField(max_length=40, blank=True)
     resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL,
@@ -177,6 +219,10 @@ class AbstractTrack(models.Model):
 
     def getLineColor(self):
         return self.getLineStyle().color
+
+    def getKmlUrl(self, **kwargs):
+        kwargs['trackName'] = self.name
+        return getKmlUrl(**kwargs)
 
     def writeCurrentKml(self, out, pos, iconStyle=None, urlFn=None):
         if iconStyle is None:
