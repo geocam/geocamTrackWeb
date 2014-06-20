@@ -601,13 +601,13 @@ def getTrackCsv(request, fname):
     return response
 
 
-def getTrackKml(request, trackName):
+def getTrackKml(request, trackName, animated=False):
 #    trackName = request.GET.get('track')
     if not trackName:
         return HttpResponseBadRequest('track parameter is required')
     track = TRACK_MODEL.objects.get(name=trackName)
     output = StringIO()
-    track.writeTrackKml(output)
+    track.writeTrackKml(output, animated)
     text = output.getvalue()
     output.close()
 
@@ -625,8 +625,34 @@ def getCentroidKml(request, trackName, centroids):
             centroid.writeCentroidKml(track.getLineStyle())
 
 
-# for a track, start time and end time get the centroid
+def getClosestPosition(track, timestamp, max_time_difference_seconds=60):
+    """
+    Look up the closest location, with a 1 minute default maximum difference.
+    """
+    try:
+        foundPosition = PAST_POSITION_MODEL.objects.get(track=track, timestamp=timestamp)
+    except ObjectDoesNotExist:
+        tablename = PAST_POSITION_MODEL._meta.db_table
+        query = "select * from " + tablename + " where " + "track_id = '" + str(track.id) + "' order by abs(timestampdiff(second, '" + timestamp.isoformat() + "' , timestamp)) limit 1"
+        posAtTime = (PAST_POSITION_MODEL.objects.raw(query))
+        posList = list(posAtTime)
+        if posList:
+            foundPosition = posAtTime[0]
+            if (foundPosition.timestamp > timestamp):
+                delta = (foundPosition.timestamp - timestamp)
+            else:
+                delta = (timestamp - foundPosition.timestamp)
+            if math.fabs(delta.seconds) > max_time_difference_seconds:
+                foundPosition = None
+        else:
+            foundPosition = None
+    return foundPosition
+
+
 def getLocationCentroid(trackName, start, end):
+    """
+    for a track, start time and end time get the centroid
+    """
     track = TRACK_MODEL.objects.get(name=trackName)
     if not track:
         return None

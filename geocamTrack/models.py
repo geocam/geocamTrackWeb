@@ -8,7 +8,6 @@ import calendar
 import datetime
 import logging
 from math import pi, cos, sin
-import sys
 import urllib
 
 from django.contrib.auth.models import User
@@ -285,7 +284,7 @@ class AbstractTrack(models.Model):
 </Placemark>
 """)
 
-    def writeTrackKml(self, out, positions=None, lineStyle=None, urlFn=None):
+    def writeTrackKml(self, out, positions=None, lineStyle=None, urlFn=None, animated=False):
         if positions is None:
             positions = self.getPositions()
         if lineStyle is None:
