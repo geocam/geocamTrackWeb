@@ -28,13 +28,18 @@ from geocamUtil.loader import getModelByName
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
-from geocamTrack import settings
+from geocamTrack import settings, model_dict
 
-TRACK_MODEL = getModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
-RESOURCE_MODEL = getModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
-POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
-PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
-GEOCAM_TRACK_OPS_TZ = pytz.timezone(settings.GEOCAM_TRACK_OPS_TIME_ZONE)
+
+def getModel(key):
+    found = getattr(geocamTrack, key)
+    if not found:
+        value = model_dict[key]
+        model = getModelByName(value)
+        if model:
+            setattr(geocamTrack, key, model)
+        found = model
+    return found
 
 
 class ExampleError(Exception):
@@ -51,7 +56,7 @@ def getGeoJsonDict():
     return dict(type='FeatureCollection',
                 crs=dict(type='name',
                          properties=dict(name='urn:ogc:def:crs:OGC:1.3:CRS84')),
-                features=[r.getGeoJson() for r in POSITION_MODEL.objects.all()])
+                features=[r.getGeoJson() for r in getModel('POSITION_MODEL').objects.all()])
 
 
 def getGeoJsonDictWithErrorHandling():
@@ -105,7 +110,7 @@ def getKmlTrack(name, positions):
 
 def getKmlLatest(request):
     text = getKmlTrack(settings.GEOCAM_TRACK_FEED_NAME,
-                       POSITION_MODEL.objects.all())
+                       getModel('POSITION_MODEL').objects.all())
     return getKmlResponse(text)
 
 
@@ -280,7 +285,7 @@ def writeTrackNetworkLink(out, name,
 
 
 def getPositionDataDateRange():
-    allPositions = PAST_POSITION_MODEL.objects.all()
+    allPositions = getModel('PAST_POSITION_MODEL').objects.all()
     if allPositions.count():
         minTimeUtc = allPositions.order_by('timestamp')[0].timestamp
         maxTimeUtc = allPositions.order_by('-timestamp')[0].timestamp
@@ -344,7 +349,7 @@ def getPositionCountForDay(day, track=None):
     startTimeUtc = defaultToUtcTime(dayStart)
     endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
 
-    positions = (PAST_POSITION_MODEL
+    positions = (getModel('PAST_POSITION_MODEL')
                  .objects.filter
                  (timestamp__gte=startTimeUtc,
                   timestamp__lte=endTimeUtc))
@@ -359,7 +364,7 @@ def getTrackIndexKml(request):
     dates = [day
              for day in dates
              if getPositionCountForDay(day)]
-    tracks = TRACK_MODEL.objects.all().order_by('name')
+    tracks = getModel('TRACK_MODEL').objects.all().order_by('name')
 
     now = utcToDefaultTime(datetime.datetime.utcnow())
     today = now.date()
@@ -444,7 +449,7 @@ def getTracksKml(request, recent=True):
     trackName = request.GET.get('track')
     if trackName:
         try:
-            track = TRACK_MODEL.objects.get(name=trackName)
+            track = getModel('TRACK_MODEL').objects.get(name=trackName)
         except ObjectDoesNotExist:
             raise Http404('no track named %s' % trackName)
         tracks = [track]
@@ -519,7 +524,7 @@ def getCsvTrackLink(day, trackName, startTimeUtc=None, endTimeUtc=None):
 
 def getCsvTrackIndex(request):
     dates = getPositionDataDateRange()
-    tracks = TRACK_MODEL.objects.all().order_by('name')
+    tracks = getModel('TRACK_MODEL').objects.all().order_by('name')
 
     out = StringIO()
     for day in dates:
@@ -527,7 +532,7 @@ def getCsvTrackIndex(request):
         startTimeUtc = defaultToUtcTime(dayStart)
         endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
 
-        dayPoints = (PAST_POSITION_MODEL
+        dayPoints = (getModel('PAST_POSITION_MODEL')
                      .objects.filter
                      (timestamp__gte=startTimeUtc,
                       timestamp__lte=endTimeUtc))
@@ -558,8 +563,8 @@ def getTrackCsv(request, fname):
     trackName = request.GET.get('track')
     if not trackName:
         return HttpResponseBadRequest('track parameter is required')
-    track = TRACK_MODEL.objects.get(name=trackName)
-    positions = PAST_POSITION_MODEL.objects.filter(track=track).\
+    track = getModel('TRACK_MODEL').objects.get(name=trackName)
+    positions = getModel('PAST_POSITION_MODEL').objects.filter(track=track).\
         order_by('timestamp')
 
     startTimeEpoch = request.GET.get('start')
@@ -605,7 +610,7 @@ def getTrackKml(request, trackName, animated=False):
 #    trackName = request.GET.get('track')
     if not trackName:
         return HttpResponseBadRequest('track parameter is required')
-    track = TRACK_MODEL.objects.get(name=trackName)
+    track = getModel('TRACK_MODEL').objects.get(name=trackName)
     output = StringIO()
     track.writeTrackKml(output, animated)
     text = output.getvalue()
@@ -619,7 +624,7 @@ def getTrackKml(request, trackName, animated=False):
 def getCentroidKml(request, trackName, centroids):
     if not trackName:
         return HttpResponseBadRequest('track parameter is required')
-    track = TRACK_MODEL.objects.get(name=trackName)
+    track = getModel('TRACK_MODEL').objects.get(name=trackName)
     if track:
         for centroid in centroids:
             centroid.writeCentroidKml(track.getLineStyle())
@@ -629,12 +634,12 @@ def getLocationCentroid(trackName, start, end):
     """
     for a track, start time and end time get the centroid
     """
-    track = TRACK_MODEL.objects.get(name=trackName)
+    track = getModel('TRACK_MODEL').objects.get(name=trackName)
     if not track:
         return None
 
     # get all the lats and longs over duration and find average.
-    positions = POSITION_MODEL.objects.filter(track=track, timestamp__gte=start, timestamp__lte=end)
+    positions = getModel('POSITION_MODEL').objects.filter(track=track, timestamp__gte=start, timestamp__lte=end)
     if not positions:
         return None
 
@@ -667,15 +672,12 @@ def getClosestPosition(track, timestamp, max_time_difference_seconds=60):
     """
     Look up the closest location, with a 1 minute default maximum difference.
     """
-    # This is annoying, but if this method is called from outside this may not have been initialized
-    PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
-
     try:
-        foundPosition = PAST_POSITION_MODEL.objects.get(track=track, timestamp=timestamp)
+        foundPosition = getModel('PAST_POSITION_MODEL').objects.get(track=track, timestamp=timestamp)
     except ObjectDoesNotExist:
-        tablename = PAST_POSITION_MODEL._meta.db_table
+        tablename = getModel('PAST_POSITION_MODEL')._meta.db_table
         query = "select * from " + tablename + " where " + "track_id = '" + str(track.id) + "' order by abs(timestampdiff(second, '" + timestamp.isoformat() + "' , timestamp)) limit 1"
-        posAtTime = (PAST_POSITION_MODEL.objects.raw(query))
+        posAtTime = (getModel('PAST_POSITION_MODEL').objects.raw(query))
         posList = list(posAtTime)
         if posList:
             foundPosition = posAtTime[0]

@@ -9,9 +9,13 @@ geocamTrackWeb
 """
 
 import django.conf
+import pytz
 
 from geocamUtil.MultiSettings import MultiSettings
 from geocamTrack import defaultSettings
+
+from geocamUtil.loader import getModelByName
+
 
 __version_info__ = {
     'major': 0,
@@ -37,3 +41,10 @@ def get_version():
 __version__ = get_version()
 
 settings = MultiSettings(django.conf.settings, defaultSettings)
+
+model_dict = {'TRACK_MODEL': settings.GEOCAM_TRACK_TRACK_MODEL,
+              'RESOURCE_MODEL': settings.GEOCAM_TRACK_RESOURCE_MODEL,
+              'POSITION_MODEL': settings.GEOCAM_TRACK_POSITION_MODEL,
+              'PAST_POSITION_MODEL': settings.GEOCAM_TRACK_PAST_POSITION_MODEL,
+              'GEOCAM_TRACK_OPS_TZ': settings.GEOCAM_TRACK_OPS_TIME_ZONE,
+              }
