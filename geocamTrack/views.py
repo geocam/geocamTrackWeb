@@ -195,12 +195,14 @@ def getIcon(request, userName):
                         mimetype='image/png')
 
 
-def utcToDefaultTime(t):
+def utcToDefaultTime(t): 
+    GEOCAM_TRACK_OPS_TZ = getModel('GEOCAM_TRACK_OPS_TZ')
     return pytz.utc.localize(t).astimezone(GEOCAM_TRACK_OPS_TZ).replace(tzinfo=None)
 
 
 def defaultToUtcTime(t):
-    return GEOCAM_TRACK_OPS_TZ.localize(t).astimezone(pytz.utc).replace(tzinfo=None)
+    GEOCAM_TRACK_OPS_TZ = getModel('GEOCAM_TRACK_OPS_TZ')
+    return getModel(GEOCAM_TRACK_OPS_TZ).localize(t).astimezone(pytz.utc).replace(tzinfo=None)
 
 
 def getDateRange(minDate, maxDate):
