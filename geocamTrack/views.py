@@ -16,7 +16,7 @@ from django.http import HttpResponse, HttpResponseNotAllowed, Http404, HttpRespo
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 import pytz
 import iso8601
@@ -32,7 +32,11 @@ from geocamTrack import settings, model_dict
 
 
 def getModel(key):
-    found = getattr(geocamTrack, key)
+    try:
+        found = getattr(geocamTrack, key)
+    except AttributeError:
+        found = None
+
     if not found:
         value = model_dict[key]
         model = getModelByName(value)
@@ -672,9 +676,17 @@ def getClosestPosition(track, timestamp, max_time_difference_seconds=60):
     """
     Look up the closest location, with a 1 minute default maximum difference.
     """
+    foundPosition = None
+
     try:
-        foundPosition = getModel('PAST_POSITION_MODEL').objects.get(track=track, timestamp=timestamp)
+        foundPositions = getModel('PAST_POSITION_MODEL').objects.filter(track=track, timestamp=timestamp)
+        # take the first one.
+        if foundPositions:
+            foundPosition = foundPositions[0]
     except ObjectDoesNotExist:
+        pass
+
+    if not foundPosition:
         tablename = getModel('PAST_POSITION_MODEL')._meta.db_table
         query = "select * from " + tablename + " where " + "track_id = '" + str(track.id) + "' order by abs(timestampdiff(second, '" + timestamp.isoformat() + "' , timestamp)) limit 1"
         posAtTime = (getModel('PAST_POSITION_MODEL').objects.raw(query))
