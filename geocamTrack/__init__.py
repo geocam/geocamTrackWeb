@@ -46,5 +46,4 @@ model_dict = {'TRACK_MODEL': settings.GEOCAM_TRACK_TRACK_MODEL,
               'RESOURCE_MODEL': settings.GEOCAM_TRACK_RESOURCE_MODEL,
               'POSITION_MODEL': settings.GEOCAM_TRACK_POSITION_MODEL,
               'PAST_POSITION_MODEL': settings.GEOCAM_TRACK_PAST_POSITION_MODEL,
-              'GEOCAM_TRACK_OPS_TZ': settings.GEOCAM_TRACK_OPS_TIME_ZONE,
               }
