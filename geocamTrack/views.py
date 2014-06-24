@@ -460,7 +460,7 @@ def getTracksKml(request, recent=True):
             raise Http404('no track named %s' % trackName)
         tracks = [track]
     else:
-        tracks = TRACK_MODEL.objects.all()
+        tracks = getModel('TRACK_MODEL').objects.all()
 
     startTime = request.GET.get('start')
     if startTime:
@@ -612,17 +612,24 @@ def getTrackCsv(request, fname):
     return response
 
 
+def getAnimatedTrackKml(request, trackName):
+    return getTrackKml(request, trackName, animated=True)
+
+
 def getTrackKml(request, trackName, animated=False):
-#    trackName = request.GET.get('track')
     if not trackName:
         return HttpResponseBadRequest('track parameter is required')
     track = getModel('TRACK_MODEL').objects.get(name=trackName)
     output = StringIO()
-    track.writeTrackKml(output, animated)
+    track.writeTrackKml(output, animated=animated)
     text = output.getvalue()
     output.close()
 
-    return getKmlResponse(text)
+    if text:
+        return getKmlResponse(text)
+    else:
+        # handle error case
+        return HttpResponseBadRequest("ERROR GETTING TRACK -- no positions")
 
 
 # TODO implement and test

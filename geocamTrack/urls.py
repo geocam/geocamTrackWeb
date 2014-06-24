@@ -57,5 +57,8 @@ urlpatterns = patterns(
     (r'^track/(?P<trackName>[\w-]+)$', views.getTrackKml,
      {'readOnly': True},
      'geocamTrack_trackKml'),
+    (r'^track/animated/(?P<trackName>[\w-]+)$', views.getAnimatedTrackKml,
+     {'readOnly': True},
+     'geocamTrack_trackKml_animated'),
 
 )

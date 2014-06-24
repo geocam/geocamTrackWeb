@@ -3,7 +3,6 @@
 # the Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 # __END_LICENSE__
-
 import calendar
 import datetime
 import logging
@@ -91,7 +90,8 @@ class IconStyle(models.Model):
 """ % dict(url=imgUrl,
            scaleStr=scaleStr,
            colorStr=colorStr,
-           headingStr=headingStr))
+           headingStr=headingStr,
+           id=self.id))
 
 
 class LineStyle(models.Model):
@@ -193,6 +193,13 @@ class AbstractTrack(models.Model):
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
 
+    def getTimezone(self):
+        """
+        Override if your model has a different way of getting time zones.
+        It would be nifty to look them up from lat/lon
+        """
+        return pytz.timezone(settings.TIME_ZONE)
+
     def getPositions(self):
         PositionModel = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
         return PositionModel.objects.filter(track=self)
@@ -284,16 +291,59 @@ class AbstractTrack(models.Model):
 </Placemark>
 """)
 
+    def writeAnimatedPlacemarks(self, out, positions):
+        out.write("    <Folder>\n")
+        out.write("        <name>Trajectory</name>\n")
+        out.write("        <open>0</open>\n")
+
+#         out.write('      <visibility>1</visibility>\n')
+#         out.write("        <name>TimeStamps</name>\n")
+
+        numPositions = len(positions) - 1
+        for i, pos in enumerate(positions):
+            # start new line string
+            out.write("        <Placemark>\n")
+            out.write("            <TimeSpan>\n")
+            begin = self.getTimezone().localize(pos.timestamp)
+            tzoffset = begin.strftime('%z')
+            tzoffset = tzoffset[0:-2] + ":00"
+            out.write("                <begin>%04d-%02d-%02dT%02d:%02d:%02d%s</begin>\n" %
+                        (begin.year, begin.month, begin.day,
+                         begin.hour, begin.minute, begin.second, tzoffset))
+            if i < numPositions:
+                nextpos = positions[i + 1]
+                end = self.getTimezone().localize(nextpos.timestamp)
+            else:
+                end = begin
+
+            out.write("                <end>%04d-%02d-%02dT%02d:%02d:%02d%s</end>\n" %
+                        (end.year, end.month, end.day,
+                         end.hour, end.minute, end.second, tzoffset))
+            out.write("            </TimeSpan>\n")
+#             out.write("            <styleUrl>#dw%d</styleUrl>\n" % (pos.heading))
+            out.write("            <styleUrl>#%s</styleUrl>\n" % self.getIconStyle(pos).id)
+            out.write("            <gx:balloonVisibility>1</gx:balloonVisibility>\n")
+            out.write("            <Point>\n")
+            out.write("                <coordinates>")
+            pos.writeCoordinatesKml(out)
+            out.write("                </coordinates>\n")
+            out.write("            </Point>\n")
+            out.write("        </Placemark>\n")
+        out.write("        </Folder>\n")
+
     def writeTrackKml(self, out, positions=None, lineStyle=None, urlFn=None, animated=False):
-        if positions is None:
+        if not positions:
             positions = self.getPositions()
-        if lineStyle is None:
+        if not lineStyle:
             lineStyle = self.lineStyle
+
+        if not positions:
+            return
 
         if len(positions) < 2:
             # kml LineString requires 2 or more positions
             return
-
+        out.write("<Folder>\n")
         out.write("""
 <Placemark>
   <name>%(name)s path</name>
@@ -302,6 +352,12 @@ class AbstractTrack(models.Model):
             out.write("<Style>")
             lineStyle.writeKml(out, urlFn=urlFn, color=self.getLineColor())
             out.write("</Style>")
+
+        if animated:
+            if self.iconStyle:
+                out.write("<Style id=\"%s\">\n" % self.iconStyle.id)
+                self.iconStyle.writeKml(out, 0, urlFn=urlFn, color=self.getLineColor())
+                out.write("</Style>\n")
 
         out.write("""
   <MultiGeometry>
@@ -334,6 +390,11 @@ class AbstractTrack(models.Model):
   </MultiGeometry>
 </Placemark>
 """)
+        if animated:
+            self.writeAnimatedPlacemarks(out, list(positions))
+        out.write("</Folder>\n")
+
+
 
     def getInterpolatedPosition(self, utcDt):
         PositionModel = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
