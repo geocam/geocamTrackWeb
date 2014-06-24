@@ -297,14 +297,12 @@ class AbstractTrack(models.Model):
         out.write("        <open>0</open>\n")
 
 #         out.write('      <visibility>1</visibility>\n')
-#         out.write("        <name>TimeStamps</name>\n")
-
         numPositions = len(positions) - 1
         for i, pos in enumerate(positions):
             # start new line string
             out.write("        <Placemark>\n")
             out.write("            <TimeSpan>\n")
-            begin = self.getTimezone().localize(pos.timestamp)
+            begin = pytz.utc.localize(pos.timestamp).astimezone(self.getTimezone())
             tzoffset = begin.strftime('%z')
             tzoffset = tzoffset[0:-2] + ":00"
             out.write("                <begin>%04d-%02d-%02dT%02d:%02d:%02d%s</begin>\n" %
@@ -312,7 +310,8 @@ class AbstractTrack(models.Model):
                          begin.hour, begin.minute, begin.second, tzoffset))
             if i < numPositions:
                 nextpos = positions[i + 1]
-                end = self.getTimezone().localize(nextpos.timestamp)
+                end = pytz.utc.localize(nextpos.timestamp).astimezone(self.getTimezone())
+                #end = self.getTimezone().localize(nextpos.timestamp)
             else:
                 end = begin
 
