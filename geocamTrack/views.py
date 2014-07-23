@@ -3,7 +3,6 @@
 # the Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 # __END_LICENSE__
-
 from StringIO import StringIO
 import datetime
 import time
