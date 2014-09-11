@@ -680,19 +680,22 @@ def getLocationCentroid(trackName, start, end):
     return centroid
 
 
-def getClosestPosition(track, timestamp, max_time_difference_seconds=settings.GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS):
+def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=settings.GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS):
     """
     Look up the closest location, with a 1 minute default maximum difference.
     Track is optional but it will be a more efficient query if you limit it by track
     also if you have multiple tracks at the same time from different vehicles, you really need to pass in a track.
     """
+    if not timestamp:
+        return None
     foundPosition = None
 
+    PastPositionModel = getModel('PAST_POSITION_MODEL')
     try:
         if not track:
-            foundPositions = getModel('PAST_POSITION_MODEL').objects.filter(timestamp=timestamp)
+            foundPositions = PastPositionModel.objects.filter(timestamp=timestamp)
         else:
-            foundPositions = getModel('PAST_POSITION_MODEL').objects.filter(track=track, timestamp=timestamp)
+            foundPositions = PastPositionModel.objects.filter(track=track, timestamp=timestamp)
         # take the first one.
         if foundPositions:
             foundPosition = foundPositions[0]
@@ -700,12 +703,12 @@ def getClosestPosition(track, timestamp, max_time_difference_seconds=settings.GE
         pass
 
     if not foundPosition:
-        tablename = getModel('PAST_POSITION_MODEL')._meta.db_table
+        tablename = PastPositionModel._meta.db_table
         query = "select * from " + tablename 
         if track:
-            query = query + " where " + "track_id = '" + str(track.id)
-        query = query + "' order by abs(timestampdiff(second, '" + timestamp.isoformat() + "' , timestamp)) limit 1"
-        posAtTime = (getModel('PAST_POSITION_MODEL').objects.raw(query))
+            query = query + " where " + "track_id = '" + str(track.id) + "'"
+        query = query + " order by abs(timestampdiff(second, '" + timestamp.isoformat() + "', timestamp)) limit 1"
+        posAtTime = (PastPositionModel.objects.raw(query))
         posList = list(posAtTime)
         if posList:
             foundPosition = posAtTime[0]
