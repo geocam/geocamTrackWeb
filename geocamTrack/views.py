@@ -27,7 +27,7 @@ from geocamUtil.loader import LazyGetModelByName
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
-from geocamTrack import settings, model_dict
+from geocamTrack import settings
 
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
