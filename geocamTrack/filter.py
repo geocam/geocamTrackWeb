@@ -4,10 +4,10 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-from geocamUtil.loader import getModelByName
+from geocamUtil.loader import LazyGetModelByName
 from geocamTrack import settings
 
-PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
+PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 
 
 class PositionFilter(object):
@@ -15,7 +15,7 @@ class PositionFilter(object):
         self.distanceMeters = distanceMeters
         self.callback = callback
 
-        pastPositions = PAST_POSITION_MODEL.objects.all().order_by('-timestamp')
+        pastPositions = PAST_POSITION_MODEL.get().objects.all().order_by('-timestamp')
         if pastPositions.count():
             self.previousPos = pastPositions[0]
         else:

@@ -31,10 +31,10 @@ performance could be very bad.
 
 import datetime
 
-from geocamUtil.loader import getModelByName
+from geocamUtil.loader import LazyGetModelByName
 from geocamTrack import settings
 
-PAST_POSITION_MODEL = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
+PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 POSITION_CACHE_SIZE = 10000
 
 
@@ -45,7 +45,7 @@ def timeDeltaTotalSeconds(delta):
 class FastPosition(object):
     def __init__(self, track):
         self.track = track
-        self.baseQuery = (PAST_POSITION_MODEL.objects
+        self.baseQuery = (PAST_POSITION_MODEL.get().objects
                           .filter(track=self.track))
         self.cache = []
         self.cacheMin = None
@@ -107,7 +107,7 @@ class FastPosition(object):
 
         # if the before value is an exact match
         if beforePos.timestamp == utcDt:
-            return (PAST_POSITION_MODEL.getInterpolatedPosition
+            return (PAST_POSITION_MODEL.get().getInterpolatedPosition
                     (utcDt, 1, afterPos, 0, afterPos))
 
         afterDelta = timeDeltaTotalSeconds(afterPos.timestamp - utcDt)
@@ -121,5 +121,5 @@ class FastPosition(object):
         # interpolate
         beforeWeight = afterDelta / delta
         afterWeight = beforeDelta / delta
-        return (PAST_POSITION_MODEL.getInterpolatedPosition
+        return (PAST_POSITION_MODEL.get().getInterpolatedPosition
                 (utcDt, beforeWeight, beforePos, afterWeight, afterPos))

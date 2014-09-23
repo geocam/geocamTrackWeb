@@ -19,12 +19,15 @@ from geocamUtil import TimeUtil
 from geocamUtil import geomath
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
 from geocamUtil.models.UuidField import UuidField
-from geocamUtil.loader import getModelByName
+from geocamUtil.loader import LazyGetModelByName
 
 from geocamUtil.usng import usng
 
 # pylint: disable=C1001
 latestRequestG = None
+
+POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
+PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 
 
 def getModClass(name):
@@ -201,12 +204,10 @@ class AbstractTrack(models.Model):
         return pytz.timezone(settings.TIME_ZONE)
 
     def getPositions(self):
-        PositionModel = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
-        return PositionModel.objects.filter(track=self)
+        return PAST_POSITION_MODEL.get().objects.filter(track=self)
 
     def getCurrentPositions(self):
-        PositionModel = getModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
-        return PositionModel.objects.filter(track=self)
+        return POSITION_MODEL.get().objects.filter(track=self)
 
     def getLabelName(self, pos):
         return self.name
@@ -396,8 +397,7 @@ class AbstractTrack(models.Model):
 
 
     def getInterpolatedPosition(self, utcDt):
-        PositionModel = getModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
-        positions = PositionModel.objects.filter(track=self)
+        positions = PAST_POSITION_MODEL.get().objects.filter(track=self)
 
         # get closest position after utcDt
         afterPositions = positions.filter(timestamp__gte=utcDt).order_by('timestamp')
