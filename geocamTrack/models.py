@@ -409,7 +409,7 @@ class AbstractTrack(models.Model):
 
         # special case -- if we have a position exactly matching utcDt
         if afterPos.timestamp == utcDt:
-            return PositionModel.getInterpolatedPosition(utcDt, 1, afterPos, 0, afterPos)
+            return POSITION_MODEL.get().getInterpolatedPosition(utcDt, 1, afterPos, 0, afterPos)
 
         # get closest position before utcDt
         beforePositions = positions.filter(timestamp__lt=utcDt).order_by('-timestamp')
@@ -426,7 +426,7 @@ class AbstractTrack(models.Model):
         # interpolate
         beforeWeight = afterDelta / delta
         afterWeight = beforeDelta / delta
-        return PositionModel.getInterpolatedPosition(utcDt, beforeWeight, beforePos, afterWeight, afterPos)
+        return POSITION_MODEL.get().getInterpolatedPosition(utcDt, beforeWeight, beforePos, afterWeight, afterPos)
 
 
 class Track(AbstractTrack):
