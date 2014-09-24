@@ -691,12 +691,12 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
         pass
 
     if not foundPosition:
-        tablename = PAST_POSITION_MODEL._meta.db_table
-        query = "select * from " + tablename 
+        tablename = PAST_POSITION_MODEL.get()._meta.db_table
+        query = "select * from " + tablename
         if track:
             query = query + " where " + "track_id = '" + str(track.id) + "'"
         query = query + " order by abs(timestampdiff(second, '" + timestamp.isoformat() + "', timestamp)) limit 1"
-        posAtTime = (PAST_POSITION_MODEL.objects.raw(query))
+        posAtTime = (PAST_POSITION_MODEL.get().objects.raw(query))
         posList = list(posAtTime)
         if posList:
             foundPosition = posAtTime[0]
