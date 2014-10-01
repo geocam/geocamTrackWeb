@@ -641,6 +641,42 @@ class PastResourcePosition(GeoCamResourcePosition):
     pass
 
 
+class AbstractTrackedAsset(models.Model):
+    """ Abstract class allowing you to have an asset which has a position.
+    By default this position is not filled; it can be looked up and filled 
+    """
+    position = models.ForeignKey(settings.GEOCAM_TRACK_PAST_POSITION_MODEL, null=True, blank=True, related_name='asset_position')
+
+    # If the position was looked for but not found, this will be false so we don't have to look again.
+    position_not_found = models.NullBooleanField(null=True)
+
+    def getEventTime(self):
+        """ Override this method to return the event time for this tracked asset
+        """
+        raise NotImplementedError
+
+    def getPosition(self):
+        from geocamTrack.views import getClosestPosition
+        if self.position:
+            return self.position
+        elif self.position_not_found == None and self.event_time:
+            # populate the position
+            timestamp=self.getEventTime()
+            if not timestamp:
+                return None
+            foundPosition = getClosestPosition(timestamp=timestamp)
+            if foundPosition:
+                self.position = foundPosition
+                self.position_not_found = False
+            else:
+                self.position_not_found = True
+            self.save()
+            return self.position
+
+    class Meta:
+        abstract = True
+
+
 # a convenience class to hold a UTM position and distance, for storing averages of locations.
 class Centroid():
     name = None
