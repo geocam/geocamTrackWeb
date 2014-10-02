@@ -659,7 +659,7 @@ class AbstractTrackedAsset(models.Model):
         from geocamTrack.views import getClosestPosition
         if self.position:
             return self.position
-        elif self.position_not_found == None and self.event_time:
+        elif self.position_not_found == None and self.getEventTime():
             # populate the position
             timestamp=self.getEventTime()
             if not timestamp:
