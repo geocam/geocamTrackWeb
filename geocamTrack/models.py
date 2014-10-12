@@ -216,7 +216,20 @@ class AbstractTrack(models.Model):
         return ''
 
     def getIconStyle(self, pos):
-        return self.iconStyle
+        # use specific style if given
+        if self.iconStyle is not None:
+            return self.iconStyle
+
+        # use pointer icon if we know the heading
+        if pos.heading is not None:
+            if not hasattr(self, '_pointerIcon'):
+                self._pointerIcon = IconStyle.objects.get(name='pointer')
+            return self._pointerIcon
+
+        # use spot icon otherwise
+        if not hasattr(self, '_defaultIcon'):
+            self._defaultIcon = IconStyle.objects.get(name='default')
+        return self._defaultIcon
 
     def getLineStyle(self):
         return self.iconStyle
