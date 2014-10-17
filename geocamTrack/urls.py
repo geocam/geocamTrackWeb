@@ -48,8 +48,9 @@ urlpatterns = patterns(
     (r'^track/(?P<trackName>[\w-]+)$', views.getTrackKml,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},
      'geocamTrack_trackKml'),
-    (r'^track/animated/(?P<trackName>[\w-]+)$', views.getAnimatedTrackKml,
-     {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},
+    (r'^animated/track/(?P<trackName>[\w\d\s-]+)$', views.getAnimatedTrackKml,
+#     {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},
+     {'securityTags': ['kml', 'readOnly']},
      'geocamTrack_trackKml_animated'),
 
 )

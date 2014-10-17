@@ -601,6 +601,7 @@ def getTrackCsv(request, fname):
 
 
 def getAnimatedTrackKml(request, trackName):
+    print 'getting animated track %s' % trackName
     return getTrackKml(request, trackName, animated=True)
 
 
