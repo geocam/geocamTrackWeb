@@ -345,15 +345,16 @@ class AbstractTrack(models.Model):
         out.write("        </Folder>\n")
 
     def writeTrackKml(self, out, positions=None, lineStyle=None, urlFn=None, animated=False):
-        if not positions:
+        if positions is None:
             positions = self.getPositions()
-        if not lineStyle:
+        if lineStyle is None:
             lineStyle = self.lineStyle
 
-        if not positions:
+        n = positions.count()
+        if n == 0:
             return
 
-        if len(positions) < 2:
+        if n < 2:
             # kml LineString requires 2 or more positions
             return
         out.write("<Folder>\n")
