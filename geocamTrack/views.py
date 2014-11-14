@@ -701,11 +701,14 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
         posList = list(posAtTime)
         if posList:
             foundPosition = posAtTime[0]
-            if (foundPosition.timestamp > timestamp):
-                delta = (foundPosition.timestamp - timestamp)
+            if foundPosition and foundPosition.timestamp:
+                if (foundPosition.timestamp > timestamp):
+                    delta = (foundPosition.timestamp - timestamp)
+                else:
+                    delta = (timestamp - foundPosition.timestamp)
+                if math.fabs(delta.total_seconds()) > max_time_difference_seconds:
+                    foundPosition = None
             else:
-                delta = (timestamp - foundPosition.timestamp)
-            if math.fabs(delta.total_seconds()) > max_time_difference_seconds:
                 foundPosition = None
         else:
             foundPosition = None
