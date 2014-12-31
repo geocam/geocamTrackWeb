@@ -73,7 +73,7 @@ def wrapKml(text):
 
 def getKmlResponse(text):
     return HttpResponse(wrapKml(text),
-                        mimetype='application/vnd.google-earth.kml+xml')
+                        content_type='application/vnd.google-earth.kml+xml')
 
 
 def getKmlNetworkLink(request):
@@ -115,7 +115,7 @@ def dumps(obj):
 
 def getResourcesJson(request):
     return HttpResponse(dumps(getGeoJsonDictWithErrorHandling()),
-                        mimetype='application/json')
+                        content_type='application/json')
 
 
 def postPosition(request):
@@ -164,7 +164,7 @@ def postPosition(request):
         PastResourcePosition(resource=resource, **attrs).save()
 
         return HttpResponse(dumps(dict(result='ok')),
-                            mimetype='application/json')
+                            content_type='application/json')
 
 
 def getLiveMap(request):
@@ -180,7 +180,7 @@ def getLiveMap(request):
 
 def getIcon(request, userName):
     return HttpResponse(renderAvatar(request, userName),
-                        mimetype='image/png')
+                        content_type='image/png')
 
 
 def utcToDefaultTime(t): 
@@ -413,7 +413,7 @@ def getTrackIndexKml(request):
 </Document>
 </kml>
 """)
-    return HttpResponse(out.getvalue(), mimetype='application/vnd.google-earth.kml+xml')
+    return HttpResponse(out.getvalue(), content_type='application/vnd.google-earth.kml+xml')
 
 
 @cache_page(0.9 * settings.GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS)
@@ -498,7 +498,7 @@ def getTracksKml(request, recent=True):
 </Document>
 </kml>
 """)
-    return HttpResponse(out.getvalue(), mimetype='application/vnd.google-earth.kml+xml')
+    return HttpResponse(out.getvalue(), content_type='application/vnd.google-earth.kml+xml')
 
 
 def getCsvTrackLink(day, trackName, startTimeUtc=None, endTimeUtc=None):
@@ -595,7 +595,7 @@ def getTrackCsv(request, fname):
 
         prevPos = pos
     response = HttpResponse(out.getvalue(),
-                            mimetype='text/csv')
+                            content_type='text/csv')
     response['Content-disposition'] = 'attachment; filename=%s' % fname
     return response
 
