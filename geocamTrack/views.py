@@ -123,7 +123,7 @@ def postPosition(request):
         return HttpResponseNotAllowed('Please post a resource position as a GeoJSON Feature.')
     else:
         try:
-            featureDict = json.loads(request.raw_post_data)
+            featureDict = json.loads(request.body)
         except ValueError:
             return HttpResponse('Malformed request, expected resources position as a GeoJSON Feature',
                                 status=400)
