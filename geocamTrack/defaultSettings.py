@@ -42,3 +42,8 @@ GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS = 8 * 60 * 60
 GEOCAM_TRACK_OPS_TIME_ZONE = 'UTC'
 
 GEOCAM_TRACK_FEED_NAME = 'GeoCam Track'
+
+# include this in your siteSettings.py BOWER_INSTALLED_APPS
+GEOCAM_TRACK_BOWER_INSTALLED_APPS = ('jquery-mobile',
+                                     'google-maps-utility-library-v3-infobubble',
+                                     )
