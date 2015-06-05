@@ -7,6 +7,7 @@
 import calendar
 import datetime
 import logging
+import struct
 from math import pi, cos, sin
 import urllib
 
@@ -128,6 +129,18 @@ class LineStyle(models.Model):
 """ % dict(colorStr=colorStr,
            widthStr=widthStr))
 
+    def getAlpha(self):
+        """ Get 0-1 alpha value from color """
+        if self.color:
+            decvalue = int("0x" + self.color[0:2], 16)
+            return decvalue / 255
+        return 1.0
+
+    def getHexColor(self):
+        if self.color:
+            return self.color[2:]
+        return None
+
 
 def timeDeltaTotalSeconds(delta):
     return 86400 * delta.days + delta.seconds + 1e-6 * delta.microseconds
@@ -233,7 +246,7 @@ class AbstractTrack(models.Model):
         return self._defaultIcon
 
     def getLineStyle(self):
-        return self.iconStyle
+        return self.lineStyle
 
     def getIconColor(self, pos):
         return self.getIconStyle(pos).color
@@ -409,8 +422,6 @@ class AbstractTrack(models.Model):
             self.writeAnimatedPlacemarks(out, list(positions))
         out.write("</Folder>\n")
 
-
-
     def getInterpolatedPosition(self, utcDt):
         positions = PAST_POSITION_MODEL.get().objects.filter(track=self)
 
@@ -443,6 +454,47 @@ class AbstractTrack(models.Model):
         afterWeight = beforeDelta / delta
         return POSITION_MODEL.get().getInterpolatedPosition(utcDt, beforeWeight, beforePos, afterWeight, afterPos)
 
+    def toMapDict(self):
+        positions = self.getPositions()
+
+        n = positions.count()
+        if n < 2:
+            return
+
+        result = {}
+        result['type'] = 'AbstractTrack'
+        result['uuid'] = self.uuid
+        color = self.getLineStyle().getHexColor()
+        if color:
+            result['color'] = color
+        result['alpha'] = self.getLineStyle() .getAlpha()
+        coordGroups = []
+        timesGroups = []
+        coords = []
+        times = []
+
+        lastPos = None
+        breakDist = settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS
+        for pos in positions:
+            if lastPos and breakDist is not None:
+                diff = geomath.calculateDiffMeters([lastPos.longitude, lastPos.latitude],
+                                                   [pos.longitude, pos.latitude])
+                dist = geomath.getLength(diff)
+                if dist > breakDist:
+                    # start new line string
+                    if coords:
+                        coordGroups.append(coords)
+                        coords = []
+                        timesGroups.append(times)
+                        times = []
+                coords.append([pos.longitude, pos.latitude])
+                times.append(pos.timestamp)
+            lastPos = pos
+        coordGroups.append(coords)
+        timesGroups.append(times)
+        result['times'] = timesGroups
+        result['coords'] = coordGroups
+        return result
 
 class Track(AbstractTrack):
     pass

@@ -47,3 +47,6 @@ GEOCAM_TRACK_FEED_NAME = 'GeoCam Track'
 GEOCAM_TRACK_BOWER_INSTALLED_APPS = ('jquery-mobile',
                                      'google-maps-utility-library-v3-infobubble',
                                      )
+
+XGDS_MAP_SERVER_JS_MAP = {}
+XGDS_MAP_SERVER_JS_MAP['AbstractTrack'] = 'geocamTrack/js/olTrackMap.js'
