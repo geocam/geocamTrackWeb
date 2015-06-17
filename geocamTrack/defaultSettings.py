@@ -50,4 +50,5 @@ GEOCAM_TRACK_BOWER_INSTALLED_APPS = ('jquery-mobile',
 
 XGDS_MAP_SERVER_JS_MAP = {}
 XGDS_MAP_SERVER_JS_MAP['AbstractTrack'] = {'ol': 'geocamTrack/js/olTrackMap.js',
-                                           'model': GEOCAM_TRACK_TRACK_MODEL}
+                                           'model': GEOCAM_TRACK_TRACK_MODEL,
+                                           'hiddenColumns': ['type', 'color', 'alpha', 'times', 'coords']}

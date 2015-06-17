@@ -463,10 +463,12 @@ class AbstractTrack(models.Model):
 
         result = {}
         result['type'] = 'AbstractTrack'
-        result['uuid'] = self.uuid
+        result['id'] = self.uuid
         color = self.getLineStyle().getHexColor()
         if color:
             result['color'] = color
+        else:
+            result['color'] = ''
         result['alpha'] = self.getLineStyle() .getAlpha()
         coordGroups = []
         timesGroups = []

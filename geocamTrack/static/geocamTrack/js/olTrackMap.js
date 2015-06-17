@@ -13,6 +13,9 @@ var AbstractTrack = {
              };
         },
         constructElements: function(tracksJson){
+            if (_.isEmpty(tracksJson)){
+                return null;
+            }
             this.initStyles();
             var olFeatures = [];
             for (var i = 0; i < tracksJson.length; i++) {
