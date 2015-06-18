@@ -195,7 +195,8 @@ def getKmlUrl(trackName=None,
 class AbstractTrack(models.Model):
     name = models.CharField(max_length=40, blank=True)
     resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL,
-                                 related_name='%(app_label)s_%(class)s_related')
+                                 related_name='%(app_label)s_%(class)s_related',
+                                 verbose_name=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME)
     iconStyle = models.ForeignKey(settings.GEOCAM_TRACK_ICON_STYLE_MODEL, null=True, blank=True,
                                   related_name='%(app_label)s_%(class)s_related')
     lineStyle = models.ForeignKey(settings.GEOCAM_TRACK_LINE_STYLE_MODEL, null=True, blank=True,

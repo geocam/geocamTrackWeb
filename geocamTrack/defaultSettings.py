@@ -5,6 +5,7 @@
 # __END_LICENSE__
 
 GEOCAM_TRACK_RESOURCE_MODEL = 'geocamTrack.Resource'
+GEOCAM_TRACK_RESOURCE_VERBOSE_NAME = 'Resource'
 GEOCAM_TRACK_TRACK_MODEL = 'geocamTrack.Track'
 GEOCAM_TRACK_POSITION_MODEL = 'geocamTrack.ResourcePosition'
 GEOCAM_TRACK_PAST_POSITION_MODEL = 'geocamTrack.PastResourcePosition'
