@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block contents %}
+    <span>Current Positions are:</span> <span id="live_positions_state"></span>
+{% endblock contents %}
+
+{% block scripts %}
+{{ block.super }}
+    <script type="text/javascript" src="{{ EXTERNAL_URL }}underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="{{ EXTERNAL_URL }}klass/klass.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTrack/js/testLive.js"></script>
+	<script type="text/javascript">
+	        $(document).ready(function() {
+	            var livePositionsController = new livePositions.LivePositionsController({
+	                livePositionsStreamURL: "{% if trackId %}{% url 'geocamTrack_livePositions_stream' trackId %}{% else %}{% url 'geocamTrack_livePositions_stream' %}{% endif %}",
+	                livePositionsStateURL: "{% if trackId %}{% url 'geocamTrack_livePositions' trackId %}{% else %}{% url 'geocamTrack_livePositions' %}{% endif %}",
+	            });
+	        });
+	    </script>
+{% endblock scripts%}

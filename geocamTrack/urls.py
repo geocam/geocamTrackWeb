@@ -7,6 +7,10 @@
 from django.conf.urls import patterns
 
 from geocamTrack import views
+import settings
+
+if settings.XGDS_SSE:
+    from sse_wrapper.views import EventStreamView
 
 urlpatterns = patterns(
     '',
@@ -52,5 +56,19 @@ urlpatterns = patterns(
 #     {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},
      {'securityTags': ['kml', 'readOnly']},
      'geocamTrack_trackKml_animated'),
-
 )
+
+if settings.XGDS_SSE:
+    ssepatterns = None
+    ssepatterns = patterns('',
+                           (r'^live/test/$', views.getLiveTest, {}, 'geocamTrack_liveTest'),
+                           (r'^live/test/(?P<trackId>[\d-]+)$', views.getLiveTest, {}, 'geocamTrack_liveTest'),
+                           (r'^live/testPositions/$', views.testPositions, {}, 'geocamTrack_testPositions'),
+                           (r'^live/testPositions/(?P<trackId>[\d-]+)$', views.testPositions, {}, 'geocamTrack_testPositions'),
+                           (r'^live/startStreaming/$', views.sendActivePositions, {}, 'geocamTrack_startStreaming'),
+                           (r'^live/positions/(?P<trackId>[\d-]+)$', views.getActivePositionsJson, {}, 'geocamTrack_livePositions'),
+                           (r'^live/positions-stream/(?P<channel_extension>[\w]+)/$', EventStreamView.as_view(channel='live/positions'), {}, 'geocamTrack_livePositions_stream'),
+                           (r'^live/positions/$', views.getActivePositionsJson, {}, 'geocamTrack_livePositions'),
+                           (r'^live/positions-stream/$', EventStreamView.as_view(channel='live/positions'), {}, 'geocamTrack_livePositions_stream'),
+                           )
+    urlpatterns = urlpatterns + ssepatterns

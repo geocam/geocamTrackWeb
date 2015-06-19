@@ -3,7 +3,6 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All rights reserved.
 # __END_LICENSE__
-
 from StringIO import StringIO
 import datetime
 import time
@@ -24,11 +23,17 @@ import iso8601
 from geocamUtil import anyjson as json
 from geocamUtil import geomath
 from geocamUtil.loader import LazyGetModelByName
+from geocamUtil.modelJson import modelsToJson
+from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from geocamTrack import settings
+
+if settings.XGDS_SSE:
+    from sse_wrapper.events import send_event
+
 
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
@@ -602,7 +607,7 @@ def getTrackCsv(request, fname):
 
 
 def getAnimatedTrackKml(request, trackName):
-    print 'getting animated track %s' % trackName
+#     print 'getting animated track %s' % trackName
     return getTrackKml(request, trackName, animated=True)
 
 
@@ -714,3 +719,58 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
         else:
             foundPosition = None
     return foundPosition
+
+
+def getActivePositions(trackId=None):
+    """ look up the active tracks from the GEOCAM_TRACK_POSITION_MODEL """
+    tablename = POSITION_MODEL.get()._meta.db_table
+    query = "select * from " + tablename
+    # query = query + " where (timestampdiff(second, '" + datetime.utcnow().isoformat() + "', timestamp)) < " + settings.GEOCAM_TRACK_CURRENT_POSITION_AGE_MIN_SECONDS
+    if trackId:
+        query = query + ' where track_id=' + trackId
+    print query
+    try:
+        results = (POSITION_MODEL.get().objects.raw(query))
+        return list(results)
+    except:
+        return []
+
+
+if settings.XGDS_SSE:
+    def getLiveTest(request, trackId=None):
+        return render_to_response("geocamTrack/testLive.html",
+                                  {'trackId': trackId},
+                                  context_instance=RequestContext(request))
+
+    def getActivePositionsJson(request, trackId=None):
+        json_data = modelsToJson(getActivePositions(trackId), DatetimeJsonEncoder)
+        return HttpResponse(content=json_data,
+                            content_type="application/json")
+
+    def testPositions(request, trackId=None):
+        activePositions = getActivePositions(trackId)
+        if activePositions:
+            json_data = modelsToJson(activePositions, DatetimeJsonEncoder)
+            channel = 'live/positions'
+            if trackId:
+                channel = channel + '/' + trackId
+            json_data = ['{"now":' + datetime.datetime.now().isoformat() + '}'] + json_data
+            send_event('positions', json_data, channel)
+            return HttpResponse(content=json_data,
+                                content_type="application/json")
+        return HttpResponse('No data')
+
+    def sendActivePositions(request, trackId=None):
+        while True:
+            activePositions = getActivePositions(trackId)
+            if activePositions:
+                json_data = modelsToJson(activePositions, DatetimeJsonEncoder)
+                json_data = ['{"now":' + datetime.datetime.now().isoformat() + '}'] + json_data
+                channel = 'live/positions'
+                if trackId:
+                    channel = channel + '/' + trackId
+                send_event('positions', json_data, channel)
+            time.sleep(1)
+            yield
+
+

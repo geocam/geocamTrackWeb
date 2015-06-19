@@ -47,9 +47,13 @@ GEOCAM_TRACK_FEED_NAME = 'GeoCam Track'
 # include this in your siteSettings.py BOWER_INSTALLED_APPS
 GEOCAM_TRACK_BOWER_INSTALLED_APPS = ('jquery-mobile',
                                      'google-maps-utility-library-v3-infobubble',
+                                     'klass=https://github.com/ded/klass.git'
                                      )
 
 XGDS_MAP_SERVER_JS_MAP = {}
 XGDS_MAP_SERVER_JS_MAP['AbstractTrack'] = {'ol': 'geocamTrack/js/olTrackMap.js',
                                            'model': GEOCAM_TRACK_TRACK_MODEL,
                                            'hiddenColumns': ['type', 'color', 'alpha', 'times', 'coords']}
+
+# override to include SSE; right now we are based on django-sse-wrapper
+XGDS_SSE = False
