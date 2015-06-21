@@ -23,7 +23,7 @@ import iso8601
 from geocamUtil import anyjson as json
 from geocamUtil import geomath
 from geocamUtil.loader import LazyGetModelByName
-from geocamUtil.modelJson import modelsToJson
+from geocamUtil.modelJson import modelsToJson, modelToJson
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
@@ -727,7 +727,7 @@ def getActivePositions(trackId=None):
     query = "select * from " + tablename
     # query = query + " where (timestampdiff(second, '" + datetime.utcnow().isoformat() + "', timestamp)) < " + settings.GEOCAM_TRACK_CURRENT_POSITION_AGE_MIN_SECONDS
     if trackId:
-        query = query + ' where track_id=' + trackId
+        query = query + ' where track_id=' + str(trackId)
     print query
     try:
         results = (POSITION_MODEL.get().objects.raw(query))
@@ -753,24 +753,28 @@ if settings.XGDS_SSE:
             json_data = modelsToJson(activePositions, DatetimeJsonEncoder)
             channel = 'live/positions'
             if trackId:
-                channel = channel + '/' + trackId
+                channel = channel + '/' + str(trackId)
             json_data = ['{"now":' + datetime.datetime.now().isoformat() + '}'] + json_data
             send_event('positions', json_data, channel)
             return HttpResponse(content=json_data,
                                 content_type="application/json")
         return HttpResponse('No data')
 
-    def sendActivePositions(request, trackId=None):
+    def sendActivePositions(trackId=None):
         while True:
             activePositions = getActivePositions(trackId)
             if activePositions:
                 json_data = modelsToJson(activePositions, DatetimeJsonEncoder)
-                json_data = ['{"now":' + datetime.datetime.now().isoformat() + '}'] + json_data
                 channel = 'live/positions'
+                theNow = datetime.datetime.now().isoformat()
                 if trackId:
-                    channel = channel + '/' + trackId
-                send_event('positions', json_data, channel)
+                    json_data = ['{"now":' + theNow + '}'] + json_data
+                    send_event('positions', json_data, channel + '/' + str(trackId))
+                else:
+                    for position in activePositions:
+                        json_data = '{"now":' + theNow + '}' + modelToJson(position, DatetimeJsonEncoder)
+                        send_event('positions', json_data, channel + '/' + str(position.track.id))
             time.sleep(1)
-            yield
+#             yield
 
 
