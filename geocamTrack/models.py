@@ -499,6 +499,7 @@ class AbstractTrack(models.Model):
         result['coords'] = coordGroups
         return result
 
+
 class Track(AbstractTrack):
     pass
 
@@ -618,6 +619,17 @@ class AbstractResourcePositionNoUuid(models.Model):
                        coords=coords,
                        icon=self.getIconForIndex(index)))
 
+    def toMapDict(self):
+        result = {}
+        result['type'] = "Position"
+        result['id'] = self.id
+        result['lat'] = self.latitude
+        result['lon'] = self.longitude
+        result.update(self.getProperties())
+        del(result['unixstamp'])
+        del(result['subtype'])
+        return result
+
     def __unicode__(self):
         return ('%s %s %s %s %s'
                 % (self.__class__.__name__,
@@ -646,6 +658,11 @@ class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
 
     def getHeading(self):
         return self.heading
+
+    def getProperties(self):
+        props = super(AbstractResourcePositionWithHeadingNoUuid, self).getProperties()
+        props['heading'] = self.heading
+        return props
 
     @classmethod
     def interpHeading(cls, beforeWeight, beforeHeading, afterWeight, afterHeading):

@@ -51,20 +51,20 @@ var AbstractTrack = {
                     geometry: new ol.geom.LineString(coords[c]).transform('EPSG:4326', 'EPSG:3857')
                 });
                 lineFeature.setStyle(lsstyle);
-//            this.setupLinePopup(lineFeature, planJson);
+                this.setupLinePopup(lineFeature, trackJson);
                 allFeatures.push(lineFeature);
             }
             return allFeatures;
         },
         setupLinePopup: function(feature, trackJson) {
-            var trString = "<tr><td>%s</td><td>%s</td></tr>";
-            var formattedString = "<table>";
-            for (var k = 0; k< 2; k++){
-                formattedString = formattedString + trString;
-            }
-            formattedString = formattedString + "</table>";
-            var data = ["Time:", planJson.notes,
-                        "Track:", planJson.author];
-            feature['popup'] = vsprintf(formattedString, data);
+//            var trString = "<tr><td>%s</td><td>%s</td></tr>";
+//            var formattedString = "<table>";
+//            for (var k = 0; k< 1; k++){
+//                formattedString = formattedString + trString;
+//            }
+//            formattedString = formattedString + "</table>";
+//            var data = ["Track:", trackJson.name];
+//            feature['popup'] = vsprintf(formattedString, data);
+            feature['popup'] = trackJson.name;
         }
 }
