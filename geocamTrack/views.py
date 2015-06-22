@@ -4,6 +4,7 @@
 # All rights reserved.
 # __END_LICENSE__
 from StringIO import StringIO
+import json
 import datetime
 import time
 import calendar
@@ -20,7 +21,6 @@ from django.core.urlresolvers import reverse
 import pytz
 import iso8601
 
-from geocamUtil import anyjson as json
 from geocamUtil import geomath
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.modelJson import modelsToJson, modelToJson
@@ -30,6 +30,7 @@ from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition,
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from geocamTrack import settings
+import traceback
 
 if settings.XGDS_SSE:
     from sse_wrapper.events import send_event
@@ -734,6 +735,31 @@ def getActivePositions(trackId=None):
         return list(results)
     except:
         return []
+
+
+def mapJsonTrack(request, uuid):
+    TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
+    try:
+        track = TRACK_MODEL.get().objects.get(uuid=uuid)
+        json_data = json.dumps([track.toMapDict()], cls=DatetimeJsonEncoder)
+        return HttpResponse(content=json_data,
+                            content_type="application/json")
+    except:
+        traceback.print_exc()
+        return HttpResponse(content={},
+                            content_type="application/json")
+
+
+def mapJsonPosition(request, id):
+    POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
+    try:
+        position = POSITION_MODEL.get().objects.get(id=id)
+        json_data = json.dumps([position.toMapDict()], cls=DatetimeJsonEncoder)
+        return HttpResponse(content=json_data,
+                            content_type="application/json")
+    except:
+        return HttpResponse(content={},
+                            content_type="application/json")
 
 
 if settings.XGDS_SSE:
