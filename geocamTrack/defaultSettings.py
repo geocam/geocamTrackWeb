@@ -47,7 +47,7 @@ GEOCAM_TRACK_FEED_NAME = 'GeoCam Track'
 # include this in your siteSettings.py BOWER_INSTALLED_APPS
 GEOCAM_TRACK_BOWER_INSTALLED_APPS = ('jquery-mobile',
                                      'google-maps-utility-library-v3-infobubble',
-                                     'klass=https://github.com/ded/klass.git'
+                                     'klass=git://github.com/ded/klass.git'
                                      )
 
 XGDS_MAP_SERVER_JS_MAP = {}
