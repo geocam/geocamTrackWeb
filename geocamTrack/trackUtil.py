@@ -13,9 +13,12 @@ PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MOD
 
 
 def getDatesWithPositionData():
-    cursor = connection.cursor()
-    cursor.execute("SELECT DISTINCT DATE(CONVERT_TZ(timestamp, 'UTC', '%s')) FROM %s"
-                   % (settings.GEOCAM_TRACK_OPS_TIME_ZONE,
-                      PAST_POSITION_MODEL.get()._meta.db_table))
-    dates = [fields[0] for fields in cursor.fetchall()]
-    return dates
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT DISTINCT DATE(CONVERT_TZ(timestamp, 'UTC', '%s')) FROM %s"
+                       % (settings.GEOCAM_TRACK_OPS_TIME_ZONE,
+                          PAST_POSITION_MODEL.get()._meta.db_table))
+        dates = [fields[0] for fields in cursor.fetchall()]
+        return dates
+    except:
+        return None
