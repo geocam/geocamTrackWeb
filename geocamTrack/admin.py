@@ -9,7 +9,7 @@ from django.contrib import admin
 # pylint: disable=W0401
 
 from geocamTrack.models import *
-from geocamTrack import settings
+from django.conf import settings
 
 admin.site.register(Resource)
 admin.site.register(IconStyle)

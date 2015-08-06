@@ -17,7 +17,7 @@ from StringIO import StringIO
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from django.contrib.auth.models import User
 
-from geocamTrack import settings
+from django.conf import settings
 
 trackAppDir = os.path.dirname(__file__)
 

@@ -17,7 +17,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 import pytz
 
-from geocamTrack import settings
+from django.conf import settings
 from geocamUtil import TimeUtil
 from geocamUtil import geomath
 from geocamUtil.models.ExtrasDotField import ExtrasDotField

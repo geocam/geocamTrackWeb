@@ -11,7 +11,6 @@ geocamTrackWeb
 import django.conf
 import pytz
 
-from geocamUtil.MultiSettings import MultiSettings
 from geocamTrack import defaultSettings
 
 
@@ -37,5 +36,3 @@ def get_version():
     return ''.join(vers)
 
 __version__ = get_version()
-
-settings = MultiSettings(django.conf.settings, defaultSettings)

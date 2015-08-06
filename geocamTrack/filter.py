@@ -7,7 +7,7 @@
 import datetime
 
 from geocamUtil.loader import LazyGetModelByName
-from geocamTrack import settings
+from django.conf import settings
 
 PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 

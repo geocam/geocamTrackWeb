@@ -29,7 +29,7 @@ from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
-from geocamTrack import settings
+from django.conf import settings
 import traceback
 
 if settings.XGDS_SSE:
