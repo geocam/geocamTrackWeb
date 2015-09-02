@@ -8,3 +8,4 @@
 /static/js/*.r*.js
 /static/css/*.r*.css
 /geocamTrack/build
+migrations/
