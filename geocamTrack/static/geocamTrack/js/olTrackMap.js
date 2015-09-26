@@ -48,7 +48,7 @@ var AbstractTrack = {
             for (c = 0; c < coords.length; c++){
                 var lineFeature = new ol.Feature({
                     name: trackJson.uuid + "_" + c,
-                    geometry: new ol.geom.LineString(coords[c]).transform('EPSG:4326', 'EPSG:3857')
+                    geometry: new ol.geom.LineString(coords[c]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
                 });
                 lineFeature.setStyle(lsstyle);
                 this.setupLinePopup(lineFeature, trackJson);
