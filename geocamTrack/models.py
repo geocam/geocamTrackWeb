@@ -18,6 +18,8 @@ from django.db import models
 import pytz
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 from geocamUtil import TimeUtil
 from geocamUtil import geomath
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
@@ -42,7 +44,7 @@ def getModClass(name):
     return name[:dot], name[dot + 1:]
 
 
-class Resource(models.Model):
+class AbstractResource(models.Model):
     name = models.CharField(max_length=32)
     user = models.ForeignKey(User, null=True, blank=True)
     uuid = UuidField()
@@ -50,6 +52,16 @@ class Resource(models.Model):
 
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
+    
+    def get_content_type(self):
+        return ContentType.objects.get_for_model(self).id
+    
+    class Meta:
+        abstract = True
+    
+
+class Resource(AbstractResource):
+    pass
 
 
 class IconStyle(models.Model):
@@ -194,10 +206,12 @@ def getKmlUrl(trackName=None,
 
 
 class AbstractTrack(models.Model):
+    """ This is for an abstract track with a FIXED resource model, ie all the tracks have like resources.
+    """
     name = models.CharField(max_length=40, blank=True)
     resource = models.ForeignKey(settings.GEOCAM_TRACK_RESOURCE_MODEL,
                                  related_name='%(app_label)s_%(class)s_related',
-                                 verbose_name=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME)
+                                 verbose_name=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME, blank=True, null=True)
     iconStyle = models.ForeignKey(settings.GEOCAM_TRACK_ICON_STYLE_MODEL, null=True, blank=True,
                                   related_name='%(app_label)s_%(class)s_related')
     lineStyle = models.ForeignKey(settings.GEOCAM_TRACK_LINE_STYLE_MODEL, null=True, blank=True,
@@ -504,6 +518,15 @@ class AbstractTrack(models.Model):
 class Track(AbstractTrack):
     pass
 
+
+class GenericTrack(AbstractTrack):
+    """ This is for a track with a generic resource model, ie the resources can be of different types all extending AbstractResource
+    For example camera, GPS, robot, etc.
+    """
+    generic_resource_content_type = models.ForeignKey(ContentType, related_name='generic_resource_content_type')
+    generic_resource_id = models.PositiveIntegerField()
+    generic_resource = GenericForeignKey('generic_resource_content_type', 'generic_resource_id')
+ 
 
 class AbstractResourcePositionNoUuid(models.Model):
     """
