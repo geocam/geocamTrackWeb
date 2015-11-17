@@ -24,5 +24,11 @@ from django.forms.models import ModelChoiceField
 class AbstractImportTrackedForm(AbstractImportForm):
     resource = ModelChoiceField(required=False, queryset=Resource.get().objects.all(), label=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME)
     
+    def getResource(self):
+        if self.cleaned_data['resource']:
+            return self.cleaned_data['resource']
+        else:
+            return None
+    
     class meta:
         abstract=True
