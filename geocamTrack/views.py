@@ -677,7 +677,7 @@ def getLocationCentroid(trackName, start, end):
     return centroid
 
 
-def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=settings.GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS):
+def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=settings.GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS, resource=None):
     """
     Look up the closest location, with a 1 minute default maximum difference.
     Track is optional but it will be a more efficient query if you limit it by track
@@ -690,6 +690,8 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
     try:
         if not track:
             foundPositions = PAST_POSITION_MODEL.get().objects.filter(timestamp=timestamp)
+        elif resource:
+            foundPositions = PAST_POSITION_MODEL.get().objects.filter(track__resource=resource, timestamp=timestamp)
         else:
             foundPositions = PAST_POSITION_MODEL.get().objects.filter(track=track, timestamp=timestamp)
         # take the first one.
@@ -700,10 +702,17 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
 
     if not foundPosition:
         tablename = PAST_POSITION_MODEL.get()._meta.db_table
-        query = "select * from " + tablename
+        query = "select * from " + tablename + ' pos'
         if track:
             query = query + " where " + "track_id = '" + str(track.id) + "'"
-        query = query + " order by abs(timestampdiff(second, '" + timestamp.isoformat() + "', timestamp)) limit 1"
+        elif resource:
+            query = query + ", " + TRACK_MODEL.get()._meta.db_table + " track"
+            query = query + " where"
+#             query = query + " pos.track_id is not null and"
+            query = query + " pos.track_id=track." + TRACK_MODEL.get()._meta.pk.name
+            query = query + " and track.resource_id = '" + str(resource.pk) + "'"
+            
+        query = query + " order by abs(timestampdiff(second, '" + timestamp.isoformat() + "', timestamp)) limit 1;"
         posAtTime = (PAST_POSITION_MODEL.get().objects.raw(query))
         posList = list(posAtTime)
         if posList:
