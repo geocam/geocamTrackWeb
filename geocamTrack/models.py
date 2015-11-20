@@ -54,7 +54,7 @@ class AbstractResource(models.Model):
         return '%s %s' % (self.__class__.__name__, self.name)
     
     def get_content_type(self):
-        return ContentType.objects.get_for_model(self).id
+        return ContentType.objects.get_for_model(self).pk
     
     class Meta:
         abstract = True
@@ -109,7 +109,7 @@ class IconStyle(models.Model):
            scaleStr=scaleStr,
            colorStr=colorStr,
            headingStr=headingStr,
-           id=self.id))
+           id=self.pk))
 
 
 class LineStyle(models.Model):
@@ -364,7 +364,7 @@ class AbstractTrack(models.Model):
                          end.hour, end.minute, end.second, tzoffset))
             out.write("            </TimeSpan>\n")
 #             out.write("            <styleUrl>#dw%d</styleUrl>\n" % (pos.heading))
-            out.write("            <styleUrl>#%s</styleUrl>\n" % self.getIconStyle(pos).id)
+            out.write("            <styleUrl>#%s</styleUrl>\n" % self.getIconStyle(pos).pk)
             out.write("            <gx:balloonVisibility>1</gx:balloonVisibility>\n")
             out.write("            <Point>\n")
             out.write("                <coordinates>")
@@ -399,7 +399,7 @@ class AbstractTrack(models.Model):
 
         if animated:
             if self.iconStyle:
-                out.write("<Style id=\"%s\">\n" % self.iconStyle.id)
+                out.write("<Style id=\"%s\">\n" % self.iconStyle.pk)
                 self.iconStyle.writeKml(out, 0, urlFn=urlFn, color=self.getLineColor())
                 out.write("</Style>\n")
 
@@ -646,7 +646,7 @@ class AbstractResourcePositionNoUuid(models.Model):
     def toMapDict(self):
         result = {}
         result['type'] = "Position"
-        result['id'] = self.id
+        result['id'] = self.pk
         result['lat'] = self.latitude
         result['lon'] = self.longitude
         result.update(self.getProperties())
@@ -665,8 +665,7 @@ class AbstractResourcePositionNoUuid(models.Model):
 
 class AbstractResourcePosition(AbstractResourcePositionNoUuid):
     """
-    Adds a uuid field to AbstractResourcePositionNoUuid. You probably don't
-    really want the uuid field, but here it is for backward compatibility.
+    Adds a uuid field to AbstractResourcePositionNoUuid. 
     """
     uuid = UuidField()
 
@@ -722,9 +721,7 @@ class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
 
 class AbstractResourcePositionWithHeading(AbstractResourcePositionWithHeadingNoUuid):
     """
-    Adds a uuid field to AbstractResourcePositionWithHeadingNoUuid. You
-    probably don't really want the uuid field, but here it is for
-    backward compatibility.
+    Adds a uuid field to AbstractResourcePositionWithHeadingNoUuid. 
     """
     uuid = UuidField()
 

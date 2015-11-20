@@ -704,7 +704,7 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
         tablename = PAST_POSITION_MODEL.get()._meta.db_table
         query = "select * from " + tablename + ' pos'
         if track:
-            query = query + " where " + "track_id = '" + str(track.id) + "'"
+            query = query + " where " + "track_id = '" + str(track.pk) + "'"
         elif resource:
             query = query + ", " + TRACK_MODEL.get()._meta.db_table + " track"
             query = query + " where"
@@ -762,7 +762,7 @@ def mapJsonTrack(request, uuid):
 def mapJsonPosition(request, id):
     POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
     try:
-        position = POSITION_MODEL.get().objects.get(id=id)
+        position = POSITION_MODEL.get().objects.get(pk=id)
         json_data = json.dumps([position.toMapDict()], cls=DatetimeJsonEncoder)
         return HttpResponse(content=json_data,
                             content_type="application/json")
@@ -808,7 +808,7 @@ if settings.XGDS_SSE:
                 else:
                     for position in activePositions:
                         json_data = '{"now":' + theNow + '}' + modelToJson(position, DatetimeJsonEncoder)
-                        send_event('positions', json_data, channel + '/' + str(position.track.id))
+                        send_event('positions', json_data, channel + '/' + str(position.track.pk))
             time.sleep(1)
 #             yield
 
