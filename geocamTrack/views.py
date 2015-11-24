@@ -10,12 +10,16 @@ import time
 import calendar
 import urllib
 import math
+import xml.etree.cElementTree as et
+from dateutil.parser import parse as dateparser
 
 from django.views.decorators.cache import cache_page
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseNotAllowed, Http404, HttpResponseBadRequest
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, render, redirect
 from django.template import RequestContext
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 import pytz
@@ -25,6 +29,7 @@ from geocamUtil import geomath
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.modelJson import modelsToJson, modelToJson
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
+from forms import ImportTrackForm
 
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
 import geocamTrack.models
@@ -812,4 +817,104 @@ if settings.XGDS_SSE:
             time.sleep(1)
 #             yield
 
+def getGpxWaypointList(docroot, ns):
+    wptList = []
+    for wpt in docroot.findall("ns:wpt", ns):
+        if wpt.find("ns:time",ns) is not None:
+            time = dateparser(wpt.find("ns:time",ns).text)
+        else:
+            time = None
+        wptData = {"time":time,
+                   "name":wpt.find("ns:name", ns).text,
+                   "lat":float(wpt.attrib["lat"]),
+                   "lon":float(wpt.attrib["lon"]),
+                   "ele":float(wpt.find("ns:ele", ns).text),
+                   "desc":wpt.find("ns:desc", ns).text,
+                   "cmt":wpt.find("ns:cmt", ns).text,
+                   "markerAndColor":[s.strip() for s in wpt.find("ns:sym", ns).
+                                     text.split(",")]}
+        wptList.append(wptData)
 
+    return wptList
+
+
+
+def getGpxTrackSet(docroot, ns):
+    trackCollection = []
+    for trk in docroot.findall("ns:trk", ns):
+        trackName = trk.find("ns:name",ns).text
+        trackSegPointList = trk.find("ns:trkseg", ns)
+        trackSegment = {"name":trackName}
+        trackSegPoints = []
+        foundTimeInTrackData = True
+        for point in trackSegPointList:
+            if point.find("ns:time",ns) is not None:
+                time = dateparser(point.find("ns:time",ns).text)
+                time = time.replace(tzinfo=None)
+            else:
+                foundTimeInTrackData = False
+                time = "<no time>"
+            trackPoint = {"lat":float(point.attrib["lat"]),
+                          "lon":float(point.attrib["lon"]),
+                          "ele":float(point.find("ns:ele", ns).text),
+                          "time":time}
+            trackSegPoints.append(trackPoint)
+        trackSegment["foundTimeInTrackData"] = foundTimeInTrackData
+        trackSegment["trackPoints"] = trackSegPoints
+        trackCollection.append(trackSegment)
+
+    return trackCollection
+
+
+def doImportGpxTrack(request, f, tz, resource):
+    buff = []
+    for chunk in f.chunks():
+        buff.append(chunk)
+    root = et.fromstring(''.join(buff))
+    ns = {"ns":root.tag.split('}')[0].strip('{')}
+
+    trackSet = getGpxTrackSet(root, ns)
+    newTracks = []
+    for trackSeg in trackSet:
+        if trackSeg["foundTimeInTrackData"]:
+            if ((TRACK_MODEL.get().__module__ + "." + TRACK_MODEL.get().__name__) == "geocamTrack.models.GenericTrack") or \
+               GenericTrack in TRACK_MODEL.get().__bases__:
+                newTrack = TRACK_MODEL.get().objects.create(name=trackSeg["name"],
+                                                            generic_resource_id=resource.pk,
+                                                            generic_resource_content_type=ContentType.objects.get_for_model(resource))
+            else:
+                newTrack = TRACK_MODEL.get().objects.create(name=trackSeg["name"],
+                                                            resource=resource)
+            newTracks.append(newTrack)
+            print "%s (%s)" % (trackSeg["name"], trackSeg["foundTimeInTrackData"])
+            for point in trackSeg["trackPoints"]:
+                PAST_POSITION_MODEL.get().objects.create(track=newTrack,
+                                                         timestamp=point["time"],
+                                                         latitude=point["lat"],
+                                                         longitude=point["lon"],
+                                                         altitude=point["ele"])
+    # parse uploaded file with elementree
+    # now call track and waypoint import fxns
+    return newTracks
+
+
+@login_required
+def importTrack(request):
+    errors = None
+    newTracks = []
+    if request.method == 'POST':
+        form = ImportTrackForm(request.POST, request.FILES)
+        if form.is_valid():
+            if form.cleaned_data['sourceFile'].name.endswith(".gpx"):
+                newTracks = doImportGpxTrack(request, request.FILES['sourceFile'], form.getTimezone(), form.getResource())
+        else:
+            errors = form.errors
+    return render(
+        request,
+        'geocamTrack/importTrack.html',
+        {
+            'form': ImportTrackForm(),
+            'errorstring': errors,
+            'tracks': newTracks
+        },
+    )

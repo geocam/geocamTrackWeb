@@ -17,6 +17,8 @@
 from django.conf import settings
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.forms.AbstractImportForm import AbstractImportForm
+from geocamUtil.extFileField import ExtFileField
+
 Resource = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
 
 from django.forms.models import ModelChoiceField
@@ -32,3 +34,6 @@ class AbstractImportTrackedForm(AbstractImportForm):
     
     class meta:
         abstract=True
+
+class ImportTrackForm(AbstractImportTrackedForm):
+    sourceFile = ExtFileField(ext_whitelist=(".gpx", ), required=True)

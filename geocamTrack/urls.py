@@ -55,7 +55,7 @@ urlpatterns = patterns(
      'geocamTrack_trackKml_animated'),
     (r'^mapJsonTrack/(?P<uuid>[\w-]+)$', views.mapJsonTrack, {'loginRequired': True}, 'geocamTrack_mapJsonTrack'),
     (r'^mapJsonPosition/(?P<id>[\d]+)$', views.mapJsonPosition, {'loginRequired': True}, 'geocamTrack_mapJsonPosition'),
-
+    (r'importTrack/$', views.importTrack, {'loginRequired': True}, 'geocamTrack_importTrack'),
 )
 
 if settings.XGDS_SSE:

@@ -262,7 +262,9 @@ class AbstractTrack(models.Model):
         return self._defaultIcon
 
     def getLineStyle(self):
-        return self.lineStyle
+        if self.lineStyle:
+            return self.lineStyle
+        return LineStyle.objects.get(name='default')
 
     def getIconColor(self, pos):
         return self.getIconStyle(pos).color
