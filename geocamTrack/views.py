@@ -31,7 +31,7 @@ from geocamUtil.modelJson import modelsToJson, modelToJson
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from forms import ImportTrackForm
 
-from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
+from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid, GenericTrack
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from django.conf import settings

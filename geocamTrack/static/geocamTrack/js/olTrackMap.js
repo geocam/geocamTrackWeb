@@ -1,6 +1,6 @@
 // render json track information on the openlayers map (as a layer from the tree)
 
-var AbstractTrack = {
+var Track = {
         initStyles: function() {
             if (_.isUndefined(this.styles)){
                 this.styles = {};

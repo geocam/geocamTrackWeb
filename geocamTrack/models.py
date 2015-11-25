@@ -3,7 +3,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All rights reserved.
 # __END_LICENSE__
-
+    
 import json
 import calendar
 import datetime
@@ -519,6 +519,11 @@ class AbstractTrack(models.Model):
 
 class Track(AbstractTrack):
     pass
+
+    def toMapDict(self):
+        result = AbstractTrack.toMapDict(self)
+        result['type'] = 'Track'
+        return result
 
 
 class GenericTrack(AbstractTrack):

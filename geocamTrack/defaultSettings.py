@@ -15,7 +15,7 @@ GEOCAM_TRACK_LINE_STYLE_MODEL = 'geocamTrack.LineStyle'
 # note: currently all of these tracking views have caching enabled where
 # the cache period is set to the refresh period minus epsilon
 
-GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS = None
+GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS = 5
 GEOCAM_TRACK_RECENT_TRACK_REFRESH_TIME_SECONDS = 5
 GEOCAM_TRACK_CURRENT_POS_REFRESH_TIME_SECONDS = 1
 GEOCAM_TRACK_SHOW_CURRENT_POSITION_AGE = False
