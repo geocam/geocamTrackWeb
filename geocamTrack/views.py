@@ -866,6 +866,25 @@ def getGpxTrackSet(docroot, ns):
     return trackCollection
 
 
+def getTrackForResource(resource):
+    if ((TRACK_MODEL.get().__module__ + "." + TRACK_MODEL.get().__name__) == "geocamTrack.models.GenericTrack") or \
+               GenericTrack in TRACK_MODEL.get().__bases__:
+        return TRACK_MODEL.get().objects.filter(generic_resource_id=resource.pk,
+                                                generic_resource_content_type=ContentType.objects.get_for_model(resource))
+    else:
+        return TRACK_MODEL.get().objects.filter(resource=resource)
+
+def createTrackForResource(resource, name):
+    if ((TRACK_MODEL.get().__module__ + "." + TRACK_MODEL.get().__name__) == "geocamTrack.models.GenericTrack") or \
+               GenericTrack in TRACK_MODEL.get().__bases__:
+        newTrack = TRACK_MODEL.get().objects.create(name=name,
+                                                    generic_resource_id=resource.pk,
+                                                    generic_resource_content_type=ContentType.objects.get_for_model(resource))
+    else:
+        newTrack = TRACK_MODEL.get().objects.create(name=name,
+                                                    resource=resource)
+    return newTrack
+        
 def doImportGpxTrack(request, f, tz, resource):
     buff = []
     for chunk in f.chunks():
@@ -877,14 +896,7 @@ def doImportGpxTrack(request, f, tz, resource):
     newTracks = []
     for trackSeg in trackSet:
         if trackSeg["foundTimeInTrackData"]:
-            if ((TRACK_MODEL.get().__module__ + "." + TRACK_MODEL.get().__name__) == "geocamTrack.models.GenericTrack") or \
-               GenericTrack in TRACK_MODEL.get().__bases__:
-                newTrack = TRACK_MODEL.get().objects.create(name=trackSeg["name"],
-                                                            generic_resource_id=resource.pk,
-                                                            generic_resource_content_type=ContentType.objects.get_for_model(resource))
-            else:
-                newTrack = TRACK_MODEL.get().objects.create(name=trackSeg["name"],
-                                                            resource=resource)
+            newTrack = createTrackForResource(resource, trackSeg["name"])
             newTracks.append(newTrack)
             print "%s (%s)" % (trackSeg["name"], trackSeg["foundTimeInTrackData"])
             for point in trackSeg["trackPoints"]:
