@@ -1,6 +1,27 @@
-{% extends 'base.html' %}
-{% block content %}
-<strong>Import Track</strong>
+{% extends 'dashboard_base.html' %}
+
+{% block jsInitPreApp %}
+	{% if tracks %}
+    var tracks = {{ tracks|safe }};
+    /* var tracksArray = []; 
+    $(tracks).each(function() {
+    	tracksArray.push(JSON.parse(this)); // parse json string
+    }); */
+    {% endif %}
+{% endblock jsInitPreApp %}
+
+{% block otherJSInit %}
+	{% if tracks %}
+	if (tracks.length > 0) {
+		app.vent.trigger("mapSearch:found", tracks);
+	}
+	{% endif %}
+{% endblock otherJSInit %}
+
+{% block firstPackery %}
+<div id="importDiv" class="item w3 noresize" >
+	<i class="icon-lock pinDiv warning"></i><br/>
+	<strong>Import Track</strong>
 <form id="import_gpx" action="{% url 'geocamTrack_importTrack' %}" method="post" enctype="multipart/form-data">
     <table>
     {{ form.as_table }}
@@ -9,4 +30,5 @@
         <input id="save" class="mybutton" type="submit" value="Import">
     </div>
 </form>
-{% endblock content %}
+</div>
+{% endblock firstPackery %}

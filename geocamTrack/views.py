@@ -906,8 +906,6 @@ def doImportGpxTrack(request, f, tz, resource):
                                                          latitude=point["lat"],
                                                          longitude=point["lon"],
                                                          altitude=point["ele"])
-    # parse uploaded file with elementree
-    # now call track and waypoint import fxns
     return newTracks
 
 
@@ -915,11 +913,16 @@ def doImportGpxTrack(request, f, tz, resource):
 def importTrack(request):
     errors = None
     newTracks = []
+    jsonTracks = []
     if request.method == 'POST':
         form = ImportTrackForm(request.POST, request.FILES)
         if form.is_valid():
             if form.cleaned_data['sourceFile'].name.endswith(".gpx"):
                 newTracks = doImportGpxTrack(request, request.FILES['sourceFile'], form.getTimezone(), form.getResource())
+                if newTracks:
+                    for t in newTracks:
+                        jsonTracks.append(t.toMapDict())
+                    
         else:
             errors = form.errors
     return render(
@@ -928,6 +931,6 @@ def importTrack(request):
         {
             'form': ImportTrackForm(),
             'errorstring': errors,
-            'tracks': newTracks
+            'tracks': json.dumps(jsonTracks, cls=DatetimeJsonEncoder)
         },
     )
