@@ -3,10 +3,6 @@
 {% block jsInitPreApp %}
 	{% if tracks %}
     var tracks = {{ tracks|safe }};
-    /* var tracksArray = []; 
-    $(tracks).each(function() {
-    	tracksArray.push(JSON.parse(this)); // parse json string
-    }); */
     {% endif %}
 {% endblock jsInitPreApp %}
 
