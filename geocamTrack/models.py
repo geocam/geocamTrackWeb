@@ -481,7 +481,11 @@ class AbstractTrack(models.Model):
 
         result = {}
         result['type'] = 'AbstractTrack'
-        result['id'] = self.uuid
+        if self.name:
+            result['name'] = self.name
+        else:
+            result['name'] = ''
+        result['id'] = self.pk
         color = self.getLineStyle().getHexColor()
         if color:
             result['color'] = color
@@ -518,12 +522,14 @@ class AbstractTrack(models.Model):
 
 
 class Track(AbstractTrack):
-    pass
 
     def toMapDict(self):
         result = AbstractTrack.toMapDict(self)
         result['type'] = 'Track'
         return result
+    
+    def __unicode__(self):
+        return '%s %s' % (self.__class__.__name__, self.name)
 
 
 class GenericTrack(AbstractTrack):

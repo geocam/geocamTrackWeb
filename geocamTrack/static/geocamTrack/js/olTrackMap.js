@@ -10,6 +10,14 @@ var Track = {
                         width: 2
                       })
                     });
+                this.styles['dot'] = new ol.style.Style({
+                    image: new ol.style.Circle({
+                        	radius: 5,
+                        	fill: new ol.style.Fill({
+                        	    color: '67fb09'
+                        	})
+                      })
+                });
              };
         },
         constructElements: function(tracksJson){
@@ -34,6 +42,7 @@ var Track = {
             var coords = trackJson.coords;
             var coord;
             var lsstyle = this.styles['lineStyle'];
+            var dotstyle = this.styles['dot'];
             if (!_.isUndefined(trackJson.color)){
                 color = "#" + trackJson.color;
                 lsstyle = new ol.style.Style({
@@ -43,28 +52,38 @@ var Track = {
                         width: 2
                       })
                     });
+                dotstyle = new ol.style.Style({
+                    image: new ol.style.Circle({
+                	radius: 5,
+                	fill: new ol.style.Fill({
+                	    color: color
+                	})
+                    })
+              });
             }
             
-            for (c = 0; c < coords.length; c++){
-                var lineFeature = new ol.Feature({
-                    name: trackJson.uuid + "_" + c,
-                    geometry: new ol.geom.LineString(coords[c]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
-                });
-                lineFeature.setStyle(lsstyle);
-                this.setupLinePopup(lineFeature, trackJson);
-                allFeatures.push(lineFeature);
+            for (var c = 0; c < coords.length; c++){
+        	if (coords[c].length > 1){
+                    var lineFeature = new ol.Feature({
+                        name: trackJson.id + "_" + c,
+                        geometry: new ol.geom.LineString(coords[c]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
+                    });
+                    lineFeature.setStyle(lsstyle);
+                    this.setupLinePopup(lineFeature, trackJson);
+                    allFeatures.push(lineFeature);
+        	} else if (coords[c].length == 1) {
+                    var feature = new ol.Feature({
+                        name: trackJson.id + "_" + c,
+                    	geometry: new ol.geom.Point(coords[c][0]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
+                    });
+                    feature.setStyle(dotstyle);
+                    this.setupLinePopup(feature, trackJson);
+                    allFeatures.push(feature);
+        	}
             }
             return allFeatures;
         },
         setupLinePopup: function(feature, trackJson) {
-//            var trString = "<tr><td>%s</td><td>%s</td></tr>";
-//            var formattedString = "<table>";
-//            for (var k = 0; k< 1; k++){
-//                formattedString = formattedString + trString;
-//            }
-//            formattedString = formattedString + "</table>";
-//            var data = ["Track:", trackJson.name];
-//            feature['popup'] = vsprintf(formattedString, data);
             feature['popup'] = trackJson.name;
         }
 }

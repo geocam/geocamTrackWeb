@@ -4,6 +4,14 @@ var Position = {
         initStyles: function() {
             if (_.isUndefined(this.styles)){
                 this.styles = {};
+                this.styles['dot'] = new ol.style.Style({
+                    image: new ol.style.Circle({
+                        	radius: 5,
+                        	fill: new ol.style.Fill({
+                        	    color: 'blue'
+                        	})
+                      })
+                });
                 this.styles['compass'] = new ol.style.Style({
                     image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
                         src: '/static/geocamTrack/icons/compassRoseSm.png',
@@ -58,13 +66,13 @@ var Position = {
             return feature;
         },
         getStyles: function(positionJson) {
-            var styles = [this.styles['compass']];
-            var theText = new ol.style.Text(this.styles['text']);
-            theText.setText(positionJson.displayName);
-            var textStyle = new ol.style.Style({
-                text: theText
-            });
-            styles.push(textStyle);
+            var styles = [this.styles['dot']];
+//            var theText = new ol.style.Text(this.styles['text']);
+//            theText.setText(positionJson.displayName);
+//            var textStyle = new ol.style.Style({
+//                text: theText
+//            });
+//            styles.push(textStyle);
             return styles;
         },
         setupPopup: function(feature, positionJson) {
