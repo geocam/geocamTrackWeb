@@ -4,11 +4,9 @@
 # All rights reserved.
 # __END_LICENSE__
     
-import json
 import calendar
 import datetime
 import logging
-import struct
 from math import pi, cos, sin
 import urllib
 
@@ -45,10 +43,11 @@ def getModClass(name):
 
 
 class AbstractResource(models.Model):
-    name = models.CharField(max_length=32)
+    name = models.CharField(max_length=128)
     user = models.ForeignKey(User, null=True, blank=True)
     uuid = UuidField()
     extras = ExtrasDotField()
+    primary = models.NullBooleanField(null=True, default=False)  # to be used for 'primary resources' which show up in the import dropdown
 
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)

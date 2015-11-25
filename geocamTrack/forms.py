@@ -24,7 +24,7 @@ Resource = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
 from django.forms.models import ModelChoiceField
 
 class AbstractImportTrackedForm(AbstractImportForm):
-    resource = ModelChoiceField(required=False, queryset=Resource.get().objects.all(), label=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME)
+    resource = ModelChoiceField(required=False, queryset=Resource.get().objects.filter(primary=True), label=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME)
     
     def getResource(self):
         if self.cleaned_data['resource']:

@@ -687,6 +687,7 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
     Look up the closest location, with a 1 minute default maximum difference.
     Track is optional but it will be a more efficient query if you limit it by track
     also if you have multiple tracks at the same time from different vehicles, you really need to pass in a track.
+    TODO this will not work for GenericTrack
     """
     if not timestamp:
         return None
