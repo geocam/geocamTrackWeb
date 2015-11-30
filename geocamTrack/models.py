@@ -741,6 +741,14 @@ class AbstractResourcePositionWithHeading(AbstractResourcePositionWithHeadingNoU
         abstract = True
 
 
+class AltitudeResourcePositionNoUuid(AbstractResourcePositionWithHeadingNoUuid):
+    altitude = models.FloatField(null=True)
+    precisionMeters = models.FloatField(null=True)  # estimated position error
+
+    class Meta:
+        abstract = True
+
+
 class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
     """
     This abstract position model has the set of fields we usually use with
