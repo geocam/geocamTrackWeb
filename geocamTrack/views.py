@@ -886,27 +886,26 @@ def createTrackForResource(resource, name):
                                                     resource=resource)
     return newTrack
         
+
 def doImportGpxTrack(request, f, tz, resource):
-    buff = []
-    for chunk in f.chunks():
-        buff.append(chunk)
-    root = et.fromstring(''.join(buff))
+    gpxData = ''.join([chunk for chunk in f.chunks()])
+    root = et.fromstring(gpxData)
     ns = {"ns":root.tag.split('}')[0].strip('{')}
 
     trackSet = getGpxTrackSet(root, ns)
-    newTracks = []
-    for trackSeg in trackSet:
-        if trackSeg["foundTimeInTrackData"]:
-            newTrack = createTrackForResource(resource, trackSeg["name"])
-            newTracks.append(newTrack)
-            print "%s (%s)" % (trackSeg["name"], trackSeg["foundTimeInTrackData"])
-            for point in trackSeg["trackPoints"]:
-                PAST_POSITION_MODEL.get().objects.create(track=newTrack,
+    newTracksDB = []
+    for track in trackSet:
+        if track["foundTimeInTrackData"]:
+            newTrackDB = TRACK_MODEL.get().objects.create(name=track["name"],
+                                                          resource=resource)
+            newTracksDB.append(newTrackDB)
+            for point in track["trackPoints"]:
+                PAST_POSITION_MODEL.get().objects.create(track=newTrackDB,
                                                          timestamp=point["time"],
                                                          latitude=point["lat"],
                                                          longitude=point["lon"],
                                                          altitude=point["ele"])
-    return newTracks
+    return newTracksDB
 
 
 @login_required
