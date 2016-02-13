@@ -531,13 +531,13 @@ class Track(AbstractTrack):
         return '%s %s' % (self.__class__.__name__, self.name)
 
 
-class GenericTrack(AbstractTrack):
-    """ This is for a track with a generic resource model, ie the resources can be of different types all extending AbstractResource
-    For example camera, GPS, robot, etc.
-    """
-    generic_resource_content_type = models.ForeignKey(ContentType, related_name='generic_resource_content_type')
-    generic_resource_id = models.PositiveIntegerField()
-    generic_resource = GenericForeignKey('generic_resource_content_type', 'generic_resource_id')
+# class GenericTrack(AbstractTrack):
+#     """ This is for a track with a generic resource model, ie the resources can be of different types all extending AbstractResource
+#     For example camera, GPS, robot, etc.
+#     """
+#     generic_resource_content_type = models.ForeignKey(ContentType, related_name='generic_resource_content_type')
+#     generic_resource_id = models.PositiveIntegerField()
+#     generic_resource = GenericForeignKey('generic_resource_content_type', 'generic_resource_id')
  
 
 class AbstractResourcePositionNoUuid(models.Model):
@@ -546,7 +546,7 @@ class AbstractResourcePositionNoUuid(models.Model):
     geocamTrack supports.  Other apps building on geocamTrack may want
     to derive their position model from this.
     """
-    track = models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True)
+    track = models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True, null=True, blank=True)
     timestamp = models.DateTimeField(db_index=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
