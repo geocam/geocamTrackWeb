@@ -667,13 +667,20 @@ class AbstractResourcePositionNoUuid(models.Model):
         return result
 
     def __unicode__(self):
-        return ('%s %s %s %s %s'
+        if self.track:
+            return ('%s %s %s %s %s'
+                    % (self.__class__.__name__,
+                       self.track.name,
+                       self.timestamp,
+                       self.latitude,
+                       self.longitude))
+        else: 
+            return ('%s %s %s %s'
                 % (self.__class__.__name__,
-                   self.track.name,
-                   self.timestamp,
-                   self.latitude,
-                   self.longitude))
-
+                self.timestamp,
+                self.latitude,
+                self.longitude))
+            
 
 class AbstractResourcePosition(AbstractResourcePositionNoUuid):
     """
