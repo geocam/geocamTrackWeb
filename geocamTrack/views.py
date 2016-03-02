@@ -881,6 +881,7 @@ def doImportGpxTrack(request, f, tz, resource):
             newTracksDB.append(newTrackDB)
             for point in track["trackPoints"]:
                 PAST_POSITION_MODEL.get().objects.create(track=newTrackDB,
+							 serverTimestamp=datetime.datetime.now(pytz.utc),
                                                          timestamp=point["time"],
                                                          latitude=point["lat"],
                                                          longitude=point["lon"],
