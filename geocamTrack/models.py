@@ -280,13 +280,13 @@ class AbstractTrack(models.Model):
             iconStyle = self.getIconStyle(pos)
         ageStr = ''
         if settings.GEOCAM_TRACK_SHOW_CURRENT_POSITION_AGE:
-            now = datetime.datetime.utcnow()
+            now = datetime.datetime.now(pytz.utc)
             diff = now - pos.timestamp
             diffSecs = diff.days * 24 * 60 * 60 + diff.seconds
             if diffSecs >= settings.GEOCAM_TRACK_CURRENT_POSITION_AGE_MIN_SECONDS:
                 age = TimeUtil.getTimeShort(pos.timestamp)
                 ageStr = ' (%s)' % age
-            ageStr += ' %s' % getTimeSpinner(datetime.datetime.now())
+            ageStr += ' %s' % getTimeSpinner(datetime.datetime.now(pytz.utc))
 
         label = ('%s%s%s' %
                  (self.getLabelName(pos),

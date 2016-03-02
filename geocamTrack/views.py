@@ -372,7 +372,7 @@ def getTrackIndexKml(request):
              if getPositionCountForDay(day)]
     tracks = TRACK_MODEL.get().objects.all().order_by('name')
 
-    now = utcToDefaultTime(datetime.datetime.utcnow())
+    now = utcToDefaultTime(datetime.datetime.now(pytz.utc))
     today = now.date()
 
     out = StringIO()
@@ -741,7 +741,7 @@ def getActivePositions(trackId=None):
     """ look up the active tracks from the GEOCAM_TRACK_POSITION_MODEL """
     tablename = POSITION_MODEL.get()._meta.db_table
     query = "select * from " + tablename
-    # query = query + " where (timestampdiff(second, '" + datetime.utcnow().isoformat() + "', timestamp)) < " + settings.GEOCAM_TRACK_CURRENT_POSITION_AGE_MIN_SECONDS
+    # query = query + " where (timestampdiff(second, '" + datetime.now(pytz.utc).isoformat() + "', timestamp)) < " + settings.GEOCAM_TRACK_CURRENT_POSITION_AGE_MIN_SECONDS
     if trackId:
         query = query + ' where track_id=' + str(trackId)
     print query
@@ -795,7 +795,7 @@ if settings.XGDS_SSE:
             channel = 'live/positions'
             if trackId:
                 channel = channel + '/' + str(trackId)
-            json_data = ['{"now":' + datetime.datetime.now().isoformat() + '}'] + json_data
+            json_data = ['{"now":' + datetime.datetime.now(pytz.utc).isoformat() + '}'] + json_data
             send_event('positions', json_data, channel)
             return HttpResponse(content=json_data,
                                 content_type="application/json")
@@ -807,7 +807,7 @@ if settings.XGDS_SSE:
             if activePositions:
                 json_data = modelsToJson(activePositions, DatetimeJsonEncoder)
                 channel = 'live/positions'
-                theNow = datetime.datetime.now().isoformat()
+                theNow = datetime.datetime.now(pytz.utc).isoformat()
                 if trackId:
                     json_data = ['{"now":' + theNow + '}'] + json_data
                     send_event('positions', json_data, channel + '/' + str(trackId))
