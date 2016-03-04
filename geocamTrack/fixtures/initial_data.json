@@ -5,7 +5,7 @@
         "fields": {
             "scale": 1.0,
             "name": "default",
-            "url": "http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png",
+            "url": "/static/geocamTrack/icons/shaded_dot.png",
             "height": 64,
             "width": 64,
             "extras": "{}",

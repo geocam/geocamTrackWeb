@@ -62,7 +62,7 @@ class AbstractResource(models.Model):
 class Resource(AbstractResource):
     pass
 
-
+import pydevd
 class IconStyle(models.Model):
     name = models.CharField(max_length=40, blank=True)
     url = models.CharField(max_length=1024, blank=True)
@@ -78,8 +78,13 @@ class IconStyle(models.Model):
         return '%s %s' % (self.__class__.__name__, self.name)
 
     def writeKml(self, out, heading=None, urlFn=None, color=None):
+#         pydevd.settrace('192.168.1.77')
         if not color:
             color = self.color
+            try:
+                int(self.color)
+            except:
+                color = self.color()
         if color:
             colorStr = '<color>%s</color>' % color
         else:
@@ -245,28 +250,47 @@ class AbstractTrack(models.Model):
         return ''
 
     def getIconStyle(self, pos):
+#         pydevd.settrace('192.168.1.77')
+        if hasattr(self, '_currentIcon'):
+            return self._currentIcon
+        
         # use specific style if given
         if self.iconStyle is not None:
+            self._currentIcon = self.iconStyle
             return self.iconStyle
 
         # use pointer icon if we know the heading
         if pos.heading is not None:
             if not hasattr(self, '_pointerIcon'):
                 self._pointerIcon = IconStyle.objects.get(name='pointer')
+            self._currentIcon = self._pointerIcon
             return self._pointerIcon
 
         # use spot icon otherwise
         if not hasattr(self, '_defaultIcon'):
             self._defaultIcon = IconStyle.objects.get(name='default')
-        return self._defaultIcon
+            self._defaultIcon.color = self.getLineStyleColor
+            self._currentIcon = self._defaultIcon
+            
+        return self._currentIcon
 
     def getLineStyle(self):
         if self.lineStyle:
             return self.lineStyle
         return LineStyle.objects.get(name='default')
 
+    def getLineStyleColor(self):
+        if self.lineStyle:
+            return self.lineStyle.color
+        return LineStyle.objects.get(name='default').color
+
     def getIconColor(self, pos):
-        return self.getIconStyle(pos).color
+        try:
+            currentIconStyle = self.getIconStyle(pos)
+            int(currentIconStyle.color)
+            return currentIconStyle.color
+        except:
+            return currentIconStyle.color()
 
     def getLineColor(self):
         return self.getLineStyle().color
