@@ -25,6 +25,7 @@ from django.core.urlresolvers import reverse
 import pytz
 import iso8601
 
+from geocamUtil.TimeUtil import utcToTimeZone, timeZoneToUtc
 from geocamUtil import geomath
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.modelJson import modelsToJson, modelToJson
@@ -36,6 +37,7 @@ import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from django.conf import settings
 import traceback
+from trackUtil import getDatesWithPositionData
 
 if settings.XGDS_SSE:
     from sse_wrapper.events import send_event
@@ -290,19 +292,7 @@ def writeTrackNetworkLink(out, name,
            styleStr=styleStr))
 
 
-def getPositionDataDateRange():
-    allPositions = PAST_POSITION_MODEL.get().objects.all()
-    if allPositions.count():
-        minTimeUtc = allPositions.order_by('timestamp')[0].timestamp
-        maxTimeUtc = allPositions.order_by('-timestamp')[0].timestamp
-        minDate = utcToDefaultTime(minTimeUtc).date()
-        maxDate = utcToDefaultTime(maxTimeUtc).date()
-        return list(getDateRange(minDate, maxDate))
-    else:
-        return []
-
-
-def writeTrackIndexForDay(out, track, day, isToday, startTimeUtc, endTimeUtc):
+def writeTrackIndexForDay(out, track, isToday):
     if isToday:
         out.write("""
     <Folder>
@@ -334,7 +324,7 @@ def writeTrackIndexForDay(out, track, day, isToday, startTimeUtc, endTimeUtc):
                               caching='cached',
                               trackName=track.name,
                               showIcon=0,
-                              startTimeUtc=startTimeUtc,
+                              startTimeUtc=track.pastposition_set.first().timestamp,
                               refreshInterval=settings.GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS)
         out.write("""
     </Folder>
@@ -345,8 +335,8 @@ def writeTrackIndexForDay(out, track, day, isToday, startTimeUtc, endTimeUtc):
                               caching='cached',
                               trackName=track.name,
                               showIcon=0,
-                              startTimeUtc=startTimeUtc,
-                              endTimeUtc=endTimeUtc,
+                              startTimeUtc=track.pastposition_set.first().timestamp,
+                              endTimeUtc=track.pastposition_set.last().timestamp,
                               visibility=0)
 
 
@@ -363,18 +353,28 @@ def getPositionCountForDay(day, track=None):
         positions = positions.filter(track=track)
     return positions.count()
 
-
 def getTrackIndexKml(request):
     geocamTrack.models.latestRequestG = request
-    dates = reversed(getPositionDataDateRange())
-    dates = [day
-             for day in dates
-             if getPositionCountForDay(day)]
-    tracks = TRACK_MODEL.get().objects.all().order_by('name')
-
-    now = utcToDefaultTime(datetime.datetime.now(pytz.utc))
-    today = now.date()
-
+#     dates = reversed(getDatesWithPositionData())
+    tracks = TRACK_MODEL.get().objects.exclude(pastposition__isnull=True).order_by('-name')
+    today = datetime.datetime.now(pytz.timezone(settings.GEOCAM_TRACK_OPS_TIME_ZONE)).date()
+    todaystring = today.strftime("%Y%d%m")
+    
+    todays_tracks = []
+    for track in tracks:
+        if track.name.startswith(todaystring):
+            todays_tracks.append(track)
+        else:
+            break
+    
+    other_tracks = [ t for t in tracks]
+    other_tracks = other_tracks[len(todays_tracks):]
+    dates = []
+    for t in other_tracks:
+        prefix = t.name[0:8]
+        if prefix not in dates:
+            dates.append(prefix)
+    
     out = StringIO()
     out.write("""<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2"
@@ -385,41 +385,42 @@ def getTrackIndexKml(request):
   <name>Tracks</name>
   <open>1</open>
 """)
-
-    if len(dates) >= 4 and dates[0] == today:
-        # Put past days in a separate folder to avoid clutter. The user
-        # is most likely to be interested in today's data.
-        dates = [dates[0]] + ['pastDaysStart'] + dates[1:] + ['pastDaysEnd']
-
-    for day in dates:
-        if day == 'pastDaysStart':
-            out.write('<Folder><name>Past Days</name>\n')
-            continue
-        elif day == 'pastDaysEnd':
-            out.write('</Folder>\n')
-            continue
-
-        if day == today:
-            dateStr = 'Today'
-        else:
-            dateStr = day.strftime('%Y-%m-%d')
-
-        dayStart = datetime.datetime.combine(day, datetime.time())
-        startTimeUtc = defaultToUtcTime(dayStart)
-        endTimeUtc = defaultToUtcTime(dayStart + datetime.timedelta(1))
-
+    
+    # do today
+    if todays_tracks:
         out.write("""
-  <Folder>
-    <name>%s</name>
-""" % dateStr)
-
-        for track in tracks:
-            if getPositionCountForDay(day, track):
-                isToday = (day == today)
-                writeTrackIndexForDay(out, track, day, isToday, startTimeUtc, endTimeUtc)
+      <Folder>
+        <name>Today</name>
+    """)
+        for track in todays_tracks:
+            writeTrackIndexForDay(out, track, True)
         out.write("""
-  </Folder>
-""")
+      </Folder>
+    """)
+
+    if other_tracks:
+        out.write('<Folder><name>Past Days</name>\n')
+        lastday = None
+        for track in other_tracks:
+            prefix = track.name[0:8]
+            if lastday == None:
+                lastday = prefix
+                out.write("""
+        <Folder>
+        <name>%s</name>
+    """ % lastday)
+            elif lastday != prefix:
+                lastday = prefix
+                out.write("""
+        </Folder>
+        <Folder>
+        <name>%s</name>
+    """ % lastday)
+      
+            writeTrackIndexForDay(out, track, False)
+            
+        out.write('</Folder>\n')
+        out.write('</Folder>\n')
 
     out.write("""
 </Document>
@@ -469,13 +470,13 @@ def getTracksKml(request, recent=True):
     recent = request.GET.get('recent')
     if recent:
         recentStartFloat = time.time() - settings.GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS
-        recentStartTime = datetime.datetime.utcfromtimestamp(recentStartFloat)
+        recentStartTime = datetime.datetime.utcfromtimestamp(recentStartFloat).replace(tzinfo=pytz.utc)
         if startTime is None or recentStartTime > startTime:
             startTime = recentStartTime
 
     endTime = request.GET.get('end')
     if endTime:
-        endTime = datetime.datetime.utcfromtimestamp(float(endTime))
+        endTime = datetime.datetime.utcfromtimestamp(float(endTime)).replace(tzinfo=pytz.utc)
 
     showLine = int(request.GET.get('line', 1))
     showIcon = int(request.GET.get('icon', 1))
@@ -529,7 +530,7 @@ def getCsvTrackLink(day, trackName, startTimeUtc=None, endTimeUtc=None):
 
 
 def getCsvTrackIndex(request):
-    dates = getPositionDataDateRange()
+    dates = getDatesWithPositionData()
     tracks = TRACK_MODEL.get().objects.all().order_by('name')
 
     out = StringIO()
