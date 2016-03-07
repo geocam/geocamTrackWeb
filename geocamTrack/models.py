@@ -62,7 +62,6 @@ class AbstractResource(models.Model):
 class Resource(AbstractResource):
     pass
 
-import pydevd
 class IconStyle(models.Model):
     name = models.CharField(max_length=40, blank=True)
     url = models.CharField(max_length=1024, blank=True)
@@ -78,7 +77,6 @@ class IconStyle(models.Model):
         return '%s %s' % (self.__class__.__name__, self.name)
 
     def writeKml(self, out, heading=None, urlFn=None, color=None):
-#         pydevd.settrace('192.168.1.77')
         if not color:
             color = self.color
             try:
@@ -250,7 +248,6 @@ class AbstractTrack(models.Model):
         return ''
 
     def getIconStyle(self, pos):
-#         pydevd.settrace('192.168.1.77')
         if hasattr(self, '_currentIcon'):
             return self._currentIcon
         
