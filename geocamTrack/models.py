@@ -207,22 +207,22 @@ def getKmlUrl(trackName=None,
     return reverse(urlPattern) + queryParams
 
 
-DEFAULT_RESOURCE_FIELD = models.ForeignKey(Resource,
-                                           related_name='%(app_label)s_%(class)s_related',
-                                           verbose_name=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME, blank=True, null=True)
-DEFAULT_ICON_STYLE_FIELD = models.ForeignKey(IconStyle, null=True, blank=True,
-                                             related_name='%(app_label)s_%(class)s_related')
-DEFAULT_LINE_STYLE_FIELD = models.ForeignKey(LineStyle, null=True, blank=True,
-                                             related_name='%(app_label)s_%(class)s_related')
+DEFAULT_RESOURCE_FIELD = lambda: models.ForeignKey(Resource,
+                                                   related_name='%(app_label)s_%(class)s_related',
+                                                   verbose_name=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME, blank=True, null=True)
+DEFAULT_ICON_STYLE_FIELD = lambda: models.ForeignKey(IconStyle, null=True, blank=True,
+                                                     related_name='%(app_label)s_%(class)s_related')
+DEFAULT_LINE_STYLE_FIELD = lambda: models.ForeignKey(LineStyle, null=True, blank=True,
+                                                     related_name='%(app_label)s_%(class)s_related')
 
 
 class AbstractTrack(models.Model):
     """ This is for an abstract track with a FIXED resource model, ie all the tracks have like resources.
     """
     name = models.CharField(max_length=40, blank=True)
-    resource = 'set this to DEFAULT_RESOURCE_FIELD or similar in derived classes'
-    iconStyle = 'set this to DEFAULT_ICON_STYLE_FIELD or similar in derived classes'
-    lineStyle = 'set this to DEFAULT_LINE_STYLE_FIELD or similar in derived classes'
+    resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
+    iconStyle = 'set this to DEFAULT_ICON_STYLE_FIELD() or similar in derived classes'
+    lineStyle = 'set this to DEFAULT_LINE_STYLE_FIELD() or similar in derived classes'
     uuid = UuidField()
     extras = ExtrasDotField()
 
@@ -547,9 +547,9 @@ class AbstractTrack(models.Model):
 
 
 class Track(AbstractTrack):
-    resource = DEFAULT_RESOURCE_FIELD
-    iconStyle = DEFAULT_ICON_STYLE_FIELD
-    lineStyle = DEFAULT_LINE_STYLE_FIELD
+    resource = DEFAULT_RESOURCE_FIELD()
+    iconStyle = DEFAULT_ICON_STYLE_FIELD()
+    lineStyle = DEFAULT_LINE_STYLE_FIELD()
 
     def toMapDict(self):
         result = AbstractTrack.toMapDict(self)
@@ -569,7 +569,7 @@ class Track(AbstractTrack):
 #     generic_resource = GenericForeignKey('generic_resource_content_type', 'generic_resource_id')
  
 
-DEFAULT_TRACK_FIELD = models.ForeignKey(Track, db_index=True, null=True, blank=True)
+DEFAULT_TRACK_FIELD = lambda: models.ForeignKey(Track, db_index=True, null=True, blank=True)
 
 
 class AbstractResourcePositionNoUuid(models.Model):
@@ -578,7 +578,7 @@ class AbstractResourcePositionNoUuid(models.Model):
     geocamTrack supports.  Other apps building on geocamTrack may want
     to derive their position model from this.
     """
-    track = 'set to DEFAULT_TRACK_FIELD or similar in derived classes'
+    track = 'set to DEFAULT_TRACK_FIELD() or similar in derived classes'
     timestamp = models.DateTimeField(db_index=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
@@ -793,7 +793,7 @@ class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
     This abstract position model has the set of fields we usually use with
     GeoCam.
     """
-    track = DEFAULT_TRACK_FIELD
+    track = DEFAULT_TRACK_FIELD()
 
     altitude = models.FloatField(null=True)
     precisionMeters = models.FloatField(null=True)  # estimated position error
