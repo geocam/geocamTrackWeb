@@ -358,7 +358,7 @@ def getTrackIndexKml(request):
 #     dates = reversed(getDatesWithPositionData())
     tracks = TRACK_MODEL.get().objects.exclude(pastposition__isnull=True).order_by('-name')
     today = datetime.datetime.now(pytz.timezone(settings.GEOCAM_TRACK_OPS_TIME_ZONE)).date()
-    todaystring = today.strftime("%Y%d%m")
+    todaystring = today.strftime("%Y%m%d")
     
     todays_tracks = []
     for track in tracks:
@@ -465,7 +465,7 @@ def getTracksKml(request, recent=True):
 
     startTime = request.GET.get('start')
     if startTime:
-        startTime = datetime.datetime.utcfromtimestamp(float(startTime))
+        startTime = datetime.datetime.utcfromtimestamp(float(startTime)).replace(tzinfo=pytz.utc)
 
     recent = request.GET.get('recent')
     if recent:
