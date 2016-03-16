@@ -825,7 +825,7 @@ class AbstractTrackedAsset(models.Model):
         raise NotImplementedError
 
     def getPosition(self):
-        from geocamTrack.views import getClosestPosition
+        from geocamTrack.utils import getClosestPosition
         if self.position:
             return self.position
         elif self.position_not_found == None and self.getEventTime():

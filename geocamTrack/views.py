@@ -30,6 +30,7 @@ from geocamUtil import geomath
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.modelJson import modelsToJson, modelToJson
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
+from geocamUtil.KmlUtil import wrapKmlDjango, djangoResponse
 from forms import ImportTrackForm
 
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
@@ -85,14 +86,9 @@ def wrapKml(text):
 ''' % text
 
 
-def getKmlResponse(text):
-    return HttpResponse(wrapKml(text),
-                        content_type='application/vnd.google-earth.kml+xml')
-
-
 def getKmlNetworkLink(request):
     url = request.build_absolute_uri(settings.SCRIPT_NAME + 'geocamTrack/latest.kml')
-    return getKmlResponse('''
+    return djangoResponse('''
 <NetworkLink>
   <name>%(name)s</name>
   <Link>
@@ -117,7 +113,7 @@ def getKmlTrack(name, positions):
 def getKmlLatest(request):
     text = getKmlTrack(settings.GEOCAM_TRACK_FEED_NAME,
                        POSITION_MODEL.get().objects.all())
-    return getKmlResponse(text)
+    return djangoResponse(text)
 
 
 def dumps(obj):
@@ -628,7 +624,7 @@ def getTrackKml(request, trackName, animated=False):
     output.close()
 
     if text:
-        return getKmlResponse(text)
+        return djangoResponse(text)
     else:
         # handle error case
         return HttpResponseBadRequest("ERROR GETTING TRACK -- no positions")
@@ -682,60 +678,6 @@ def getLocationCentroid(trackName, start, end):
 
     return centroid
 
-
-def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=settings.GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS, resource=None):
-    """
-    Look up the closest location, with a 1 minute default maximum difference.
-    Track is optional but it will be a more efficient query if you limit it by track
-    also if you have multiple tracks at the same time from different vehicles, you really need to pass in a track.
-    TODO this will not work for GenericTrack
-    """
-    if not timestamp:
-        return None
-    foundPosition = None
-
-    try:
-        if not track:
-            foundPositions = PAST_POSITION_MODEL.get().objects.filter(timestamp=timestamp)
-        elif resource:
-            foundPositions = PAST_POSITION_MODEL.get().objects.filter(track__resource=resource, timestamp=timestamp)
-        else:
-            foundPositions = PAST_POSITION_MODEL.get().objects.filter(track=track, timestamp=timestamp)
-        # take the first one.
-        if foundPositions:
-            foundPosition = foundPositions[0]
-    except ObjectDoesNotExist:
-        pass
-
-    if not foundPosition:
-        tablename = PAST_POSITION_MODEL.get()._meta.db_table
-        query = "select * from " + tablename + ' pos'
-        if track:
-            query = query + " where " + "track_id = '" + str(track.pk) + "'"
-        elif resource:
-            query = query + ", " + TRACK_MODEL.get()._meta.db_table + " track"
-            query = query + " where"
-#             query = query + " pos.track_id is not null and"
-            query = query + " pos.track_id=track." + TRACK_MODEL.get()._meta.pk.name
-            query = query + " and track.resource_id = '" + str(resource.pk) + "'"
-            
-        query = query + " order by abs(timestampdiff(second, '" + timestamp.isoformat() + "', timestamp)) limit 1;"
-        posAtTime = (PAST_POSITION_MODEL.get().objects.raw(query))
-        posList = list(posAtTime)
-        if posList:
-            foundPosition = posAtTime[0]
-            if foundPosition and foundPosition.timestamp:
-                if (foundPosition.timestamp > timestamp):
-                    delta = (foundPosition.timestamp - timestamp)
-                else:
-                    delta = (timestamp - foundPosition.timestamp)
-                if math.fabs(delta.total_seconds()) > max_time_difference_seconds:
-                    foundPosition = None
-            else:
-                foundPosition = None
-        else:
-            foundPosition = None
-    return foundPosition
 
 
 def getActivePositions(trackId=None):
