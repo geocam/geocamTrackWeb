@@ -4,6 +4,8 @@
 # All rights reserved.
 # __END_LICENSE__
 
+from geocamUtil.SettingsUtil import getOrCreateDict, getOrCreateArray
+
 GEOCAM_TRACK_RESOURCE_MODEL = 'geocamTrack.Resource'
 GEOCAM_TRACK_RESOURCE_VERBOSE_NAME = 'Resource'
 GEOCAM_TRACK_TRACK_MODEL = 'geocamTrack.Track'
@@ -44,16 +46,30 @@ GEOCAM_TRACK_OPS_TIME_ZONE = 'UTC'
 
 GEOCAM_TRACK_FEED_NAME = 'GeoCam Track'
 
-# include this in your siteSettings.py BOWER_INSTALLED_APPS
-GEOCAM_TRACK_BOWER_INSTALLED_APPS = ('jquery-mobile',
-                                     'google-maps-utility-library-v3-infobubble',
-                                     'klass=git://github.com/ded/klass.git'
-                                     )
+BOWER_INSTALLED_APPS = getOrCreateArray('BOWER_INSTALLED_APPS')
+BOWER_INSTALLED_APPS += ['jquery-mobile',
+                         'google-maps-utility-library-v3-infobubble',
+                         'klass=git://github.com/ded/klass.git'
+                         ]
 
-XGDS_MAP_SERVER_JS_MAP = {}
+XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
 XGDS_MAP_SERVER_JS_MAP['AbstractTrack'] = {'ol': 'geocamTrack/js/olTrackMap.js',
                                            'model': GEOCAM_TRACK_TRACK_MODEL,
                                            'hiddenColumns': ['type', 'color', 'alpha', 'times', 'coords']}
+XGDS_MAP_SERVER_JS_MAP['Position'] = {'ol': 'geocamTrack/js/olPositionMap.js',
+                                      'model': GEOCAM_TRACK_PAST_POSITION_MODEL,
+                                      'hiddenColumns': ['type','id']}
+
+XGDS_DATA_MASKED_FIELDS = getOrCreateDict('XGDS_DATA_MASKED_FIELDS')
+XGDS_DATA_MASKED_FIELDS['geocamTrack'] = {'Track': ['uuid',
+                                                    'iconStyle',
+                                                    'lineStyle',
+                                                    'extras',
+                                                    ]
+                                          }
+
+XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
+XGDS_DATA_IMPORTS['GPS Track'] = '/track/importTrack'
 
 # override to include SSE; right now we are based on django-sse-wrapper
 XGDS_SSE = False
