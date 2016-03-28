@@ -17,7 +17,7 @@
         "pk": 2,
         "model": "geocamTrack.iconstyle",
         "fields": {
-            "scale": 1.2,
+            "scale": 0.3,
             "name": "pointer",
             "url": "/static/geocamTrack/icons/pointer.png",
             "height": 64,
