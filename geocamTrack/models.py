@@ -82,7 +82,10 @@ class IconStyle(models.Model):
             try:
                 int(self.color)
             except:
-                color = self.color()
+                try:
+                    color = self.color()
+                except:
+                    color = self.color
         if color:
             colorStr = '<color>%s</color>' % color
         else:
