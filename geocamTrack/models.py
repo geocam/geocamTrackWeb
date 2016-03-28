@@ -289,10 +289,13 @@ class AbstractTrack(models.Model):
     def getIconColor(self, pos):
         try:
             currentIconStyle = self.getIconStyle(pos)
-            int(currentIconStyle.color)
+            int(str(currentIconStyle.color))
             return currentIconStyle.color
         except:
-            return currentIconStyle.color()
+            try:
+                return currentIconStyle.color()
+            except:
+                return str(currentIconStyle.color)
 
     def getLineColor(self):
         return self.getLineStyle().color
