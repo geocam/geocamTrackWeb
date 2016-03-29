@@ -360,8 +360,6 @@ def getTrackIndexKml(request):
     for track in tracks:
         if track.name.startswith(todaystring):
             todays_tracks.append(track)
-        else:
-            break
     
     other_tracks = [ t for t in tracks]
     other_tracks = other_tracks[len(todays_tracks):]
