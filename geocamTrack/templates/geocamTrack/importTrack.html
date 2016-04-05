@@ -14,8 +14,11 @@
 	{% endif %}
 {% endblock otherJSInit %}
 
-{% block firstPackery %}
-<div id="importDiv" class="item w3 noresize" >
+{% block preMap %}
+<div class="grid-stack-item" id="importDiv"
+        data-gs-x="0" data-gs-y="0"
+        data-gs-width="3" data-gs-height="2">
+            <div class="grid-stack-item-content">
 	<i class="icon-lock pinDiv warning"></i><br/>
 	<strong>Import Track</strong>
 <form id="import_gpx" action="{% url 'geocamTrack_importTrack' %}" method="post" enctype="multipart/form-data">
@@ -27,4 +30,5 @@
     </div>
 </form>
 </div>
-{% endblock firstPackery %}
+</div>
+{% endblock preMap %}
