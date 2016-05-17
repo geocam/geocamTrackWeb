@@ -6,6 +6,11 @@
 
 from geocamUtil.SettingsUtil import getOrCreateDict, getOrCreateArray
 
+# If the server you are deploying on is the server which is collecting and providing track data,
+# set this GEOCAM_TRACK_SERVER_TRACK_PROVIDER to True in your settings.py.  
+# data replication will take care of propagating that.
+GEOCAM_TRACK_SERVER_TRACK_PROVIDER = False  
+
 GEOCAM_TRACK_RESOURCE_MODEL = 'geocamTrack.Resource'
 GEOCAM_TRACK_RESOURCE_VERBOSE_NAME = 'Resource'
 GEOCAM_TRACK_TRACK_MONIKIER = 'Track'
