@@ -43,9 +43,9 @@ def getModClass(name):
 
 
 class AbstractResource(models.Model):
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, db_index=True)
     user = models.ForeignKey(User, null=True, blank=True)
-    uuid = UuidField()
+    uuid = UuidField(db_index=True)
     extras = ExtrasDotField()
     primary = models.NullBooleanField(null=True, default=False)  # to be used for 'primary resources' which show up in the import dropdown
 
@@ -226,7 +226,7 @@ class AbstractTrack(models.Model):
     resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
     iconStyle = 'set this to DEFAULT_ICON_STYLE_FIELD() or similar in derived classes'
     lineStyle = 'set this to DEFAULT_LINE_STYLE_FIELD() or similar in derived classes'
-    uuid = UuidField()
+    uuid = UuidField(db_index=True)
     extras = ExtrasDotField()
 
     class Meta:
@@ -586,8 +586,8 @@ class AbstractResourcePositionNoUuid(models.Model):
     """
     track = 'set to DEFAULT_TRACK_FIELD() or similar in derived classes'
     timestamp = models.DateTimeField(db_index=True)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    latitude = models.FloatField(db_index=True)
+    longitude = models.FloatField(db_index=True)
 
     class Meta:
         abstract = True
@@ -724,7 +724,7 @@ class AbstractResourcePosition(AbstractResourcePositionNoUuid):
     """
     Adds a uuid field to AbstractResourcePositionNoUuid. 
     """
-    uuid = UuidField()
+    uuid = UuidField(db_index=True)
 
     class Meta:
         abstract = True
@@ -734,7 +734,7 @@ class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
     """
     Adds heading support to AbstractResourcePosition.
     """
-    heading = models.FloatField(null=True, blank=True)
+    heading = models.FloatField(null=True, blank=True, db_index=True)
 
     def getHeading(self):
         return self.heading
@@ -780,15 +780,15 @@ class AbstractResourcePositionWithHeading(AbstractResourcePositionWithHeadingNoU
     """
     Adds a uuid field to AbstractResourcePositionWithHeadingNoUuid. 
     """
-    uuid = UuidField()
+    uuid = UuidField(db_index=True)
 
     class Meta:
         abstract = True
 
 
 class AltitudeResourcePositionNoUuid(AbstractResourcePositionWithHeadingNoUuid):
-    altitude = models.FloatField(null=True)
-    precisionMeters = models.FloatField(null=True)  # estimated position error
+    altitude = models.FloatField(null=True, db_index=True)
+    precisionMeters = models.FloatField(null=True, db_index=True)  # estimated position error
 
     class Meta:
         abstract = True
@@ -801,8 +801,8 @@ class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
     """
     track = DEFAULT_TRACK_FIELD()
 
-    altitude = models.FloatField(null=True)
-    precisionMeters = models.FloatField(null=True)  # estimated position error
+    altitude = models.FloatField(null=True, db_index=True)
+    precisionMeters = models.FloatField(null=True, db_index=True)  # estimated position error
 
     class Meta:
         abstract = True
