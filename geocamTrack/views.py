@@ -30,7 +30,7 @@ from geocamUtil import geomath
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.modelJson import modelsToJson, modelToJson
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
-from geocamUtil.KmlUtil import wrapKmlDjango, djangoResponse
+from geocamUtil.KmlUtil import wrapKmlDjango, djangoResponse, wrapKml, buildNetworkLink
 from forms import ImportTrackForm
 
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
@@ -75,31 +75,20 @@ def getGeoJsonDictWithErrorHandling():
     return dict(result=result)
 
 
-def wrapKml(text):
-    # xmlns:gx="http://www.google.com/kml/ext/2.2"
-    return '''<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2"
-     xmlns:kml="http://www.opengis.net/kml/2.2"
-     xmlns:atom="http://www.w3.org/2005/Atom">
-%s
-</kml>
-''' % text
+# def wrapKml(text):
+#     # xmlns:gx="http://www.google.com/kml/ext/2.2"
+#     return '''<?xml version="1.0" encoding="UTF-8"?>
+# <kml xmlns="http://www.opengis.net/kml/2.2"
+#      xmlns:kml="http://www.opengis.net/kml/2.2"
+#      xmlns:atom="http://www.w3.org/2005/Atom">
+# %s
+# </kml>
+# ''' % text
 
 
-def getKmlNetworkLink(request):
+def getKmlNetworkLink(request, name=settings.GEOCAM_TRACK_FEED_NAME, interval=5):
     url = request.build_absolute_uri(settings.SCRIPT_NAME + 'geocamTrack/latest.kml')
-    return djangoResponse('''
-<NetworkLink>
-  <name>%(name)s</name>
-  <Link>
-    <href>%(url)s</href>
-    <refreshMode>onInterval</refreshMode>
-    <refreshInterval>5</refreshInterval>
-  </Link>
-</NetworkLink>
-''' % dict(name=settings.GEOCAM_TRACK_FEED_NAME,
-           url=url))
-
+    return djangoResponse(buildNetworkLink(url, name, interval))
 
 def getKmlTrack(name, positions):
     text = '<Document>\n'
