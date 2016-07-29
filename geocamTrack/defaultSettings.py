@@ -59,9 +59,10 @@ BOWER_INSTALLED_APPS += ['jquery-mobile',
                          ]
 
 XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
-# XGDS_MAP_SERVER_JS_MAP['AbstractTrack'] = {'ol': 'geocamTrack/js/olTrackMap.js',
-#                                            'model': GEOCAM_TRACK_TRACK_MODEL,
-#                                            'hiddenColumns': ['type', 'color', 'alpha', 'times', 'coords']}
+XGDS_MAP_SERVER_JS_MAP[GEOCAM_TRACK_TRACK_MONIKIER] = {'ol': 'geocamTrack/js/olTrackMap.js',
+                                                       'model': GEOCAM_TRACK_TRACK_MODEL,
+                                                       'columns': ['type', 'color', 'alpha', 'name', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
+                                                       'hiddenColumns': ['type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId']}
 XGDS_MAP_SERVER_JS_MAP['Position'] = {'ol': 'geocamTrack/js/olPositionMap.js',
                                       'model': GEOCAM_TRACK_PAST_POSITION_MODEL,
                                       'hiddenColumns': ['type','id']}

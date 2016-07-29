@@ -25,6 +25,7 @@ from geocamUtil.models.UuidField import UuidField
 from geocamUtil.loader import LazyGetModelByName
 
 from geocamUtil.usng import usng
+from xgds_core.models import SearchableModel
 
 # pylint: disable=C1001
 latestRequestG = None
@@ -219,7 +220,7 @@ DEFAULT_LINE_STYLE_FIELD = lambda: models.ForeignKey(LineStyle, null=True, blank
                                                      related_name='%(app_label)s_%(class)s_related')
 
 
-class AbstractTrack(models.Model):
+class AbstractTrack(models.Model, SearchableModel):
     """ This is for an abstract track with a FIXED resource model, ie all the tracks have like resources.
     """
     name = models.CharField(max_length=40, blank=True)
@@ -254,6 +255,11 @@ class AbstractTrack(models.Model):
 
     def getLabelExtra(self, pos):
         return ''
+
+    @property
+    def lat(self):
+        # This is a total hack to get tracks to show on the map after they were searched.
+        return 1
 
     def getIconStyle(self, pos):
         if hasattr(self, '_currentIcon'):
@@ -503,34 +509,34 @@ class AbstractTrack(models.Model):
         afterWeight = beforeDelta / delta
         return POSITION_MODEL.get().getInterpolatedPosition(utcDt, beforeWeight, beforePos, afterWeight, afterPos)
 
-    def toMapDict(self):
-        positions = self.getPositions()
-
-        n = positions.count()
-        if n < 2:
-            return
-
-        result = {}
-        result['type'] = 'AbstractTrack'
-        if self.name:
-            result['name'] = self.name
-        else:
-            result['name'] = ''
-        result['id'] = self.pk
+    @classmethod
+    def cls_type(cls):
+        return settings.GEOCAM_TRACK_TRACK_MONIKIER
+    
+    @property
+    def color(self):
         color = self.getLineStyle().getHexColor()
         if color:
-            result['color'] = color
-        else:
-            result['color'] = ''
-        result['alpha'] = self.getLineStyle() .getAlpha()
-        coordGroups = []
-        timesGroups = []
+            return color
+        return None
+    
+    @property
+    def alpha(self):
+        return self.getLineStyle().getAlpha()
+
+    def buildTimeCoords(self):
+        self.coordGroups = []
+        self.timesGroups = []
+        if self.getPositions().count() < 2:
+            return
+        if self.coordGroups:
+            return
         coords = []
         times = []
-
+ 
         lastPos = None
         breakDist = settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS
-        for pos in positions:
+        for pos in self.getPositions():
             if lastPos and breakDist is not None:
                 diff = geomath.calculateDiffMeters([lastPos.longitude, lastPos.latitude],
                                                    [pos.longitude, pos.latitude])
@@ -538,18 +544,88 @@ class AbstractTrack(models.Model):
                 if dist > breakDist:
                     # start new line string
                     if coords:
-                        coordGroups.append(coords)
+                        self.coordGroups.append(coords)
                         coords = []
-                        timesGroups.append(times)
+                        self.timesGroups.append(times)
                         times = []
                 coords.append([pos.longitude, pos.latitude])
                 times.append(pos.timestamp)
             lastPos = pos
-        coordGroups.append(coords)
-        timesGroups.append(times)
-        result['times'] = timesGroups
-        result['coords'] = coordGroups
-        return result
+        self.coordGroups.append(coords)
+        self.timesGroups.append(times)
+
+    @property
+    def coords(self):
+        self.buildTimeCoords()
+        if self.coordGroups:
+            return self.coordGroups
+        return None
+        
+    @property
+    def times(self):
+        self.buildTimeCoords()
+        if self.timesGroups:
+            return self.timesGroups
+        return None
+    
+    @classmethod
+    def timesearchField(cls):
+        return None
+
+    @property
+    def event_time(self):
+        self.buildTimeCoords()
+        if self.timesGroups:
+            return self.timesGroups[0][0]
+        return None
+        
+#     def toMapDict(self):
+#         positions = self.getPositions()
+# 
+#         n = positions.count()
+#         if n < 2:
+#             return
+# 
+#         result = {}
+#         result['type'] = 'AbstractTrack'
+#         if self.name:
+#             result['name'] = self.name
+#         else:
+#             result['name'] = ''
+#         result['id'] = self.pk
+#         color = self.getLineStyle().getHexColor()
+#         if color:
+#             result['color'] = color
+#         else:
+#             result['color'] = ''
+#         result['alpha'] = self.getLineStyle() .getAlpha()
+#         coordGroups = []
+#         timesGroups = []
+#         coords = []
+#         times = []
+# 
+#         lastPos = None
+#         breakDist = settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS
+#         for pos in positions:
+#             if lastPos and breakDist is not None:
+#                 diff = geomath.calculateDiffMeters([lastPos.longitude, lastPos.latitude],
+#                                                    [pos.longitude, pos.latitude])
+#                 dist = geomath.getLength(diff)
+#                 if dist > breakDist:
+#                     # start new line string
+#                     if coords:
+#                         coordGroups.append(coords)
+#                         coords = []
+#                         timesGroups.append(times)
+#                         times = []
+#                 coords.append([pos.longitude, pos.latitude])
+#                 times.append(pos.timestamp)
+#             lastPos = pos
+#         coordGroups.append(coords)
+#         timesGroups.append(times)
+#         result['times'] = timesGroups
+#         result['coords'] = coordGroups
+#         return result
 
 
 class Track(AbstractTrack):
@@ -557,10 +633,10 @@ class Track(AbstractTrack):
     iconStyle = DEFAULT_ICON_STYLE_FIELD()
     lineStyle = DEFAULT_LINE_STYLE_FIELD()
 
-    def toMapDict(self):
-        result = AbstractTrack.toMapDict(self)
-        result['type'] = 'Track'
-        return result
+#     def toMapDict(self):
+#         result = AbstractTrack.toMapDict(self)
+#         result['type'] = 'Track'
+#         return result
     
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
