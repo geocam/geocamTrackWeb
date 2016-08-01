@@ -579,65 +579,12 @@ class AbstractTrack(models.Model, SearchableModel):
             return self.timesGroups[0][0]
         return None
         
-#     def toMapDict(self):
-#         positions = self.getPositions()
-# 
-#         n = positions.count()
-#         if n < 2:
-#             return
-# 
-#         result = {}
-#         result['type'] = 'AbstractTrack'
-#         if self.name:
-#             result['name'] = self.name
-#         else:
-#             result['name'] = ''
-#         result['id'] = self.pk
-#         color = self.getLineStyle().getHexColor()
-#         if color:
-#             result['color'] = color
-#         else:
-#             result['color'] = ''
-#         result['alpha'] = self.getLineStyle() .getAlpha()
-#         coordGroups = []
-#         timesGroups = []
-#         coords = []
-#         times = []
-# 
-#         lastPos = None
-#         breakDist = settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS
-#         for pos in positions:
-#             if lastPos and breakDist is not None:
-#                 diff = geomath.calculateDiffMeters([lastPos.longitude, lastPos.latitude],
-#                                                    [pos.longitude, pos.latitude])
-#                 dist = geomath.getLength(diff)
-#                 if dist > breakDist:
-#                     # start new line string
-#                     if coords:
-#                         coordGroups.append(coords)
-#                         coords = []
-#                         timesGroups.append(times)
-#                         times = []
-#                 coords.append([pos.longitude, pos.latitude])
-#                 times.append(pos.timestamp)
-#             lastPos = pos
-#         coordGroups.append(coords)
-#         timesGroups.append(times)
-#         result['times'] = timesGroups
-#         result['coords'] = coordGroups
-#         return result
-
 
 class Track(AbstractTrack):
     resource = DEFAULT_RESOURCE_FIELD()
     iconStyle = DEFAULT_ICON_STYLE_FIELD()
     lineStyle = DEFAULT_LINE_STYLE_FIELD()
 
-#     def toMapDict(self):
-#         result = AbstractTrack.toMapDict(self)
-#         result['type'] = 'Track'
-#         return result
-    
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
 
@@ -654,7 +601,7 @@ class Track(AbstractTrack):
 DEFAULT_TRACK_FIELD = lambda: models.ForeignKey(Track, db_index=True, null=True, blank=True)
 
 
-class AbstractResourcePositionNoUuid(models.Model):
+class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
     """
     AbstractResourcePositionNoUuid is the most minimal position model
     geocamTrack supports.  Other apps building on geocamTrack may want
@@ -668,6 +615,14 @@ class AbstractResourcePositionNoUuid(models.Model):
     class Meta:
         abstract = True
         ordering = ('-timestamp',)
+
+    @classmethod
+    def cls_type(cls):
+        return 'Position'
+    
+    @classmethod
+    def timesearchField(self):
+        return 'timestamp'
 
     def saveCurrent(self):
         # if there is an existing entry for this track, overwrite
@@ -769,16 +724,53 @@ class AbstractResourcePositionNoUuid(models.Model):
                        coords=coords,
                        icon=self.getIconForIndex(index)))
 
-    def toMapDict(self):
-        result = {}
-        result['type'] = "Position"
-        result['id'] = self.pk
-        result['lat'] = self.latitude
-        result['lon'] = self.longitude
-        result.update(self.getProperties())
-        del(result['unixstamp'])
-        del(result['subtype'])
-        return result
+    @property
+    def lat(self):
+        return self.latitude
+        
+    @property
+    def lon(self):
+        return self.longitude
+    
+    @property
+    def altitude(self):
+        return None
+    
+    @property
+    def heading(self):
+        return None
+    
+    def getPosition(self):
+        return self
+    
+    @property
+    def displayName(self):
+        return self.track.name
+
+    @property
+    def event_time(self):
+        return self.timestamp
+    
+    @property
+    def tz(self):
+        if self.track and hasattr(self.track, 'timezone'):
+            return self.track.timezone
+        return settings.TIME_ZONE
+    
+    @property
+    def unixstamp(self):
+        return self.timestamp.strftime('%s')
+    
+#     def toMapDict(self):
+#         result = {}
+#         result['type'] = "Position"
+#         result['id'] = self.pk
+#         result['lat'] = self.latitude
+#         result['lon'] = self.longitude
+#         result.update(self.getProperties())
+#         del(result['unixstamp'])
+#         del(result['subtype'])
+#         return result
 
     def __unicode__(self):
         if self.track:
