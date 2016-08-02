@@ -679,7 +679,7 @@ class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
         timezone = pytz.timezone(settings.TIME_ZONE)
         localTime = timezone.localize(self.timestamp)
         props0 = dict(subtype='ResourcePosition',
-                      displayName=self.track.name,
+                      displayName=self.track.name if self.track else 'Pos',
                       timestamp=localTime.isoformat(),
                       unixstamp=localTime.strftime("%s"))
         props = dict(((k, v) for k, v in props0.iteritems()
@@ -719,47 +719,25 @@ class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
   </Style>
 </Placemark>
 '''
-                % dict(id=self.track.uuid,
-                       displayName=self.track.name,
+                % dict(id=self.pk,
+                       displayName=self.track.name if self.track else 'Pos',
                        coords=coords,
                        icon=self.getIconForIndex(index)))
 
-    @property
-    def lat(self):
-        return self.latitude
-        
-    @property
-    def lon(self):
-        return self.longitude
-    
-    @property
-    def altitude(self):
-        return None
-    
-    @property
-    def heading(self):
-        return None
-    
     def getPosition(self):
         return self
     
     @property
     def displayName(self):
-        return self.track.name
+        if self.track:
+            return self.track.name
+        return str(self)
 
-    @property
-    def event_time(self):
-        return self.timestamp
-    
     @property
     def tz(self):
         if self.track and hasattr(self.track, 'timezone'):
             return self.track.timezone
         return settings.TIME_ZONE
-    
-    @property
-    def unixstamp(self):
-        return self.timestamp.strftime('%s')
     
 #     def toMapDict(self):
 #         result = {}
