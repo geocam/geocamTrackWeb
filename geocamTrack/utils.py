@@ -5,6 +5,7 @@
 # __END_LICENSE__
 
 import math
+import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
@@ -42,15 +43,22 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
     if not foundPosition:
         tablename = PAST_POSITION_MODEL.get()._meta.db_table
         query = "select * from " + tablename + ' pos'
+        operand = ' where'
         if track:
             query = query + " where " + "track_id = '" + str(track.pk) + "'"
+            operand = ' and'
         elif resource:
             query = query + ", " + TRACK_MODEL.get()._meta.db_table + " track"
             query = query + " where"
 #             query = query + " pos.track_id is not null and"
             query = query + " pos.track_id=track." + TRACK_MODEL.get()._meta.pk.name
             query = query + " and track.resource_id = '" + str(resource.pk) + "'"
+            operand = ' and'
             
+        # limit time to range
+        mintime = timestamp - datetime.timedelta(seconds=max_time_difference_seconds)
+        maxtime = timestamp + datetime.timedelta(seconds=max_time_difference_seconds)
+        query = query + operand + " pos.timestamp >= '" + mintime.isoformat() + "' and pos.timestamp <= '" + maxtime.isoformat() + "'"
         query = query + " order by abs(timestampdiff(second, '" + timestamp.isoformat() + "', timestamp)) limit 1;"
         posAtTime = (PAST_POSITION_MODEL.get().objects.raw(query))
         posList = list(posAtTime)
