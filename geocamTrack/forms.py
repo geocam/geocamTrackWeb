@@ -18,10 +18,13 @@ from django.conf import settings
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.forms.AbstractImportForm import AbstractImportForm
 from geocamUtil.extFileField import ExtFileField
+from xgds_core.forms import SearchForm
 
 Resource = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
+TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 
 from django.forms.models import ModelChoiceField
+from django.forms import CharField
 
 class AbstractImportTrackedForm(AbstractImportForm):
     resource = ModelChoiceField(required=False, queryset=Resource.get().objects.filter(primary=True), label=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME)
@@ -37,3 +40,11 @@ class AbstractImportTrackedForm(AbstractImportForm):
 
 class ImportTrackForm(AbstractImportTrackedForm):
     sourceFile = ExtFileField(ext_whitelist=(".gpx", ), required=True)
+
+class SearchTrackForm(SearchForm):
+    name = CharField(required=False)
+    resource = ModelChoiceField(required=False, queryset=Resource.get().objects.filter(primary=True), label=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME)
+
+    class Meta:
+        model = TRACK_MODEL.get()
+        fields = TRACK_MODEL.get().getSearchFormFields()

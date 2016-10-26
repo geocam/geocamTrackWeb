@@ -257,6 +257,12 @@ class AbstractTrack(models.Model, SearchableModel):
         return ''
 
     @property
+    def resource_name(self):
+        if self.resource:
+            return self.resource.name
+        return ''
+
+    @property
     def lat(self):
         # This is a total hack to get tracks to show on the map after they were searched.
         return 1
@@ -579,6 +585,9 @@ class AbstractTrack(models.Model, SearchableModel):
             return self.timesGroups[0][0]
         return None
         
+    @classmethod
+    def getSearchFormFields(cls):
+        return ['name', 'resource']
 
 class Track(AbstractTrack):
     resource = DEFAULT_RESOURCE_FIELD()
