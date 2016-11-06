@@ -16,7 +16,7 @@ TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 
 
-def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=settings.GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS, resource=None):
+def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=settings.GEOCAM_TRACK_CLOSEST_POSITION_MAX_DIFFERENCE_SECONDS, resource=None):
     """
     Look up the closest location, with a 1 minute default maximum difference.
     Track is optional but it will be a more efficient query if you limit it by track

@@ -41,6 +41,7 @@ GEOCAM_TRACK_INTERPOLATE_MAX_METERS = 20
 # interpolate if the positions before and after the timestamp have times
 # longer than this apart.
 GEOCAM_TRACK_INTERPOLATE_MAX_SECONDS = 8 * 60 * 60
+GEOCAM_TRACK_CLOSEST_POSITION_MAX_DIFFERENCE_SECONDS = 120
 
 # All timestamps in geocamTrack data tables should always use the UTC
 # time zone.  GEOCAM_TRACK_OPS_TIME_ZONE is currently used only to
