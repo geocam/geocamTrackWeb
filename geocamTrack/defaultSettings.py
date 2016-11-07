@@ -31,6 +31,7 @@ GEOCAM_TRACK_CURRENT_POSITION_AGE_MIN_SECONDS = 60
 
 GEOCAM_TRACK_OLD_TRACK_REFRESH_TIME_SECONDS = 300
 GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS = 3 * 300
+GEOCAM_TRACK_RECENT_TIME_FUNCTION = 'time.time'
 
 # When interpolating to generate the position for a timestamp, do not
 # interpolate if the positions before and after the timestamp are

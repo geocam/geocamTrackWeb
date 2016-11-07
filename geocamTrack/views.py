@@ -31,6 +31,7 @@ from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.modelJson import modelsToJson, modelToJson
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.KmlUtil import wrapKmlDjango, djangoResponse, wrapKml, buildNetworkLink
+from geocamUtil.loader import getClassByName
 from forms import ImportTrackForm
 
 from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
@@ -47,7 +48,7 @@ if settings.XGDS_SSE:
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
 PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
-
+RECENT_TIME_FUNCTION = getClassByName(settings.GEOCAM_TRACK_RECENT_TIME_FUNCTION)
 
 class ExampleError(Exception):
     pass
@@ -441,7 +442,7 @@ def getTracksKml(request, recent=True):
 
     recent = request.GET.get('recent')
     if recent:
-        recentStartFloat = time.time() - settings.GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS
+        recentStartFloat = RECENT_TIME_FUNCTION() - settings.GEOCAM_TRACK_RECENT_TRACK_LENGTH_SECONDS
         recentStartTime = datetime.datetime.utcfromtimestamp(recentStartFloat).replace(tzinfo=pytz.utc)
         if startTime is None or recentStartTime > startTime:
             startTime = recentStartTime
