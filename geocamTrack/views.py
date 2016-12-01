@@ -489,9 +489,9 @@ def getTracksKml(request, recent=True):
 
 def getCsvTrackLink(day, trackName, startTimeUtc=None, endTimeUtc=None):
     fname = '%s_%s.csv' % (day.strftime('%Y%m%d'), trackName)
-    url = reverse('geocamTrack_trackCsv', args=[fname])
+    url = reverse('geocamTrack_trackCsv', args=[trackName, fname])
     params = {}
-    params['track'] = trackName
+#     params['track'] = trackName
     if startTimeUtc:
         params['start'] = str(calendar.timegm(startTimeUtc.timetuple()))
     if endTimeUtc:
@@ -539,10 +539,11 @@ def getCsvTrackIndex(request):
                               context_instance=RequestContext(request))
 
 
-def getTrackCsv(request, fname):
-    trackName = request.GET.get('track')
+def getTrackCsv(request, trackName, fname=None):
     if not trackName:
-        return HttpResponseBadRequest('track parameter is required')
+        return HttpResponseBadRequest('trackName is required')
+    if not fname:
+        fname = trackName + '.csv'
     track = TRACK_MODEL.get().objects.get(name=trackName)
     positions = PAST_POSITION_MODEL.get().objects.filter(track=track).\
         order_by('timestamp')
