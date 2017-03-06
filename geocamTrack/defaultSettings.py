@@ -55,8 +55,7 @@ GEOCAM_TRACK_OPS_TIME_ZONE = 'UTC'
 GEOCAM_TRACK_FEED_NAME = 'GeoCam Track'
 
 BOWER_INSTALLED_APPS = getOrCreateArray('BOWER_INSTALLED_APPS')
-BOWER_INSTALLED_APPS += ['jquery-mobile',
-                         'google-maps-utility-library-v3-infobubble',
+BOWER_INSTALLED_APPS += ['google-maps-utility-library-v3-infobubble',
                          'klass=git://github.com/ded/klass.git'
                          ]
 
