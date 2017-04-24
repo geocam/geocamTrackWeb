@@ -16,7 +16,7 @@ from dateutil.parser import parse as dateparser
 from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseNotAllowed, Http404, HttpResponseBadRequest
-from django.shortcuts import render_to_response, render, redirect
+from django.shortcuts import render, redirect
 from django.template import RequestContext
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -55,10 +55,10 @@ class ExampleError(Exception):
 
 
 def getIndex(request):
-    return render_to_response('trackingIndex.html',
-                              {},
-                              context_instance=RequestContext(request))
-
+    return render(request,
+                  'trackingIndex.html',
+                  {}
+                  )
 
 def getGeoJsonDict():
     return dict(type='FeatureCollection',
@@ -162,9 +162,10 @@ def getLiveMap(request):
         userData['loggedIn'] = True
         userData['userName'] = request.user.username
 
-    return render_to_response('liveMap.html',
-                              {'userData': dumps(userData)},
-                              context_instance=RequestContext(request))
+    return render(request,
+                  'liveMap.html',
+                  {'userData': dumps(userData)}
+                  )
 
 
 def getIcon(request, userName):
@@ -534,9 +535,10 @@ def getCsvTrackIndex(request):
         out.write('</li>\n')
     index = out.getvalue()
 
-    return render_to_response('geocamTrack/csvTrackIndex.html',
-                              {'index': index},
-                              context_instance=RequestContext(request))
+    return render(request,
+                  'geocamTrack/csvTrackIndex.html',
+                  {'index': index},
+                  )
 
 
 def getTrackCsv(request, trackName, fname=None):
@@ -700,9 +702,10 @@ def mapJsonPosition(request, id):
 
 if settings.XGDS_SSE:
     def getLiveTest(request, trackId=None):
-        return render_to_response("geocamTrack/testLive.html",
-                                  {'trackId': trackId},
-                                  context_instance=RequestContext(request))
+        return render(request,
+                      "geocamTrack/testLive.html",
+                      {'trackId': trackId},
+                      )
 
     def getActivePositionsJson(request, trackId=None):
         json_data = modelsToJson(getActivePositions(trackId), DatetimeJsonEncoder)
