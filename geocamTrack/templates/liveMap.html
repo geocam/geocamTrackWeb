@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html>
 <head>
 <meta name="viewport" content="initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
@@ -101,11 +102,6 @@
 <script type="text/javascript"
     src="{{ EXTERNAL_URL }}jquery/dist/jquery.min.js">
 </script>
-<!--  this does not even exist now? 
-<script type="text/javascript"
-    src="{{ STATIC_URL }}external/js/timeUtils.js">
-</script>
- -->
 <script type="text/javascript"
     src="{{ EXTERNAL_URL }}google-maps-utility-library-v3-infobubble/lib/infobubble-compiled.js">
 </script>
@@ -350,7 +346,7 @@
                                      position.coords.longitude);
  
     if (locationMarker == null) {
-      var icon_url = "{{ STATIC_URL }}external/icons/dot.png";
+      var icon_url = "{% static 'external/icons/dot.png' %}";
       var icon = new google.maps.MarkerImage(icon_url,
         new google.maps.Size(19, 19),
         new google.maps.Point(0, 0),
@@ -455,13 +451,13 @@
   <div id="map_canvas"></div>
 
   <div id="loading">
-    <img src="{{ STATIC_URL }}external/icons/loading.gif">
+    <img src="{% static 'external/icons/loading.gif' %}">
   </div>
 
   <div style="display: none">
     <div id="infobubble-content">
       <div id="infobubble-close" class="map-infoclose">
-        <img src="{{ STATIC_URL }}external/icons/close_button.gif">
+        <img src="{% static 'external/icons/close_button.gif' %}">
       </div>
       <div id="infobubble-text" class="map-infotext">
 	<div id="infobubble-user" class="map-infouser">Username</div>

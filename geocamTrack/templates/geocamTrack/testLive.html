@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block contents %}
     <span>Current Positions are:</span> <span id="live_positions_state"></span>
 {% endblock contents %}
@@ -8,7 +10,7 @@
 {{ block.super }}
     <script type="text/javascript" src="{{ EXTERNAL_URL }}underscore/underscore-min.js"></script>
     <script type="text/javascript" src="{{ EXTERNAL_URL }}klass/klass.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTrack/js/testLive.js"></script>
+    <script type="text/javascript" src="{% static 'geocamTrack/js/testLive.js' %}"></script>
 	<script type="text/javascript">
 	        $(document).ready(function() {
 	            var livePositionsController = new livePositions.LivePositionsController({
