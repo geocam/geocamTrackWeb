@@ -58,7 +58,7 @@ urlpatterns = [url(r'^$', views.getIndex,
                url(r'importTrack/$', views.importTrack, {'loginRequired': True}, 'geocamTrack_importTrack'),
 ]
 
-if settings.XGDS_SSE:
+if False and settings.XGDS_SSE:
     from sse_wrapper.views import EventStreamView
     urlpatterns += [url(r'^live/test/$', views.getLiveTest, {}, 'geocamTrack_liveTest'),
                     url(r'^live/test/(?P<trackId>[\d-]+)$', views.getLiveTest, {}, 'geocamTrack_liveTest'),

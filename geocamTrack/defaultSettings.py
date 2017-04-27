@@ -83,5 +83,3 @@ XGDS_DATA_MASKED_FIELDS['geocamTrack'] = {'Track': ['uuid',
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS['GPS Track'] = '/track/importTrack'
 
-# override to include SSE; right now we are based on django-sse-wrapper
-XGDS_SSE = False

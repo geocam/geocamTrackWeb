@@ -41,7 +41,7 @@ from django.conf import settings
 import traceback
 from trackUtil import getDatesWithPositionData
 
-if settings.XGDS_SSE:
+if False and settings.XGDS_SSE:
     from sse_wrapper.events import send_event
 
 
@@ -700,7 +700,7 @@ def mapJsonPosition(request, id):
                             content_type="application/json")
 
 
-if settings.XGDS_SSE:
+if False and settings.XGDS_SSE:
     def getLiveTest(request, trackId=None):
         return render(request,
                       "geocamTrack/testLive.html",
