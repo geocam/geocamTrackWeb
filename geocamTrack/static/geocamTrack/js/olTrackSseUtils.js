@@ -14,42 +14,26 @@
 //specific language governing permissions and limitations under the License.
 // __END_LICENSE__
 
-trackSse = {}; //namespace
 
 $.extend(trackSse, {
 	initialize: function() {
+		trackSse.positionsGroup = new ol.layer.Group({name:"livePositions"});
+		app.map.map.getLayers().push(trackSse.positionsGroup);
 		trackSse.subscribe();
 	},
-	subscribe: function() {
-		// get the channels, for each channel that may have a position subscribe to it.
-		var channels = sse.getChannels();
-		for (var i=0; i<channels.length; i++){
-			var channel = channels[i];
-			if (channel != 'sse') {
-				sse.subscribe('position', trackSse.handlePositionEvent, channel);
-			}
-		}
-	},
-	handlePositionEvent: function(event){
-		var data = JSON.parse(event.data);
-		var channel = sse.parseEventChannel(event);
-		trackSse.updatePosition(channel, data);
-		trackSse.updateTrack(channel, data);
-	},
-	positions: {},
 	createPosition: function(channel, data){
-		// in this example we just store the data
-		trackSse.positions[channel] = data;
+		trackSse.setupPositionIcon(channel);
+		data.displayName = channel;
+		var elements = Position.constructElements([data], true);
+		trackSse.positionsGroup.getLayers().push(elements);
+		trackSse.positions[channel] = elements;
 	},
-	modifyPosition: function(position, data){
-		trackSse.positions[channel] = data;
-	},
-	updatePosition: function(channel, data){
-		if (!(channel in trackSse.positions)){
-			trackSse.createPosition(channel, data);
-		} else {
-			trackSse.modifyPosition(channel, data);
-		}
+	modifyPosition: function(channel, data){
+		var position = trackSse.positions[channel];
+		var features = position.getSource().getFeatures();
+		var f = features[0];
+		var newCoords = transform([data.lon, data.lat]);
+		f.getGeometry().setCoordinates(newCoords);
 	},
 	updateTrack: function(channel, data) {
 		
