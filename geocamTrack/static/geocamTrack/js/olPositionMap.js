@@ -37,14 +37,17 @@ var Position = {
                 };
              };
         },
-        constructElements: function(positionsJson){
+        constructElements: function(positionsJson, isLive){
             if (_.isEmpty(positionsJson)){
                 return null;
             }
             this.initStyles();
             var olFeatures = [];
+            if (isLive === undefined){
+            	isLive = false;
+            }
             for (var i = 0; i < positionsJson.length; i++) {
-                olFeatures = olFeatures.concat(this.construct(positionsJson[i]));
+                olFeatures = olFeatures.concat(this.construct(positionsJson[i], isLive));
             }
             var vectorLayer = new ol.layer.Vector({
                 name: "Positions",
@@ -54,25 +57,37 @@ var Position = {
             });  
             return vectorLayer;
         },
-        construct: function(positionJson){
+        construct: function(positionJson, isLive){
             var coords = transform([positionJson.lon, positionJson.lat]);
             var feature = new ol.Feature({
                 name: positionJson.displayName,
                 uuid: positionJson.id,
                 geometry: new ol.geom.Point(coords)
             });
-            feature.setStyle(this.getStyles(positionJson));
+            if (isLive == true){
+            	feature.setStyle(this.getLiveStyles(positionJson));
+            } else {
+            	feature.setStyle(this.getStyles(positionJson));
+            }
             this.setupPopup(feature, positionJson);
             return feature;
         },
         getStyles: function(positionJson) {
             var styles = [this.styles['dot']];
-//            var theText = new ol.style.Text(this.styles['text']);
-//            theText.setText(positionJson.displayName);
-//            var textStyle = new ol.style.Style({
-//                text: theText
-//            });
-//            styles.push(textStyle);
+            return styles;
+        },
+        getLiveStyles: function(positionJson) {
+        	var styles = [this.styles['pointer']];
+        	if (positionJson.displayName in this.styles){
+        		styles[0] = this.styles[positionJson.displayName];
+        	} else {
+	            var theText = new ol.style.Text(this.styles['text']);
+	            theText.setText(positionJson.displayName);
+	            var textStyle = new ol.style.Style({
+	                text: theText
+	            });
+	            styles.push(textStyle);
+        	}
             return styles;
         },
         setupPopup: function(feature, positionJson) {
