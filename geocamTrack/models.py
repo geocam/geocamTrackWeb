@@ -626,6 +626,10 @@ class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
         ordering = ('-timestamp',)
 
     @classmethod
+    def getSearchFormFields(cls):
+        return ['track', 'timestamp', 'latitude', 'longitude']
+
+    @classmethod
     def cls_type(cls):
         return 'Position'
     

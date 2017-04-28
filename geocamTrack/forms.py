@@ -22,6 +22,7 @@ from xgds_core.forms import SearchForm
 
 Resource = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
+POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 
 from django.forms.models import ModelChoiceField
 from django.forms import CharField
@@ -48,3 +49,10 @@ class SearchTrackForm(SearchForm):
     class Meta:
         model = TRACK_MODEL.get()
         fields = TRACK_MODEL.get().getSearchFormFields()
+
+
+class SearchPositionForm(SearchForm):
+
+    class Meta:
+        model = POSITION_MODEL.get()
+        fields = POSITION_MODEL.get().getSearchFormFields()
