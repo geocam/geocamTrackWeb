@@ -37,10 +37,11 @@ $.extend(trackSse, {
 		trackSse.updateTrack(channel, data);
 	},
 	positions: {},
+	tracks: {},
 	createPosition: function(channel, data){
 		// in this example we just store the data
 		trackSse.positions[channel] = data;
-		trackSse.getTrack(data);
+		trackSse.getTrack(channel, data);
 	},
 	modifyPosition: function(position, data){
 		trackSse.positions[channel] = data;
@@ -52,13 +53,16 @@ $.extend(trackSse, {
 			trackSse.modifyPosition(channel, data);
 		}
 	},
+	renderTrack: function(channel, data){
+		
+	},
 	updateTrack: function(channel, data) {
 		
 	},
 	getTrackModel: function() {
 		return app.options.searchModels['Track'].model;
 	},
-	getTrack: function(data) {
+	getTrack: function(channel, data) {
 		
 		var trackUrl = '/xgds_map_server/mapJson/' + trackSse.getTrackModel() + '/pk:' + data.track_pk
 		$.ajax({
@@ -67,6 +71,8 @@ $.extend(trackSse, {
             success: $.proxy(function(data) {
             	if (data != null){
                     console.log(data);
+                    trackSse.tracks[channel] = data;
+                    trackSse.renderTrack(channel, data);
             	}
             }, this)
           });

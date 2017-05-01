@@ -27,7 +27,7 @@ $.extend(trackSse, {
 		var elements = Position.constructElements([data], true);
 		trackSse.positionsGroup.getLayers().push(elements);
 		trackSse.positions[channel] = elements;
-		trackSse.getTrack(data);
+		trackSse.getTrack(channel, data);
 	},
 	modifyPosition: function(channel, data){
 		var position = trackSse.positions[channel];
