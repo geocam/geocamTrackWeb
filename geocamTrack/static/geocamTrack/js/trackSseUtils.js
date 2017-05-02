@@ -51,12 +51,13 @@ $.extend(trackSse, {
 			trackSse.createPosition(channel, data);
 		} else {
 			trackSse.modifyPosition(channel, data);
+			trackSse.updateTrack(channel, data);
 		}
 	},
 	renderTrack: function(channel, data){
-		
+		// right now rendering is done by openlayers in olTrackSseUtils
 	},
-	updateTrack: function(channel, data) {
+	updateTrack: function(channel, position) {
 		
 	},
 	getTrackModel: function() {
@@ -70,7 +71,6 @@ $.extend(trackSse, {
             dataType: 'json',
             success: $.proxy(function(data) {
             	if (data != null){
-                    console.log(data);
                     trackSse.tracks[channel] = data;
                     trackSse.renderTrack(channel, data);
             	}
