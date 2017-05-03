@@ -80,12 +80,12 @@ var Position = {
         	var styles = [this.styles['pointer']];
         	if (positionJson.displayName in this.styles){
         		styles[0] = this.styles[positionJson.displayName];
-        		var theText = new ol.style.Text(this.styles['text']);
-	            theText.setText(positionJson.displayName);
-	            var textStyle = new ol.style.Style({
-	                text: theText
-	            });
-	            styles.push(textStyle);
+//        		var theText = new ol.style.Text(this.styles['text']);
+//	            theText.setText(positionJson.displayName);
+//	            var textStyle = new ol.style.Style({
+//	                text: theText
+//	            });
+//	            styles.push(textStyle);
         	} else {
 	            var theText = new ol.style.Text(this.styles['text']);
 	            theText.setText(positionJson.displayName);
