@@ -24,6 +24,12 @@ var Position = {
                         scale: 0.6
                         }))
                       });
+                this.styles['stop'] = new ol.style.Style({
+                    image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+                        src: '/static/geocamTrack/icons/stop.png',
+                        scale: 0.6
+                        }))
+                      });
                 this.styles['text'] = {
                     font: '12px Calibri,sans-serif',
                     fill: new ol.style.Fill({
@@ -65,7 +71,7 @@ var Position = {
                 geometry: new ol.geom.Point(coords)
             });
             if (isLive == true){
-            	feature.setStyle(this.getLiveStyles(positionJson));
+            	feature.setStyle(this.getLiveStyles(positionJson, false));
             } else {
             	feature.setStyle(this.getStyles(positionJson));
             }
@@ -76,8 +82,11 @@ var Position = {
             var styles = [this.styles['dot']];
             return styles;
         },
-        getLiveStyles: function(positionJson) {
+        getLiveStyles: function(positionJson, disconnected) {
         	var styles = [this.styles['pointer']];
+        	if (disconnected) {
+        		styles[0] = this.styles['stop'];
+        	}
         	if (positionJson.displayName in this.styles){
         		styles[0] = this.styles[positionJson.displayName];
 //        		var theText = new ol.style.Text(this.styles['text']);

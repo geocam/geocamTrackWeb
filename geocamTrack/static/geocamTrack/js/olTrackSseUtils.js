@@ -24,7 +24,8 @@ $.extend(trackSse, {
 		app.map.map.getLayers().push(trackSse.tracksGroup);
 		trackSse.positionsGroup = new ol.layer.Group({name:"livePositions"});
 		app.map.map.getLayers().push(trackSse.positionsGroup);
-		trackSse.subscribe();
+		trackSse.allChannels(trackSse.subscribe);
+		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, 11000);
 	},
 	lookupImage: function(url){
 		var result = undefined;
@@ -55,7 +56,6 @@ $.extend(trackSse, {
 	setupPositionIcon: function(channel){
 		Position.initStyles();
 		if (!(channel in Position.styles)){
-			
 			var channelStyleDict = {'pointer': trackSse.buildStyle(channel, 'pointer'),
 									'circle': trackSse.buildStyle(channel, 'circle'),
 									'stop': trackSse.buildStyle(channel, 'stop')};
@@ -71,15 +71,27 @@ $.extend(trackSse, {
 		trackSse.olPositions[channel] = elements;
 		trackSse.getTrack(channel, data);
 	},
-	modifyPosition: function(channel, data){
+	modifyPosition: function(channel, data, disconnected){
 		var position = trackSse.olPositions[channel];
 		if (position != undefined) {
+			if (data != undefined){
+				trackSse.positions[channel] = data;
+			}
 			var features = position.getSource().getFeatures();
 			var f = features[0];
-			f.setStyle(Position.getLiveStyles(data));
+			if (disconnected) {
+				data = trackSse.positions[channel];
+				f.setStyle(Position.getLiveStyles(data, true));
+			} else {
+				f.setStyle(Position.getLiveStyles(data, false));
+			}
 			var newCoords = transform([data.lon, data.lat]);
 			f.getGeometry().setCoordinates(newCoords);
 		}
+	},
+	showDisconnected: function(channel) {
+		console.log(channel + ' DISCONNECTED');
+		trackSse.modifyPosition(channel, null, true);
 	},
 	renderTrack: function(channel, data) {
 		var elements = Track.constructElements([data]);
@@ -117,15 +129,25 @@ $.extend(trackSse, {
 });
 
 $.extend(Position, {
-	getLiveStyles: function(positionJson) {
+	getLiveStyles: function(positionJson, disconnected) {
+		if (positionJson == null){
+			return;
+		}
+		if (disconnected === undefined) {
+			disconnected = false;
+		}
     	var styles = [this.styles['pointer']];
 		if (positionJson.displayName in this.styles){
 			var channel = this.styles[positionJson.displayName];
-			if (!_.isEmpty(positionJson.heading)){
-    			styles[0] = channel.pointer;
-    		} else {
-    			styles[0] = channel.circle;
-    		}
+			if (disconnected){
+				styles[0] = channel.stop;
+			} else {
+				if (!_.isEmpty(positionJson.heading)){
+	    			styles[0] = channel.pointer;
+	    		} else {
+	    			styles[0] = channel.circle;
+	    		}
+			}
 		} else {
 			var theText = new ol.style.Text(this.styles['text']);
             theText.setText(positionJson.displayName);

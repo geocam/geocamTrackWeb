@@ -18,17 +18,37 @@ trackSse = {}; //namespace
 
 $.extend(trackSse, {
 	initialize: function() {
-		trackSse.subscribe();
+		trackSse.allChannels(trackSse.subscribe);
+		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, 11000);
 	},
-	subscribe: function() {
-		// get the channels, for each channel that may have a position subscribe to it.
+	allChannels: function(theFunction){
 		var channels = sse.getChannels();
 		for (var i=0; i<channels.length; i++){
 			var channel = channels[i];
 			if (channel != 'sse') {
-				sse.subscribe('position', trackSse.handlePositionEvent, channel);
+				theFunction(channel);
 			}
 		}
+	},
+	checkStale: function(channel) {
+		var connected = false
+		if (trackSse.positions[channel] != undefined){
+			var nowmoment =  moment();
+			var diff = moment.duration(nowmoment.diff(trackSse.positions[channel].timestamp));
+			console.log('LAST POSITION: ' + trackSse.positions[channel].timestamp + ' NOW: ' + nowmoment.format() + ' DIFF: ' + diff.asSeconds());
+			if (diff.asSeconds() <= 10) {
+				connected = true;
+			}
+		}
+		if (!connected){
+			trackSse.showDisconnected(channel);
+		}
+	},
+	showDisconnected: function(channel) {
+		console.log(channel + ' DISCONNECTED');
+	},
+	subscribe: function(channel) {
+		sse.subscribe('position', trackSse.handlePositionEvent, channel);
 	},
 	handlePositionEvent: function(event){
 		var data = JSON.parse(event.data);
@@ -43,14 +63,14 @@ $.extend(trackSse, {
 		trackSse.positions[channel] = data;
 		trackSse.getTrack(channel, data);
 	},
-	modifyPosition: function(position, data){
+	modifyPosition: function(position, data, disconnected){
 		trackSse.positions[channel] = data;
 	},
 	updatePosition: function(channel, data){
 		if (!(channel in trackSse.positions)){
 			trackSse.createPosition(channel, data);
 		} else {
-			trackSse.modifyPosition(channel, data);
+			trackSse.modifyPosition(channel, data, false);
 			trackSse.updateTrack(channel, data);
 		}
 	},
