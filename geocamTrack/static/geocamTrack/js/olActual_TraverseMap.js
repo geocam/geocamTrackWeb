@@ -61,25 +61,27 @@ var Actual_Traverse = {
                     })
               });
             }
-            
-            for (var c = 0; c < coords.length; c++){
-        	if (coords[c].length > 1){
-                    var lineFeature = new ol.Feature({
-                        name: trackJson.id + "_" + c,
-                        geometry: new ol.geom.LineString(coords[c]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
-                    });
-                    lineFeature.setStyle(lsstyle);
-                    this.setupLinePopup(lineFeature, trackJson);
-                    allFeatures.push(lineFeature);
-        	} else if (coords[c].length == 1) {
-                    var feature = new ol.Feature({
-                        name: trackJson.id + "_" + c,
-                    	geometry: new ol.geom.Point(coords[c][0]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
-                    });
-                    feature.setStyle(dotstyle);
-                    this.setupLinePopup(feature, trackJson);
-                    allFeatures.push(feature);
-        	}
+
+            if (coords != undefined) {
+	            for (var c = 0; c < coords.length; c++){
+		        	if (coords[c].length > 1){
+		                    var lineFeature = new ol.Feature({
+		                        name: trackJson.id + "_" + c,
+		                        geometry: new ol.geom.LineString(coords[c]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
+		                    });
+		                    lineFeature.setStyle(lsstyle);
+		                    this.setupLinePopup(lineFeature, trackJson);
+		                    allFeatures.push(lineFeature);
+		        	} else if (coords[c].length == 1) {
+		                    var feature = new ol.Feature({
+		                        name: trackJson.id + "_" + c,
+		                    	geometry: new ol.geom.Point(coords[c][0]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
+		                    });
+		                    feature.setStyle(dotstyle);
+		                    this.setupLinePopup(feature, trackJson);
+		                    allFeatures.push(feature);
+		        	}
+	            }
             }
             return allFeatures;
         },

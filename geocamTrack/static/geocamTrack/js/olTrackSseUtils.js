@@ -16,6 +16,7 @@
 
 
 $.extend(trackSse, {
+	staticIconPrefix: '/static/geocamTrack/icons/',
 	olPositions: {},
 	olTracks: {},
 	initialize: function() {
@@ -24,6 +25,42 @@ $.extend(trackSse, {
 		trackSse.positionsGroup = new ol.layer.Group({name:"livePositions"});
 		app.map.map.getLayers().push(trackSse.positionsGroup);
 		trackSse.subscribe();
+	},
+	lookupImage: function(url){
+		var result = undefined;
+		$.each(trackSse.preloadedIcons, function(index, theImg){
+			if (theImg.src == url){
+				result = theImg;
+			}
+		});
+		return result;
+		
+	},
+	buildStyle: function(channel, name){
+		var pointerPath = trackSse.staticIconPrefix + channel.toLowerCase() + '_' + name + '.png';
+		var theImg = trackSse.lookupImage(pointerPath);
+		// these were preloaded in MapView.html
+		var theIcon = new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+            src: pointerPath,
+            img: theImg,  // this is for preload to fix Chrome.
+            scale: 0.5
+            }));
+
+		var theStyle = new ol.style.Style({
+            image: theIcon
+        });
+		theStyle['name'] = name;
+		return theStyle;
+	},
+	setupPositionIcon: function(channel){
+		Position.initStyles();
+		if (!(channel in Position.styles)){
+			
+			var channelStyleDict = {'pointer': trackSse.buildStyle(channel, 'pointer'),
+									'circle': trackSse.buildStyle(channel, 'circle'),
+									'stop': trackSse.buildStyle(channel, 'stop')};
+			Position.styles[channel] = channelStyleDict;
+		}
 	},
 	createPosition: function(channel, data){
 		trackSse.positions[channel] = data;
@@ -36,10 +73,13 @@ $.extend(trackSse, {
 	},
 	modifyPosition: function(channel, data){
 		var position = trackSse.olPositions[channel];
-		var features = position.getSource().getFeatures();
-		var f = features[0];
-		var newCoords = transform([data.lon, data.lat]);
-		f.getGeometry().setCoordinates(newCoords);
+		if (position != undefined) {
+			var features = position.getSource().getFeatures();
+			var f = features[0];
+			f.setStyle(Position.getLiveStyles(data));
+			var newCoords = transform([data.lon, data.lat]);
+			f.getGeometry().setCoordinates(newCoords);
+		}
 	},
 	renderTrack: function(channel, data) {
 		var elements = Track.constructElements([data]);
@@ -48,10 +88,52 @@ $.extend(trackSse, {
 	},
 	updateTrack: function(channel, data) {
 		var elements = trackSse.olTracks[channel];
+		if (elements == undefined){
+			return;
+		}
+		var newCoords = transform([data.lon, data.lat]);
+		var features = elements.getSource().getFeatures();
+		// TODO check the time of the last update; if the current one is close in time then we continue
+		if (features.length > 0){
+			var lastFeature = features[features.length - 1];
+			var geom = lastFeature.getGeometry();
+			if (geom.getType() == 'LineString'){
+				// append
+				var coords = geom.getCoordinates();
+				coords.push(newCoords);
+				geom.setCoordinates(coords);
+			} else {
+				// remove the last point and create a linestring
+			}
+		} else {
+			// maybe best to get the track from scratch ...
+		}
+			
 		//TODO add data to the end of the track as a new position or linestring.
-		//console.log('update track');
 	},
 	getCurrentPositions: function() {
 		
 	}
+});
+
+$.extend(Position, {
+	getLiveStyles: function(positionJson) {
+    	var styles = [this.styles['pointer']];
+		if (positionJson.displayName in this.styles){
+			var channel = this.styles[positionJson.displayName];
+			if (!_.isEmpty(positionJson.heading)){
+    			styles[0] = channel.pointer;
+    		} else {
+    			styles[0] = channel.circle;
+    		}
+		} else {
+			var theText = new ol.style.Text(this.styles['text']);
+            theText.setText(positionJson.displayName);
+            var textStyle = new ol.style.Style({
+                text: theText
+            });
+            styles.push(textStyle);
+		}
+		return styles;
+    },
 });

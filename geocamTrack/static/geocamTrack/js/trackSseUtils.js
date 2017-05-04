@@ -70,9 +70,9 @@ $.extend(trackSse, {
             url: trackUrl,
             dataType: 'json',
             success: $.proxy(function(data) {
-            	if (data != null){
+            	if (data != null && data.length == 1){
                     trackSse.tracks[channel] = data;
-                    trackSse.renderTrack(channel, data);
+                    trackSse.renderTrack(channel, data[0]);
             	}
             }, this)
           });
