@@ -36,7 +36,6 @@ $.extend(trackSse, {
 		if (trackSse.positions[channel] != undefined){
 			var nowmoment =  moment();
 			var diff = moment.duration(nowmoment.diff(trackSse.positions[channel].timestamp));
-			console.log('LAST POSITION: ' + trackSse.positions[channel].timestamp + ' NOW: ' + nowmoment.format() + ' DIFF: ' + diff.asSeconds());
 			if (diff.asSeconds() <= 10) {
 				connected = true;
 			}
