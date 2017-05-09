@@ -45,7 +45,7 @@ $.extend(trackSse, {
 		}
 	},
 	showDisconnected: function(channel) {
-		console.log(channel + ' DISCONNECTED');
+//		console.log(channel + ' DISCONNECTED');
 	},
 	subscribe: function(channel) {
 		sse.subscribe('position', trackSse.handlePositionEvent, channel);

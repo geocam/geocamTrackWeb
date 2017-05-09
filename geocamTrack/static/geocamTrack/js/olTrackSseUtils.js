@@ -90,7 +90,7 @@ $.extend(trackSse, {
 		}
 	},
 	showDisconnected: function(channel) {
-		console.log(channel + ' DISCONNECTED');
+//		console.log(channel + ' DISCONNECTED');
 		trackSse.modifyPosition(channel, null, true);
 	},
 	renderTrack: function(channel, data) {
