@@ -18,6 +18,7 @@ trackSse = {}; //namespace
 
 $.extend(trackSse, {
 	initialize: function() {
+		trackSse.getCurrentTracks();
 		trackSse.allChannels(trackSse.subscribe);
 		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, 11000);
 	},
@@ -83,7 +84,31 @@ $.extend(trackSse, {
 	getTrackModel: function() {
 		return app.options.searchModels['Track'].model;
 	},
+	convertTrackNameToChannel: function(track_name){
+		// override 
+		return track_name; 
+	},
+	getCurrentTracks: function() {
+		var trackPKUrl = '/track/track/pk/json'
+		$.ajax({
+            url: trackPKUrl,
+            dataType: 'json',
+            success: $.proxy(function(data) {
+            	if (data != null){
+            		// should return dictionary of channel: trackpk
+            		for (var track_name in data){
+            			var channel = trackSse.convertTrackNameToChannel(track_name);
+            		    trackSse.getTrack(channel, {'track_pk':data[track_name]});
+            		}
+            	}
+            }, this)
+          });
+	},
 	getTrack: function(channel, data) {
+		// first check if we already got it
+		if (!_.isEmpty(trackSse.tracks[channel])){
+			return;
+		}
 		
 		var trackUrl = '/xgds_map_server/mapJson/' + trackSse.getTrackModel() + '/pk:' + data.track_pk
 		$.ajax({

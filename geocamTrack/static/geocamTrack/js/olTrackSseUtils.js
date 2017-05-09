@@ -20,6 +20,7 @@ $.extend(trackSse, {
 	olPositions: {},
 	olTracks: {},
 	initialize: function() {
+		trackSse.getCurrentTracks();
 		trackSse.tracksGroup = new ol.layer.Group({name:"liveTracks"});
 		app.map.map.getLayers().push(trackSse.tracksGroup);
 		trackSse.positionsGroup = new ol.layer.Group({name:"livePositions"});

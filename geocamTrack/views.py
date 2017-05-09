@@ -15,7 +15,7 @@ from dateutil.parser import parse as dateparser
 
 from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseNotAllowed, Http404, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseNotAllowed, Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render, redirect
 from django.template import RequestContext
 from django.contrib.auth.models import User
@@ -673,6 +673,20 @@ def getActivePositions(trackId=None):
         return list(results)
     except:
         return []
+    
+def getActiveTracks():
+    """ look up the active tracks from the GEOCAM_TRACK_POSITION_MODEL """
+    return TRACK_MODEL.get().objects.filter(currentposition__isnull=False)
+
+
+def getActiveTrackPKs(request):
+    ''' return a JSON dictionary of channels to track pk '''
+    active_tracks = getActiveTracks()
+    result = {}
+    if active_tracks:
+        for track in active_tracks:
+            result[track.name] = track.pk
+    return JsonResponse(result)
 
 
 def mapJsonTrack(request, uuid):

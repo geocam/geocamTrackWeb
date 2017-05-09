@@ -56,7 +56,8 @@ urlpatterns = [url(r'^$', views.getIndex,
                url(r'^mapJsonTrack/(?P<uuid>[\w-]+)$', views.mapJsonTrack, {'loginRequired': True}, 'geocamTrack_mapJsonTrack'),
                url(r'^mapJsonPosition/(?P<id>[\d]+)$', views.mapJsonPosition, {'loginRequired': True}, 'geocamTrack_mapJsonPosition'),
                url(r'importTrack/$', views.importTrack, {'loginRequired': True}, 'geocamTrack_importTrack'),
-]
+               url(r'track/pk/json$', views.getActiveTrackPKs, {}, 'geocamTrack_active_track_pk'),
+               ]
 
 if False and settings.XGDS_SSE:
     from sse_wrapper.views import EventStreamView
