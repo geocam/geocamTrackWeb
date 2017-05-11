@@ -20,13 +20,13 @@ $.extend(trackSse, {
 	olPositions: {},
 	olTracks: {},
 	initialize: function() {
-		trackSse.getCurrentTracks();
+		trackSse.getCurrentPositions();
 		trackSse.tracksGroup = new ol.layer.Group({name:"liveTracks"});
 		app.map.map.getLayers().push(trackSse.tracksGroup);
 		trackSse.positionsGroup = new ol.layer.Group({name:"livePositions"});
 		app.map.map.getLayers().push(trackSse.positionsGroup);
 		trackSse.allChannels(trackSse.subscribe);
-		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, 11000);
+		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, trackSse.STALE_TIMEOUT);
 	},
 	lookupImage: function(url){
 		var result = undefined;
@@ -63,7 +63,10 @@ $.extend(trackSse, {
 			Position.styles[channel] = channelStyleDict;
 		}
 	},
-	createPosition: function(channel, data){
+	createPosition: function(channel, data, nonSse){
+		if (nonSse == undefined){
+			nonSse = false;
+		}
 		trackSse.positions[channel] = data;
 		trackSse.setupPositionIcon(channel);
 		data.displayName = channel;
@@ -71,6 +74,9 @@ $.extend(trackSse, {
 		trackSse.positionsGroup.getLayers().push(elements);
 		trackSse.olPositions[channel] = elements;
 		trackSse.getTrack(channel, data);
+		if (nonSse) {
+			trackSse.showDisconnected(channel);
+		}
 	},
 	modifyPosition: function(channel, data, disconnected){
 		var position = trackSse.olPositions[channel];
@@ -91,7 +97,6 @@ $.extend(trackSse, {
 		}
 	},
 	showDisconnected: function(channel) {
-//		console.log(channel + ' DISCONNECTED');
 		trackSse.modifyPosition(channel, null, true);
 	},
 	renderTrack: function(channel, data) {
@@ -123,9 +128,6 @@ $.extend(trackSse, {
 		}
 			
 		//TODO add data to the end of the track as a new position or linestring.
-	},
-	getCurrentPositions: function() {
-		
 	}
 });
 

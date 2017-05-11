@@ -673,6 +673,17 @@ def getActivePositions(trackId=None):
         return list(results)
     except:
         return []
+
+
+def getActivePositionsJSON(request):
+    ''' return JSON of the current active positions '''
+    active_positions = getActivePositions()
+    result = {}
+    if active_positions:
+        for position in active_positions:
+            result[position.track.name] = position.toMapDict()
+    return JsonResponse(result, encoder=DatetimeJsonEncoder)
+
     
 def getActiveTracks():
     """ look up the active tracks from the GEOCAM_TRACK_POSITION_MODEL """
@@ -686,7 +697,7 @@ def getActiveTrackPKs(request):
     if active_tracks:
         for track in active_tracks:
             result[track.name] = track.pk
-    return JsonResponse(result)
+    return JsonResponse(result, encoder=DatetimeJsonEncoder)
 
 
 def mapJsonTrack(request, uuid):

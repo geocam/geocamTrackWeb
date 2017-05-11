@@ -17,10 +17,11 @@
 trackSse = {}; //namespace
 
 $.extend(trackSse, {
+	STALE_TIMEOUT: 5000,
 	initialize: function() {
-		trackSse.getCurrentTracks();
+		trackSse.getCurrentPositions();
 		trackSse.allChannels(trackSse.subscribe);
-		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, 11000);
+		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, trackSse.STALE_TIMEOUT);
 	},
 	allChannels: function(theFunction){
 		var channels = sse.getChannels();
@@ -58,7 +59,10 @@ $.extend(trackSse, {
 	},
 	positions: {},
 	tracks: {},
-	createPosition: function(channel, data){
+	createPosition: function(channel, data, nonSse){
+		if (nonSse == undefined){
+			nonSse = false;
+		}
 		// in this example we just store the data
 		trackSse.positions[channel] = data;
 		trackSse.getTrack(channel, data);
@@ -87,22 +91,41 @@ $.extend(trackSse, {
 		// override 
 		return track_name; 
 	},
-	getCurrentTracks: function() {
-		var trackPKUrl = '/track/track/pk/json'
+	getCurrentPositions: function() {
+		var trackPKUrl = '/track/position/active/json'
 		$.ajax({
             url: trackPKUrl,
             dataType: 'json',
             success: $.proxy(function(data) {
             	if (data != null){
-            		// should return dictionary of channel: trackpk
+            		// should return dictionary of channel: position
             		for (var track_name in data){
             			var channel = trackSse.convertTrackNameToChannel(track_name);
-            		    trackSse.getTrack(channel, {'track_pk':data[track_name]});
+            			if (!(channel in trackSse.positions)){
+            				trackSse.createPosition(channel, data[track_name], true);
+            			}
             		}
             	}
             }, this)
           });
 	},
+	// when we get the position, it then gets the track.  No need for this.
+//	getCurrentTracks: function() {
+//		var trackPKUrl = '/track/track/pk/json'
+//		$.ajax({
+//            url: trackPKUrl,
+//            dataType: 'json',
+//            success: $.proxy(function(data) {
+//            	if (data != null){
+//            		// should return dictionary of channel: trackpk
+//            		for (var track_name in data){
+//            			var channel = trackSse.convertTrackNameToChannel(track_name);
+//            		    trackSse.getTrack(channel, {'track_pk':data[track_name]});
+//            		}
+//            	}
+//            }, this)
+//          });
+//	},
 	getTrack: function(channel, data) {
 		// first check if we already got it
 		if (!_.isEmpty(trackSse.tracks[channel])){

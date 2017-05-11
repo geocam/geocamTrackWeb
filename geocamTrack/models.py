@@ -625,6 +625,18 @@ class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
         abstract = True
         ordering = ('-timestamp',)
 
+    @property
+    def track_name(self):
+        if self.track:
+            return self.track.name
+        return None
+
+    @property
+    def track_pk(self):
+        if self.track:
+            return self.track.pk
+        return None
+    
     @classmethod
     def getSearchFormFields(cls):
         return ['track', 'timestamp', 'latitude', 'longitude']

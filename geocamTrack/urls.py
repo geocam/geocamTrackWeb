@@ -57,6 +57,7 @@ urlpatterns = [url(r'^$', views.getIndex,
                url(r'^mapJsonPosition/(?P<id>[\d]+)$', views.mapJsonPosition, {'loginRequired': True}, 'geocamTrack_mapJsonPosition'),
                url(r'importTrack/$', views.importTrack, {'loginRequired': True}, 'geocamTrack_importTrack'),
                url(r'track/pk/json$', views.getActiveTrackPKs, {}, 'geocamTrack_active_track_pk'),
+               url(r'position/active/json$', views.getActivePositionsJSON, {}, 'geocamTrack_active_positions_json'),
                ]
 
 if False and settings.XGDS_SSE:
