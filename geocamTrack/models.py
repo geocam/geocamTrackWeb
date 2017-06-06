@@ -607,7 +607,7 @@ class Track(AbstractTrack):
 #     generic_resource = GenericForeignKey('generic_resource_content_type', 'generic_resource_id')
  
 
-DEFAULT_TRACK_FIELD = lambda: models.ForeignKey(Track, db_index=True, null=True, blank=True)
+DEFAULT_TRACK_FIELD = lambda: models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True, null=True, blank=True)
 
 
 class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
@@ -616,7 +616,7 @@ class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
     geocamTrack supports.  Other apps building on geocamTrack may want
     to derive their position model from this.
     """
-    track = 'set to DEFAULT_TRACK_FIELD() or similar in derived classes'
+    track = DEFAULT_TRACK_FIELD() #'set to DEFAULT_TRACK_FIELD() or similar in derived classes'
     timestamp = models.DateTimeField(db_index=True)
     latitude = models.FloatField(db_index=True)
     longitude = models.FloatField(db_index=True)
