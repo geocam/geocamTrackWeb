@@ -667,7 +667,7 @@ def getActivePositions(trackId=None):
     # query = query + " where (timestampdiff(second, '" + datetime.now(pytz.utc).isoformat() + "', timestamp)) < " + settings.GEOCAM_TRACK_CURRENT_POSITION_AGE_MIN_SECONDS
     if trackId:
         query = query + ' where track_id=' + str(trackId)
-    print query
+#     print query
     try:
         results = (POSITION_MODEL.get().objects.raw(query))
         return list(results)
