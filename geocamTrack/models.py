@@ -616,7 +616,8 @@ class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
     geocamTrack supports.  Other apps building on geocamTrack may want
     to derive their position model from this.
     """
-    track = DEFAULT_TRACK_FIELD() #'set to DEFAULT_TRACK_FIELD() or similar in derived classes'
+    #track = DEFAULT_TRACK_FIELD() 
+    track = 'set to DEFAULT_TRACK_FIELD() or similar in derived classes'
     timestamp = models.DateTimeField(db_index=True)
     latitude = models.FloatField(db_index=True)
     longitude = models.FloatField(db_index=True)
@@ -880,11 +881,12 @@ class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
 
 
 class ResourcePosition(GeoCamResourcePosition):
-    pass
+    track = DEFAULT_TRACK_FIELD() 
 
 
 class PastResourcePosition(GeoCamResourcePosition):
-    pass
+    track = DEFAULT_TRACK_FIELD() 
+
 
 
 class AbstractTrackedAsset(models.Model):
