@@ -607,7 +607,7 @@ class Track(AbstractTrack):
 #     generic_resource = GenericForeignKey('generic_resource_content_type', 'generic_resource_id')
  
 
-DEFAULT_TRACK_FIELD = lambda: models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True, null=True, blank=True)
+DEFAULT_TRACK_FIELD = lambda: models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
 
 
 class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
