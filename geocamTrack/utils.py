@@ -58,8 +58,9 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
         # limit time to range
         mintime = timestamp - datetime.timedelta(seconds=max_time_difference_seconds)
         maxtime = timestamp + datetime.timedelta(seconds=max_time_difference_seconds)
-        query = query + operand + " pos.timestamp >= '" + mintime.isoformat() + "' and pos.timestamp <= '" + maxtime.isoformat() + "'"
-        query = query + " order by abs(timestampdiff(second, '" + timestamp.isoformat() + "', timestamp)) limit 1;"
+        query = query + operand + " pos.timestamp >= '" + mintime.strftime('%Y-%m-%d %H:%M:%S') + "' and pos.timestamp <= '" + maxtime.strftime('%Y-%m-%d %H:%M:%S') + "'"
+        query = query + " order by abs(timestampdiff(second, '" + timestamp.strftime('%Y-%m-%d %H:%M:%S') + "', timestamp)) limit 1;"
+        print query
         posAtTime = (PAST_POSITION_MODEL.get().objects.raw(query))
         posList = list(posAtTime)
         if posList:
