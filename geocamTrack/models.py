@@ -606,9 +606,9 @@ class Track(AbstractTrack):
 #     generic_resource_id = models.PositiveIntegerField()
 #     generic_resource = GenericForeignKey('generic_resource_content_type', 'generic_resource_id')
  
-
+# SUPER IMPORTANT.  If you reference an inherited class here you will get a circular dependency when this field is referenced in this file for any non-abstract class.
+# DO NOT use this DEFAULT_TRACK_FIELD in this file unless you are sure that you are referencing a model defined in this submodule
 DEFAULT_TRACK_FIELD = lambda: models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
-
 
 class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
     """
@@ -616,7 +616,6 @@ class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
     geocamTrack supports.  Other apps building on geocamTrack may want
     to derive their position model from this.
     """
-    #track = DEFAULT_TRACK_FIELD() 
     track = 'set to DEFAULT_TRACK_FIELD() or similar in derived classes'
     timestamp = models.DateTimeField(db_index=True)
     latitude = models.FloatField(db_index=True)
@@ -871,7 +870,7 @@ class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
     This abstract position model has the set of fields we usually use with
     GeoCam.
     """
-    track = DEFAULT_TRACK_FIELD()
+    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
 
     altitude = models.FloatField(null=True, db_index=True)
     precisionMeters = models.FloatField(null=True, db_index=True)  # estimated position error
@@ -881,11 +880,11 @@ class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
 
 
 class ResourcePosition(GeoCamResourcePosition):
-    track = DEFAULT_TRACK_FIELD() 
+    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
 
 
 class PastResourcePosition(GeoCamResourcePosition):
-    track = DEFAULT_TRACK_FIELD() 
+    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
 
 
 
