@@ -14,7 +14,6 @@ import xml.etree.cElementTree as et
 from dateutil.parser import parse as dateparser
 
 from django.views.decorators.cache import cache_page
-from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseNotAllowed, Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render, redirect
 from django.template import RequestContext
@@ -838,7 +837,6 @@ def doImportGpxTrack(request, f, tz, resource):
     return newTracksDB
 
 
-@login_required
 def importTrack(request):
     errors = None
     newTracks = []
