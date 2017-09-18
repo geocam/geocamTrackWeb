@@ -636,6 +636,20 @@ class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
         if self.track:
             return self.track.pk
         return None
+
+    @property
+    def track_color(self):
+        if self.track:
+            return self.track.getLineStyleColor()
+        return None
+
+    @property
+    def track_hexcolor(self):
+        if self.track:
+            kc = self.track.getLineStyleColor()
+            nc = '%s%s%s' % (kc[6:], kc[4:6], kc[2:4])
+            return nc
+        return None
     
     @classmethod
     def getSearchFormFields(cls):
