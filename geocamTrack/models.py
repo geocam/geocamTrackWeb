@@ -533,7 +533,8 @@ class AbstractTrack(models.Model, SearchableModel):
     def buildTimeCoords(self):
         self.coordGroups = []
         self.timesGroups = []
-        if self.getPositions().count() < 2:
+        currentPositions = self.getPositions()
+        if currentPositions.count() < 2:
             return
         if self.coordGroups:
             return
@@ -542,7 +543,7 @@ class AbstractTrack(models.Model, SearchableModel):
  
         lastPos = None
         breakDist = settings.GEOCAM_TRACK_START_NEW_LINE_DISTANCE_METERS
-        for pos in self.getPositions():
+        for pos in currentPositions:
             if lastPos and breakDist is not None:
                 diff = geomath.calculateDiffMeters([lastPos.longitude, lastPos.latitude],
                                                    [pos.longitude, pos.latitude])
@@ -574,6 +575,18 @@ class AbstractTrack(models.Model, SearchableModel):
             return self.timesGroups
         return None
     
+    
+    def toMapDict(self):
+        result = super(AbstractTrack, self).toMapDict() 
+        self.buildTimeCoords()
+        if self.timesGroups:
+            result['times'] = self.timesGroups
+            
+        if self.coordGroups:
+            result['coords'] = self.coordGroups
+        
+        return result 
+
     @classmethod
     def timesearchField(cls):
         return None
