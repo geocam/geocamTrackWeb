@@ -76,7 +76,7 @@ def getGeoJsonDictWithErrorHandling():
 
 
 def getKmlNetworkLink(request, name=settings.GEOCAM_TRACK_FEED_NAME, interval=5):
-    url = request.build_absolute_uri(settings.SCRIPT_NAME + 'geocamTrack/latest.kml')
+    url = request.build_absolute_uri(settings.SCRIPT_NAME + 'geocamTrack/rest/latest.kml')
     return djangoResponse(buildNetworkLink(url, name, interval))
 
 def getKmlTrack(name, positions):
