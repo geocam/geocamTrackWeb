@@ -12,7 +12,6 @@ from django.conf import settings
 urlpatterns = [url(r'^$', views.getIndex,{}, 'geocamTrack_index'),
                url(r'^post/$', views.postPosition,{'challenge': 'basic' }),
                url(r'^csvTrackIndex/$', views.getCsvTrackIndex,{},'geocamTrack_csvTrackIndex'),
-               url(r'^track/([^\./]+\.csv)$', views.getTrackCsv,{},'geocamTrack_trackCsv'),
                url(r'^track/csv/(?P<trackName>[\w-]+)$', views.getTrackCsv,{},'geocamTrack_trackCsv_byname'),
                url(r'importTrack/$', views.importTrack, {}, 'geocamTrack_importTrack'),
                

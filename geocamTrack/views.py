@@ -39,6 +39,7 @@ from geocamTrack.avatar import renderAvatar
 from django.conf import settings
 import traceback
 from trackUtil import getDatesWithPositionData
+from xgds_core.util import insertIntoPath
 
 if False and settings.XGDS_SSE:
     from sse_wrapper.events import send_event
@@ -209,6 +210,7 @@ def writeTrackNetworkLink(out, name,
     elif caching == 'cached':
         urlName = 'geocamTrack_cachedTracks'
     url = reverse(urlName)
+    url = insertIntoPath(url)
 
     params = {}
     if trackName:
