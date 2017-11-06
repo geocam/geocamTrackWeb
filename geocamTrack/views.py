@@ -585,8 +585,12 @@ def getTrackCsv(request, trackName, fname=None):
             cappedDist = dist
         cumDist += cappedDist
         if hasHeading:
-            out.write('%d,"%s",%.6f,%.6f,%.2f,%.2f,%.2f,%.2f\n'
-                      % (epoch, timestamp, pos.latitude, pos.longitude, pos.heading, dist, cappedDist, cumDist))
+            if not pos.heading:
+                out.write('%d,"%s",%.6f,%.6f,%s,%.2f,%.2f,%.2f\n'
+                          % (epoch, timestamp, pos.latitude, pos.longitude, '', dist, cappedDist, cumDist))
+            else:
+                out.write('%d,"%s",%.6f,%.6f,%.2f,%.2f,%.2f,%.2f\n'
+                          % (epoch, timestamp, pos.latitude, pos.longitude, pos.heading, dist, cappedDist, cumDist))
         else:
             out.write('%d,"%s",%.6f,%.6f,%.2f,%.2f,%.2f\n'
                       % (epoch, timestamp, pos.latitude, pos.longitude, dist, cappedDist, cumDist))
