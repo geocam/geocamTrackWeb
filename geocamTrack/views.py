@@ -33,7 +33,7 @@ from geocamUtil.KmlUtil import wrapKmlDjango, djangoResponse, wrapKml, buildNetw
 from geocamUtil.loader import getClassByName
 from forms import ImportTrackForm
 
-from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid
+from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid, AbstractResourcePositionWithHeadingNoUuid
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from django.conf import settings
@@ -561,8 +561,12 @@ def getTrackCsv(request, trackName, fname=None):
         endTime = datetime.datetime.utcfromtimestamp(float(endTimeEpoch))
         positions = positions.filter(timestamp__lte=endTime)
 
+    hasHeading = issubclass(PAST_POSITION_MODEL.get(), AbstractResourcePositionWithHeadingNoUuid)
     out = StringIO()
-    out.write('"epoch timestamp","timestamp","latitude","longitude","distance (m)","capped distance (m)","cumulative distance (m)"\n')
+    topRow = '"epoch timestamp","timestamp","latitude","longitude","distance (m)","capped distance (m)","cumulative distance (m)"\n'
+    if hasHeading:
+        topRow = '"epoch timestamp","timestamp","latitude","longitude","heading","distance (m)","capped distance (m)","cumulative distance (m)"\n'
+    out.write(topRow)
     prevPos = None
     cumDist = 0
     for pos in positions:
@@ -580,8 +584,12 @@ def getTrackCsv(request, trackName, fname=None):
         else:
             cappedDist = dist
         cumDist += cappedDist
-        out.write('%d,"%s",%.6f,%.6f,%.2f,%.2f,%.2f\n'
-                  % (epoch, timestamp, pos.latitude, pos.longitude, dist, cappedDist, cumDist))
+        if hasHeading:
+            out.write('%d,"%s",%.6f,%.6f,%.2f,%.2f,%.2f,%.2f\n'
+                      % (epoch, timestamp, pos.latitude, pos.longitude, pos.heading, dist, cappedDist, cumDist))
+        else:
+            out.write('%d,"%s",%.6f,%.6f,%.2f,%.2f,%.2f\n'
+                      % (epoch, timestamp, pos.latitude, pos.longitude, dist, cappedDist, cumDist))
 
         prevPos = pos
     response = HttpResponse(out.getvalue(),
