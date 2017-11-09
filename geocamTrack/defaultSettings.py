@@ -95,3 +95,10 @@ XGDS_DATA_MASKED_FIELDS['geocamTrack'] = {'Track': ['uuid',
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS['GPS Track'] = '/track/importTrack'
 
+#TODO override this for your track sse front end, it builds the name of the image from the name of your resource
+GEOCAM_TRACK_PRELOAD_TRACK_IMAGES = ["/static/geocamTrack/icons/1_pointer.png", 
+                                     "/static/geocamTrack/icons/2_pointer.png",
+                                     "/static/geocamTrack/icons/1_circle.png", 
+                                     "/static/geocamTrack/icons/2_circle.png",
+                                     "/static/geocamTrack/icons/1_stop.png", 
+                                     "/static/geocamTrack/icons/2_stop.png"]
