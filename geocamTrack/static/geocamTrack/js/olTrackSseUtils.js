@@ -22,9 +22,10 @@ $.extend(trackSse, {
 	initialize: function() {
 		trackSse.getCurrentPositions();
 		trackSse.tracksGroup = new ol.layer.Group({name:"liveTracks"});
-		app.map.map.getLayers().push(trackSse.tracksGroup);
+		trackSse.tracksGroup.setOpacity(0.35);
+		app.map.map.getLayers().insertAt(2,trackSse.tracksGroup);
 		trackSse.positionsGroup = new ol.layer.Group({name:"livePositions"});
-		app.map.map.getLayers().push(trackSse.positionsGroup);
+		app.map.map.getLayers().insertAt(3,trackSse.positionsGroup);
 		trackSse.allChannels(trackSse.subscribe);
 		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, trackSse.STALE_TIMEOUT);
 	},
