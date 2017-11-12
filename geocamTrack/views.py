@@ -878,3 +878,8 @@ def importTrack(request):
             'tracks': json.dumps(jsonTracks, cls=DatetimeJsonEncoder)
         },
     )
+
+
+def getSseActiveTracks(request):
+    # Look up the active channels we are using for SSE
+    return JsonResponse(settings.XGDS_SSE_TRACK_CHANNELS, safe=False)

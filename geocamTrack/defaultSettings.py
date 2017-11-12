@@ -102,3 +102,6 @@ GEOCAM_TRACK_PRELOAD_TRACK_IMAGES = ["/static/geocamTrack/icons/1_pointer.png",
                                      "/static/geocamTrack/icons/2_circle.png",
                                      "/static/geocamTrack/icons/1_stop.png", 
                                      "/static/geocamTrack/icons/2_stop.png"]
+
+#TODO override this to expose the sse channels for tracking
+XGDS_SSE_TRACK_CHANNELS = []

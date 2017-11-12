@@ -25,3 +25,7 @@ urlpatterns = [url(r'^resources.json$', views.getResourcesJson,{}),
                url(r'track/pk/json$', views.getActiveTrackPKs, {}, 'geocamTrack_active_track_pk'),
                url(r'position/active/json$', views.getActivePositionsJSON, {}, 'geocamTrack_active_positions_json'),
                ]
+
+
+if settings.XGDS_CORE_REDIS:
+    urlpatterns.append(url(r'^sseActiveTracks/$', views.getSseActiveTracks, {}, 'geocamTrack_active_tracks'))

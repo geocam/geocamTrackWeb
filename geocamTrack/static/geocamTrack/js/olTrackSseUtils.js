@@ -26,7 +26,7 @@ $.extend(trackSse, {
 		app.map.map.getLayers().insertAt(3,trackSse.tracksGroup);
 		trackSse.positionsGroup = new ol.layer.Group({name:"livePositions"});
 		app.map.map.getLayers().push(trackSse.positionsGroup);
-		trackSse.allChannels(trackSse.subscribe);
+		trackSse.subscribe()
 		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, trackSse.STALE_TIMEOUT);
 	},
 	lookupImage: function(url){

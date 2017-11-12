@@ -20,11 +20,29 @@ $.extend(trackSse, {
 	STALE_TIMEOUT: 5000,
 	initialize: function() {
 		trackSse.getCurrentPositions();
-		trackSse.allChannels(trackSse.subscribe);
+		trackSse.subscribe();
+		// sse.allChannels(trackSse.subscribe, trackSse.getChannels());
 		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, trackSse.STALE_TIMEOUT);
 	},
+	subscribe: function() {
+		sse.subscribe('position', trackSse.handlePositionEvent,  trackSse.getChannels());
+	},
+	getChannels: function() {
+		// get the active channels over AJAX
+		if (this.activeChannels === undefined){
+			$.ajax({
+	            url: '/track/sseActiveTracks',
+	            dataType: 'json',
+	            async: false,
+	            success: $.proxy(function(data) {
+	                this.activeChannels = data;
+	            }, this)
+	          });
+		}
+		return this.activeChannels;
+	},
 	allChannels: function(theFunction){
-		var channels = sse.getChannels();
+		var channels = this.getChannels();
 		for (var i=0; i<channels.length; i++){
 			var channel = channels[i];
 			if (channel != 'sse') {
@@ -48,9 +66,10 @@ $.extend(trackSse, {
 	showDisconnected: function(channel) {
 //		console.log(channel + ' DISCONNECTED');
 	},
-	subscribe: function(channel) {
-		sse.subscribe('position', trackSse.handlePositionEvent, channel);
-	},
+	// subscribe: function(channel) {
+	// 	console.log('SUBSCRIBINg position ' + channel)
+	// 	sse.subscribe('position', trackSse.handlePositionEvent, channel);
+	// },
 	handlePositionEvent: function(event){
 		var data = JSON.parse(event.data);
 		var channel = sse.parseEventChannel(event);
