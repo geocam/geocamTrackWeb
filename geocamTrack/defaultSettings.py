@@ -57,11 +57,6 @@ GEOCAM_TRACK_FEED_NAME = 'GeoCam Track'
 # Override this if you need something other than request.get_absolute_uri for your urls in kml; this will append :PORT to the base url
 GEOCAM_TRACK_URL_PORT = None
 
-BOWER_INSTALLED_APPS = getOrCreateArray('BOWER_INSTALLED_APPS')
-BOWER_INSTALLED_APPS += ['google-maps-utility-library-v3-infobubble',
-                         'klass=git://github.com/ded/klass.git'
-                         ]
-
 XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
 XGDS_MAP_SERVER_JS_MAP[GEOCAM_TRACK_TRACK_MONIKIER] = {'ol': 'geocamTrack/js/olTrackMap.js',
                                                        'model': GEOCAM_TRACK_TRACK_MODEL,
