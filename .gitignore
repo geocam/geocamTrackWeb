@@ -9,3 +9,4 @@
 /static/css/*.r*.css
 /geocamTrack/build
 migrations/
+node_modules
