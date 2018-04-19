@@ -21,7 +21,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from geocamUtil import TimeUtil
 from geocamUtil import geomath
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
-from geocamUtil.models.UuidField import UuidField
+from geocamUtil.models.UuidField import UuidModel
 from geocamUtil.loader import LazyGetModelByName
 
 from geocamUtil.usng import usng
@@ -43,10 +43,9 @@ def getModClass(name):
     return name[:dot], name[dot + 1:]
 
 
-class AbstractResource(models.Model):
+class AbstractResource(UuidModel):
     name = models.CharField(max_length=128, db_index=True)
     user = models.ForeignKey(User, null=True, blank=True)
-    uuid = UuidField(db_index=True)
     extras = ExtrasDotField()
     primary = models.NullBooleanField(null=True, default=False)  # to be used for 'primary resources' which show up in the import dropdown
 
@@ -63,7 +62,8 @@ class AbstractResource(models.Model):
 class Resource(AbstractResource):
     pass
 
-class IconStyle(models.Model):
+
+class IconStyle(UuidModel):
     name = models.CharField(max_length=40, blank=True)
     url = models.CharField(max_length=1024, blank=True)
     width = models.PositiveIntegerField(default=0)
@@ -71,7 +71,6 @@ class IconStyle(models.Model):
     scale = models.FloatField(default=1)
     color = models.CharField(max_length=16, blank=True,
                              help_text='Optional KML color specification, hex in AABBGGRR order')
-    uuid = UuidField()
     extras = ExtrasDotField()
 
     def __unicode__(self):
@@ -118,12 +117,11 @@ class IconStyle(models.Model):
            id=self.pk))
 
 
-class LineStyle(models.Model):
+class LineStyle(UuidModel):
     name = models.CharField(max_length=40, blank=True)
     color = models.CharField(max_length=16, blank=True,
                              help_text='Optional KML color specification, hex in AABBGGRR order')
     width = models.PositiveIntegerField(default=1, null=True, blank=True)
-    uuid = UuidField()
     extras = ExtrasDotField()
 
     def __unicode__(self):
@@ -220,14 +218,13 @@ DEFAULT_LINE_STYLE_FIELD = lambda: models.ForeignKey(LineStyle, null=True, blank
                                                      related_name='%(app_label)s_%(class)s_related')
 
 
-class AbstractTrack(models.Model, SearchableModel):
+class AbstractTrack(SearchableModel, UuidModel):
     """ This is for an abstract track with a FIXED resource model, ie all the tracks have like resources.
     """
     name = models.CharField(max_length=40, blank=True)
     resource = 'set this to DEFAULT_RESOURCE_FIELD() or similar in derived classes'
     iconStyle = 'set this to DEFAULT_ICON_STYLE_FIELD() or similar in derived classes'
     lineStyle = 'set this to DEFAULT_LINE_STYLE_FIELD() or similar in derived classes'
-    uuid = UuidField(db_index=True)
     extras = ExtrasDotField()
 
     class Meta:
@@ -818,11 +815,10 @@ class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
                 self.longitude))
             
 
-class AbstractResourcePosition(AbstractResourcePositionNoUuid):
+class AbstractResourcePosition(AbstractResourcePositionNoUuid, UuidModel):
     """
     Adds a uuid field to AbstractResourcePositionNoUuid. 
     """
-    uuid = UuidField(db_index=True)
 
     class Meta:
         abstract = True
@@ -874,11 +870,10 @@ class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
         abstract = True
 
 
-class AbstractResourcePositionWithHeading(AbstractResourcePositionWithHeadingNoUuid):
+class AbstractResourcePositionWithHeading(AbstractResourcePositionWithHeadingNoUuid, UuidModel):
     """
     Adds a uuid field to AbstractResourcePositionWithHeadingNoUuid. 
     """
-    uuid = UuidField(db_index=True)
 
     class Meta:
         abstract = True
@@ -926,6 +921,10 @@ class ResourcePosition(GeoCamResourcePosition):
 
 
 class PastResourcePosition(GeoCamResourcePosition):
+    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
+
+
+class ResourcePose(AbstractResourcePositionNoUuid, YPRMixin):
     track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
 
 
