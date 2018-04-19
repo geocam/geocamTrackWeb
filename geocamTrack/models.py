@@ -892,6 +892,21 @@ class AltitudeResourcePositionNoUuid(AbstractResourcePositionWithHeadingNoUuid):
         abstract = True
 
 
+class YPRMixin(models.Model):
+    """
+    This abstract mixin includes yaw pitch and roll
+    """
+    yaw = models.FloatField(null=True, db_index=True)
+    pitch = models.FloatField(null=True, db_index=True)
+    roll = models.FloatField(null=True, db_index=True)
+
+    @property
+    def heading(self):
+        return self.yaw
+
+    class Meta:
+        abstract = True
+
 class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
     """
     This abstract position model has the set of fields we usually use with
@@ -913,6 +928,9 @@ class ResourcePosition(GeoCamResourcePosition):
 class PastResourcePosition(GeoCamResourcePosition):
     track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
 
+
+class PastResourcePose(AbstractResourcePositionNoUuid, YPRMixin):
+    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
 
 
 class AbstractTrackedAsset(models.Model):
