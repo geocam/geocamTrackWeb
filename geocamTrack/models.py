@@ -902,12 +902,34 @@ class YPRMixin(models.Model):
     class Meta:
         abstract = True
 
-class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
+
+class DepthMixin(models.Model):
+    """
+    This abstract mixin includes depth.  Typically this is a positive value, in meters (ie +10.5 = 10.5 meters deep.
+    """
+    depth = models.FloatField(null=True, db_index=True)
+
+    class Meta:
+        abstract = True
+
+
+class TrackMixin(models.Model):
+    """
+    Mix this in to your model if it points to a track.
+    Note that if you are not using geocamTrack.Track, you will have to redefine this member in your class.
+    """
+    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True,
+                              related_name='%(app_label)s_%(class)s_related')
+
+    class Meta:
+        abstract = True
+
+
+class GeoCamResourcePosition(AbstractResourcePositionWithHeading, TrackMixin):
     """
     This abstract position model has the set of fields we usually use with
     GeoCam.
     """
-    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
 
     altitude = models.FloatField(null=True, db_index=True)
     precisionMeters = models.FloatField(null=True, db_index=True)  # estimated position error
@@ -916,20 +938,29 @@ class GeoCamResourcePosition(AbstractResourcePositionWithHeading):
         abstract = True
 
 
-class ResourcePosition(GeoCamResourcePosition):
-    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
+class ResourcePosition(GeoCamResourcePosition, TrackMixin):
+    pass
 
 
-class PastResourcePosition(GeoCamResourcePosition):
-    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
+class PastResourcePosition(GeoCamResourcePosition, TrackMixin):
+    pass
 
 
-class ResourcePose(AbstractResourcePositionNoUuid, YPRMixin):
-    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
+class ResourcePose(AbstractResourcePositionNoUuid, YPRMixin, TrackMixin):
+    pass
 
 
-class PastResourcePose(AbstractResourcePositionNoUuid, YPRMixin):
-    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
+class PastResourcePose(AbstractResourcePositionNoUuid, YPRMixin, TrackMixin):
+    pass
+
+
+class ResourcePoseDepth(AbstractResourcePositionNoUuid, YPRMixin, TrackMixin, DepthMixin):
+    pass
+
+
+class PastResourcePoseDepth(AbstractResourcePositionNoUuid, YPRMixin, TrackMixin, DepthMixin):
+    pass
+
 
 
 class AbstractTrackedAsset(models.Model):
