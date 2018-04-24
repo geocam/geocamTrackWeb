@@ -50,6 +50,7 @@ GEOCAM_TRACK_CLOSEST_POSITION_MAX_DIFFERENCE_SECONDS = 120
 # midnight in the specified time zone. Since ops are usually idle at
 # night and we want to split during the idle period, we usually set this
 # to the time zone where most ops actually occur.
+# In SiteSettings, set it to TIME_ZONE
 GEOCAM_TRACK_OPS_TIME_ZONE = 'UTC'
 
 GEOCAM_TRACK_FEED_NAME = 'GeoCam Track'
