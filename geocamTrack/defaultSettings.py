@@ -91,7 +91,7 @@ XGDS_DATA_MASKED_FIELDS['geocamTrack'] = {'Track': ['uuid',
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS['GPS Track'] = '/track/importTrack'
 
-#TODO override this for your track sse front end, it builds the name of the image from the name of your resource
+# TODO override this for your track sse front end, it builds the name of the image from the name of your resource
 GEOCAM_TRACK_PRELOAD_TRACK_IMAGES = ["/static/geocamTrack/icons/1_pointer.png", 
                                      "/static/geocamTrack/icons/2_pointer.png",
                                      "/static/geocamTrack/icons/1_circle.png", 
@@ -99,5 +99,7 @@ GEOCAM_TRACK_PRELOAD_TRACK_IMAGES = ["/static/geocamTrack/icons/1_pointer.png",
                                      "/static/geocamTrack/icons/1_stop.png", 
                                      "/static/geocamTrack/icons/2_stop.png"]
 
-#TODO override this to expose the sse channels for tracking
+# TODO override this to expose the sse channels for tracking
+# Typically they will be broadcast per vehicle, so for example if you have
+# tracked vehicles A and B, it will be ['A','B']
 XGDS_SSE_TRACK_CHANNELS = []
