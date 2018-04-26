@@ -571,8 +571,7 @@ class AbstractTrack(SearchableModel, UuidModel):
         if self.timesGroups:
             return self.timesGroups
         return None
-    
-    
+
     def toMapDict(self):
         result = super(AbstractTrack, self).toMapDict() 
         self.buildTimeCoords()
@@ -599,6 +598,7 @@ class AbstractTrack(SearchableModel, UuidModel):
     def getSearchFormFields(cls):
         return ['name', 'resource']
 
+
 class Track(AbstractTrack):
     resource = DEFAULT_RESOURCE_FIELD()
     iconStyle = DEFAULT_ICON_STYLE_FIELD()
@@ -620,13 +620,25 @@ class Track(AbstractTrack):
 # DO NOT use this DEFAULT_TRACK_FIELD in this file unless you are sure that you are referencing a model defined in this submodule
 DEFAULT_TRACK_FIELD = lambda: models.ForeignKey(settings.GEOCAM_TRACK_TRACK_MODEL, db_index=True, null=True, blank=True, related_name='%(app_label)s_%(class)s_related')
 
-class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
+
+class TrackMixin(models.Model):
     """
-    AbstractResourcePositionNoUuid is the most minimal position model
+    Mix this in to your model if it points to a track.
+    Note that if you are not using geocamTrack.Track, you will have to redefine this member in your class.
+    """
+    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True,
+                              related_name='%(app_label)s_%(class)s_related')
+
+    class Meta:
+        abstract = True
+
+
+class AbstractResourcePosition(SearchableModel, TrackMixin):
+    """
+    AbstractResourcePosition is the most minimal position model
     geocamTrack supports.  Other apps building on geocamTrack may want
     to derive their position model from this.
     """
-    track = 'set to DEFAULT_TRACK_FIELD() or similar in derived classes'
     timestamp = models.DateTimeField(db_index=True)
     latitude = models.FloatField(db_index=True)
     longitude = models.FloatField(db_index=True)
@@ -815,16 +827,7 @@ class AbstractResourcePositionNoUuid(models.Model, SearchableModel):
                 self.longitude))
             
 
-class AbstractResourcePosition(AbstractResourcePositionNoUuid, UuidModel):
-    """
-    Adds a uuid field to AbstractResourcePositionNoUuid. 
-    """
-
-    class Meta:
-        abstract = True
-
-
-class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
+class AbstractResourcePositionWithHeading(AbstractResourcePosition):
     """
     Adds heading support to AbstractResourcePosition.
     """
@@ -834,7 +837,7 @@ class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
         return self.heading
 
     def getProperties(self):
-        props = super(AbstractResourcePositionWithHeadingNoUuid, self).getProperties()
+        props = super(AbstractResourcePositionWithHeading, self).getProperties()
         props['heading'] = self.heading
         return props
 
@@ -858,7 +861,7 @@ class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
 
     @classmethod
     def getInterpolatedPosition(cls, utcDt, beforeWeight, beforePos, afterWeight, afterPos):
-        result = (super(AbstractResourcePositionWithHeadingNoUuid, cls)
+        result = (super(AbstractResourcePositionWithHeading, cls)
                   .getInterpolatedPosition(utcDt,
                                            beforeWeight, beforePos,
                                            afterWeight, afterPos))
@@ -870,16 +873,8 @@ class AbstractResourcePositionWithHeadingNoUuid(AbstractResourcePositionNoUuid):
         abstract = True
 
 
-class AbstractResourcePositionWithHeading(AbstractResourcePositionWithHeadingNoUuid, UuidModel):
-    """
-    Adds a uuid field to AbstractResourcePositionWithHeadingNoUuid. 
-    """
 
-    class Meta:
-        abstract = True
-
-
-class AltitudeResourcePositionNoUuid(AbstractResourcePositionWithHeadingNoUuid):
+class AltitudeResourcePosition(AbstractResourcePositionWithHeading):
     altitude = models.FloatField(null=True, db_index=True)
     precisionMeters = models.FloatField(null=True, db_index=True)  # estimated position error
 
@@ -913,18 +908,6 @@ class DepthMixin(models.Model):
         abstract = True
 
 
-class TrackMixin(models.Model):
-    """
-    Mix this in to your model if it points to a track.
-    Note that if you are not using geocamTrack.Track, you will have to redefine this member in your class.
-    """
-    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True,
-                              related_name='%(app_label)s_%(class)s_related')
-
-    class Meta:
-        abstract = True
-
-
 class GeoCamResourcePosition(AbstractResourcePositionWithHeading, TrackMixin):
     """
     This abstract position model has the set of fields we usually use with
@@ -946,21 +929,20 @@ class PastResourcePosition(GeoCamResourcePosition, TrackMixin):
     pass
 
 
-class ResourcePose(AbstractResourcePositionNoUuid, YPRMixin, TrackMixin):
+class ResourcePose(AbstractResourcePosition, YPRMixin, TrackMixin):
     pass
 
 
-class PastResourcePose(AbstractResourcePositionNoUuid, YPRMixin, TrackMixin):
+class PastResourcePose(AbstractResourcePosition, YPRMixin, TrackMixin):
     pass
 
 
-class ResourcePoseDepth(AbstractResourcePositionNoUuid, YPRMixin, TrackMixin, DepthMixin):
+class ResourcePoseDepth(AbstractResourcePosition, YPRMixin, TrackMixin, DepthMixin):
     pass
 
 
-class PastResourcePoseDepth(AbstractResourcePositionNoUuid, YPRMixin, TrackMixin, DepthMixin):
+class PastResourcePoseDepth(AbstractResourcePosition, YPRMixin, TrackMixin, DepthMixin):
     pass
-
 
 
 class AbstractTrackedAsset(models.Model):
@@ -1018,7 +1000,7 @@ class Centroid():
 
         theta = leftAngle
         dtheta = 3 * pi / 180
-        while (theta < rightAngle):
+        while theta < rightAngle:
             polygonUtm.append([UTMEasting + self.distance * sin(theta),
                                UTMNorthing + self.distance * cos(theta)])
             theta += dtheta

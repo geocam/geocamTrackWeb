@@ -27,6 +27,7 @@ POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 from django.forms.models import ModelChoiceField
 from django.forms import CharField
 
+
 class AbstractImportTrackedForm(AbstractImportForm):
     resource = ModelChoiceField(required=False, queryset=Resource.get().objects.filter(primary=True), label=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME)
     
@@ -39,8 +40,10 @@ class AbstractImportTrackedForm(AbstractImportForm):
     class meta:
         abstract=True
 
+
 class ImportTrackForm(AbstractImportTrackedForm):
     sourceFile = ExtFileField(ext_whitelist=(".gpx", ), required=True)
+
 
 class SearchTrackForm(SearchForm):
     name = CharField(required=False)
