@@ -33,7 +33,7 @@ from geocamUtil.KmlUtil import wrapKmlDjango, djangoResponse, wrapKml, buildNetw
 from geocamUtil.loader import getClassByName
 from forms import ImportTrackForm
 
-from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid, AbstractResourcePositionWithHeadingNoUuid
+from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid, AbstractResourcePositionWithHeading
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from django.conf import settings
@@ -561,7 +561,7 @@ def getTrackCsv(request, trackName, fname=None):
         endTime = datetime.datetime.utcfromtimestamp(float(endTimeEpoch))
         positions = positions.filter(timestamp__lte=endTime)
 
-    hasHeading = issubclass(PAST_POSITION_MODEL.get(), AbstractResourcePositionWithHeadingNoUuid)
+    hasHeading = issubclass(PAST_POSITION_MODEL.get(), AbstractResourcePositionWithHeading)
     out = StringIO()
     topRow = '"epoch timestamp","timestamp","latitude","longitude","distance (m)","capped distance (m)","cumulative distance (m)"\n'
     if hasHeading:
