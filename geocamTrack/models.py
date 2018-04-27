@@ -873,9 +873,17 @@ class AbstractResourcePositionWithHeading(AbstractResourcePosition):
         abstract = True
 
 
-
-class AltitudeResourcePosition(AbstractResourcePositionWithHeading):
+class AltitudeMixin(models.Model):
+    """
+    This mixin includes altitude, typically in meters
+    """
     altitude = models.FloatField(null=True, db_index=True)
+
+    class Meta:
+        abstract = True
+
+
+class AltitudeResourcePosition(AbstractResourcePositionWithHeading, AltitudeMixin):
     precisionMeters = models.FloatField(null=True, db_index=True)  # estimated position error
 
     class Meta:
@@ -884,7 +892,7 @@ class AltitudeResourcePosition(AbstractResourcePositionWithHeading):
 
 class YPRMixin(models.Model):
     """
-    This abstract mixin includes yaw pitch and roll
+    This mixin includes yaw pitch and roll
     """
     yaw = models.FloatField(null=True, db_index=True)
     pitch = models.FloatField(null=True, db_index=True)
@@ -900,7 +908,7 @@ class YPRMixin(models.Model):
 
 class DepthMixin(models.Model):
     """
-    This abstract mixin includes depth.  Typically this is a positive value, in meters (ie +10.5 = 10.5 meters deep.
+    This mixin includes depth.  Typically this is a positive value, in meters (ie +10.5 = 10.5 meters deep.
     """
     depth = models.FloatField(null=True, db_index=True)
 
@@ -908,48 +916,39 @@ class DepthMixin(models.Model):
         abstract = True
 
 
-class GeoCamResourcePosition(AbstractResourcePositionWithHeading, TrackMixin):
-    """
-    This abstract position model has the set of fields we usually use with
-    GeoCam.
-    """
-
-    altitude = models.FloatField(null=True, db_index=True)
-    precisionMeters = models.FloatField(null=True, db_index=True)  # estimated position error
-
-    class Meta:
-        abstract = True
-
-
-class ResourcePosition(GeoCamResourcePosition, TrackMixin):
+class ResourcePosition(AltitudeResourcePosition, TrackMixin):
     pass
 
 
-class PastResourcePosition(GeoCamResourcePosition, TrackMixin):
+class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
     pass
 
 
-class ResourcePose(AbstractResourcePosition, YPRMixin, TrackMixin):
+class ResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
     pass
 
 
-class PastResourcePose(AbstractResourcePosition, YPRMixin, TrackMixin):
+class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
     pass
 
 
-class ResourcePoseDepth(AbstractResourcePosition, YPRMixin, TrackMixin, DepthMixin):
+class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
     pass
 
 
-class PastResourcePoseDepth(AbstractResourcePosition, YPRMixin, TrackMixin, DepthMixin):
+class PastResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
     pass
 
+
+PAST_POSITION_FIELD = lambda: models.ForeignKey(PastResourcePosition,
+                                                related_name='%(app_label)s_%(class)s_related',
+                                                blank=True, null=True)
 
 class AbstractTrackedAsset(models.Model):
     """ Abstract class allowing you to have an asset which has a position.
     By default this position is not filled; it can be looked up and filled 
     """
-    position = models.ForeignKey(PastResourcePosition, null=True, blank=True, related_name='asset_position')
+    position = PAST_POSITION_FIELD()
 
     # If the position was looked for but not found, this will be false so we don't have to look again.
     position_not_found = models.NullBooleanField(null=True)
