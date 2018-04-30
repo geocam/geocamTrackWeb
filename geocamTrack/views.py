@@ -33,7 +33,8 @@ from geocamUtil.KmlUtil import wrapKmlDjango, djangoResponse, wrapKml, buildNetw
 from geocamUtil.loader import getClassByName
 from forms import ImportTrackForm
 
-from geocamTrack.models import Resource, ResourcePosition, PastResourcePosition, Centroid, AbstractResourcePositionWithHeading
+from geocamTrack.models import ResourcePosition, PastResourcePosition, Centroid, \
+    AbstractResourcePositionWithHeading
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from django.conf import settings
@@ -44,11 +45,12 @@ from xgds_core.util import insertIntoPath
 if False and settings.XGDS_SSE:
     from sse_wrapper.events import send_event
 
-
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
 PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 RECENT_TIME_FUNCTION = getClassByName(settings.GEOCAM_TRACK_RECENT_TIME_FUNCTION)
+VEHICLE_MODEL = LazyGetModelByName(settings.XGDS_CORE_VEHICLE_MODEL)
+
 
 class ExampleError(Exception):
     pass
@@ -59,6 +61,7 @@ def getIndex(request):
                   'trackingIndex.html',
                   {}
                   )
+
 
 def getGeoJsonDict():
     return dict(type='FeatureCollection',
@@ -79,6 +82,7 @@ def getGeoJsonDictWithErrorHandling():
 def getKmlNetworkLink(request, name=settings.GEOCAM_TRACK_FEED_NAME, interval=5):
     url = request.build_absolute_uri(settings.SCRIPT_NAME + 'geocamTrack/rest/latest.kml')
     return djangoResponse(buildNetworkLink(url, name, interval))
+
 
 def getKmlTrack(name, positions):
     text = '<Document>\n'
@@ -102,37 +106,22 @@ def dumps(obj):
         return json.dumps(obj, separators=(',', ':'))  # compact
 
 
-def getResourcesJson(request):
+def getVehiclePositionsJson(request):
     return HttpResponse(dumps(getGeoJsonDictWithErrorHandling()),
                         content_type='application/json')
 
 
 def postPosition(request):
     if request.method == 'GET':
-        return HttpResponseNotAllowed('Please post a resource position as a GeoJSON Feature.')
+        return HttpResponseNotAllowed('Please post a position as a GeoJSON Feature.')
     else:
         try:
             featureDict = json.loads(request.body)
         except ValueError:
-            return HttpResponse('Malformed request, expected resources position as a GeoJSON Feature',
+            return HttpResponse('Malformed request, expected positions as a GeoJSON Feature',
                                 status=400)
 
-        # create or update Resource
-        properties = featureDict['properties']
-        featureUserName = properties['userName']
-        matchingUsers = User.objects.filter(username=featureUserName)
-        if matchingUsers:
-            user = matchingUsers[0]
-        else:
-            user = User.objects.create_user(featureUserName, '%s@example.com' % featureUserName, '12345')
-            user.first_name = featureUserName
-            user.is_active = False
-            user.save()
-        resource, created = Resource.objects.get_or_create(uuid=featureDict['id'],
-                                                           defaults=dict(user=user))
-        if resource.user.username != featureUserName:
-            resource.user = user
-            resource.save()
+        vehicle = VEHICLE_MODEL.get().objects.get(id=featureDict['id'])
 
         # create or update ResourcePosition
         coordinates = featureDict['geometry']['coordinates']
@@ -142,7 +131,7 @@ def postPosition(request):
                      latitude=coordinates[1])
         if len(coordinates) >= 3:
             attrs['altitude'] = coordinates[2]
-        rp, created = ResourcePosition.objects.get_or_create(resource=resource,
+        rp, created = ResourcePosition.objects.get_or_create(vehicle=vehicle,
                                                              defaults=attrs)
         if not created:
             for field, val in attrs.iteritems():
@@ -150,7 +139,7 @@ def postPosition(request):
             rp.save()
 
         # add a PastResourcePosition historical entry
-        PastResourcePosition(resource=resource, **attrs).save()
+        PastResourcePosition(vehicle=vehicle, **attrs).save()
 
         return HttpResponse(dumps(dict(result='ok')),
                             content_type='application/json')
@@ -173,7 +162,7 @@ def getIcon(request, userName):
                         content_type='image/png')
 
 
-def utcToDefaultTime(t): 
+def utcToDefaultTime(t):
     GEOCAM_TRACK_OPS_TZ = pytz.timezone(settings.GEOCAM_TRACK_OPS_TIME_ZONE)
     return pytz.utc.localize(t).astimezone(GEOCAM_TRACK_OPS_TZ).replace(tzinfo=None)
 
@@ -330,26 +319,27 @@ def getPositionCountForDay(day, track=None):
         positions = positions.filter(track=track)
     return positions.count()
 
+
 def getTrackIndexKml(request):
     geocamTrack.models.latestRequestG = request
-#     dates = reversed(getDatesWithPositionData())
+    #     dates = reversed(getDatesWithPositionData())
     tracks = TRACK_MODEL.get().objects.exclude(pastposition__isnull=True).order_by('-name')
     today = datetime.datetime.now(pytz.timezone(settings.GEOCAM_TRACK_OPS_TIME_ZONE)).date()
     todaystring = today.strftime("%Y%m%d")
-    
+
     todays_tracks = []
     for track in tracks:
         if track.name.startswith(todaystring):
             todays_tracks.append(track)
-    
-    other_tracks = [ t for t in tracks]
+
+    other_tracks = [t for t in tracks]
     other_tracks = other_tracks[len(todays_tracks):]
     dates = []
     for t in other_tracks:
         prefix = t.name[0:8]
         if prefix not in dates:
             dates.append(prefix)
-    
+
     out = StringIO()
     out.write("""<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2"
@@ -360,7 +350,7 @@ def getTrackIndexKml(request):
   <name>Tracks</name>
   <open>1</open>
 """)
-    
+
     # do today
     if todays_tracks:
         out.write("""
@@ -391,9 +381,9 @@ def getTrackIndexKml(request):
         <Folder>
         <name>%s</name>
     """ % lastday)
-      
+
             writeTrackIndexForDay(out, track, False)
-            
+
         out.write('</Folder>\n')
         out.write('</Folder>\n')
 
@@ -493,7 +483,7 @@ def getCsvTrackLink(day, trackName, startTimeUtc=None, endTimeUtc=None):
     fname = '%s_%s.csv' % (day.strftime('%Y%m%d'), trackName)
     url = reverse('geocamTrack_trackCsv', args=[trackName, fname])
     params = {}
-#     params['track'] = trackName
+    #     params['track'] = trackName
     if startTimeUtc:
         params['start'] = str(calendar.timegm(startTimeUtc.timetuple()))
     if endTimeUtc:
@@ -548,7 +538,7 @@ def getTrackCsv(request, trackName, fname=None):
     if not fname:
         fname = trackName + '.csv'
     track = TRACK_MODEL.get().objects.get(name=trackName)
-    positions = PAST_POSITION_MODEL.get().objects.filter(track=track).\
+    positions = PAST_POSITION_MODEL.get().objects.filter(track=track). \
         order_by('timestamp')
 
     startTimeEpoch = request.GET.get('start')
@@ -603,7 +593,7 @@ def getTrackCsv(request, trackName, fname=None):
 
 
 def getAnimatedTrackKml(request, trackName):
-#     print 'getting animated track %s' % trackName
+    #     print 'getting animated track %s' % trackName
     return getTrackKml(request, trackName, animated=True)
 
 
@@ -665,12 +655,12 @@ def getLocationCentroid(trackName, start, end):
     # now figure out the standard deviation
     distance = 0
     for position in positions:
-        distance += geomath.calculateDiffMeters([position.longitude, position.latitude], [centroid.longitude, centroid.latitude])
+        distance += geomath.calculateDiffMeters([position.longitude, position.latitude],
+                                                [centroid.longitude, centroid.latitude])
     distance = distance / len(positions)
     centroid.distance = math.sqrt(distance)
 
     return centroid
-
 
 
 def getActivePositions(trackId=None):
@@ -680,7 +670,7 @@ def getActivePositions(trackId=None):
     # query = query + " where (timestampdiff(second, '" + datetime.now(pytz.utc).isoformat() + "', timestamp)) < " + settings.GEOCAM_TRACK_CURRENT_POSITION_AGE_MIN_SECONDS
     if trackId:
         query = query + ' where track_id=' + str(trackId)
-#     print query
+    #     print query
     try:
         results = (POSITION_MODEL.get().objects.raw(query))
         return list(results)
@@ -697,10 +687,10 @@ def getActivePositionsJSON(request):
         for position in active_positions:
             if (position.track in active_tracks):
                 result[position.track.name] = position.toMapDict()
-                
+
     return JsonResponse(result, encoder=DatetimeJsonEncoder)
 
-    
+
 def getActiveTracks():
     """ look up the active tracks from the GEOCAM_TRACK_POSITION_MODEL """
     return TRACK_MODEL.get().objects.filter(currentposition__isnull=False)
@@ -748,10 +738,12 @@ if False and settings.XGDS_SSE:
                       {'trackId': trackId},
                       )
 
+
     def getActivePositionsJson(request, trackId=None):
         json_data = modelsToJson(getActivePositions(trackId), DatetimeJsonEncoder)
         return HttpResponse(content=json_data,
                             content_type="application/json")
+
 
     def testPositions(request, trackId=None):
         activePositions = getActivePositions(trackId)
@@ -765,6 +757,7 @@ if False and settings.XGDS_SSE:
             return HttpResponse(content=json_data,
                                 content_type="application/json")
         return HttpResponse('No data')
+
 
     def sendActivePositions(trackId=None):
         while True:
@@ -781,49 +774,50 @@ if False and settings.XGDS_SSE:
                         json_data = '{"now":' + theNow + '}' + modelToJson(position, DatetimeJsonEncoder)
                         send_event('positions', json_data, channel + '/' + str(position.track.pk))
             time.sleep(1)
+
+
 #             yield
 
 def getGpxWaypointList(docroot, ns):
     wptList = []
     for wpt in docroot.findall("ns:wpt", ns):
-        if wpt.find("ns:time",ns) is not None:
-            time = dateparser(wpt.find("ns:time",ns).text)
+        if wpt.find("ns:time", ns) is not None:
+            time = dateparser(wpt.find("ns:time", ns).text)
         else:
             time = None
-        wptData = {"time":time,
-                   "name":wpt.find("ns:name", ns).text,
-                   "lat":float(wpt.attrib["lat"]),
-                   "lon":float(wpt.attrib["lon"]),
-                   "ele":float(wpt.find("ns:ele", ns).text),
-                   "desc":wpt.find("ns:desc", ns).text,
-                   "cmt":wpt.find("ns:cmt", ns).text,
-                   "markerAndColor":[s.strip() for s in wpt.find("ns:sym", ns).
-                                     text.split(",")]}
+        wptData = {"time": time,
+                   "name": wpt.find("ns:name", ns).text,
+                   "lat": float(wpt.attrib["lat"]),
+                   "lon": float(wpt.attrib["lon"]),
+                   "ele": float(wpt.find("ns:ele", ns).text),
+                   "desc": wpt.find("ns:desc", ns).text,
+                   "cmt": wpt.find("ns:cmt", ns).text,
+                   "markerAndColor": [s.strip() for s in wpt.find("ns:sym", ns).
+                       text.split(",")]}
         wptList.append(wptData)
 
     return wptList
 
 
-
 def getGpxTrackSet(docroot, ns):
     trackCollection = []
     for trk in docroot.findall("ns:trk", ns):
-        trackName = trk.find("ns:name",ns).text
+        trackName = trk.find("ns:name", ns).text
         trackSegPointList = trk.find("ns:trkseg", ns)
-        trackSegment = {"name":trackName}
+        trackSegment = {"name": trackName}
         trackSegPoints = []
         foundTimeInTrackData = True
         for point in trackSegPointList:
-            if point.find("ns:time",ns) is not None:
-                time = dateparser(point.find("ns:time",ns).text)
+            if point.find("ns:time", ns) is not None:
+                time = dateparser(point.find("ns:time", ns).text)
                 time = time.replace(tzinfo=None)
             else:
                 foundTimeInTrackData = False
                 time = "<no time>"
-            trackPoint = {"lat":float(point.attrib["lat"]),
-                          "lon":float(point.attrib["lon"]),
-                          "ele":float(point.find("ns:ele", ns).text),
-                          "time":time}
+            trackPoint = {"lat": float(point.attrib["lat"]),
+                          "lon": float(point.attrib["lon"]),
+                          "ele": float(point.find("ns:ele", ns).text),
+                          "time": time}
             trackSegPoints.append(trackPoint)
         trackSegment["foundTimeInTrackData"] = foundTimeInTrackData
         trackSegment["trackPoints"] = trackSegPoints
@@ -832,21 +826,21 @@ def getGpxTrackSet(docroot, ns):
     return trackCollection
 
 
-def doImportGpxTrack(request, f, tz, resource):
+def doImportGpxTrack(request, f, tz, vehicle):
     gpxData = ''.join([chunk for chunk in f.chunks()])
     root = et.fromstring(gpxData)
-    ns = {"ns":root.tag.split('}')[0].strip('{')}
+    ns = {"ns": root.tag.split('}')[0].strip('{')}
 
     trackSet = getGpxTrackSet(root, ns)
     newTracksDB = []
     for track in trackSet:
         if track["foundTimeInTrackData"]:
             newTrackDB = TRACK_MODEL.get().objects.create(name=track["name"],
-                                                          resource=resource)
+                                                          vehicle=vehicle)
             newTracksDB.append(newTrackDB)
             for point in track["trackPoints"]:
                 PAST_POSITION_MODEL.get().objects.create(track=newTrackDB,
-							 serverTimestamp=datetime.datetime.now(pytz.utc),
+                                                         serverTimestamp=datetime.datetime.now(pytz.utc),
                                                          timestamp=point["time"],
                                                          latitude=point["lat"],
                                                          longitude=point["lon"],
@@ -862,11 +856,12 @@ def importTrack(request):
         form = ImportTrackForm(request.POST, request.FILES)
         if form.is_valid():
             if form.cleaned_data['sourceFile'].name.endswith(".gpx"):
-                newTracks = doImportGpxTrack(request, request.FILES['sourceFile'], form.getTimezone(), form.getResource())
+                newTracks = doImportGpxTrack(request, request.FILES['sourceFile'], form.getTimezone(),
+                                             form.getVehicle())
                 if newTracks:
                     for t in newTracks:
                         jsonTracks.append(t.toMapDict())
-                    
+
         else:
             errors = form.errors
     return render(

@@ -11,7 +11,6 @@ from django.contrib import admin
 from geocamTrack.models import *
 from django.conf import settings
 
-admin.site.register(Resource)
 admin.site.register(IconStyle)
 admin.site.register(LineStyle)
 admin.site.register(Track)

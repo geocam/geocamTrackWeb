@@ -11,8 +11,6 @@ from geocamUtil.SettingsUtil import getOrCreateDict, getOrCreateArray
 # data replication will take care of propagating that.
 GEOCAM_TRACK_SERVER_TRACK_PROVIDER = False  
 
-GEOCAM_TRACK_RESOURCE_MODEL = 'geocamTrack.Resource'
-GEOCAM_TRACK_RESOURCE_VERBOSE_NAME = 'Resource'
 GEOCAM_TRACK_TRACK_MONIKIER = 'Track'
 GEOCAM_TRACK_TRACK_MODEL = 'geocamTrack.Track'
 GEOCAM_TRACK_POSITION_MODEL = 'geocamTrack.ResourcePosition'
@@ -61,10 +59,10 @@ GEOCAM_TRACK_URL_PORT = None
 XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
 XGDS_MAP_SERVER_JS_MAP[GEOCAM_TRACK_TRACK_MONIKIER] = {'ol': 'geocamTrack/js/olTrackMap.js',
                                                        'model': GEOCAM_TRACK_TRACK_MODEL,
-                                                       'columns': ['name','resource_name', 'type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
+                                                       'columns': ['name','vehicle_name', 'type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
                                                        'hiddenColumns': ['type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
                                                        'columnTitles': ['Name', 'Resource',''],
-                                                       'searchableColumns': ['name', 'resource_name'],
+                                                       'searchableColumns': ['name',  'vehicle_name'],
                                                        'search_form_class': 'geocamTrack.forms.SearchTrackForm'}
 
 XGDS_MAP_SERVER_JS_MAP['Position'] = {'ol': 'geocamTrack/js/olPositionMap.js',

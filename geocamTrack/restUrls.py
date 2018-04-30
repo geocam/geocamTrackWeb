@@ -9,7 +9,7 @@ from django.conf.urls import url
 from geocamTrack import views
 from django.conf import settings
 
-urlpatterns = [url(r'^resources.json$', views.getResourcesJson,{}),
+urlpatterns = [url(r'^vehiclePositions.json$', views.getVehiclePositionsJson,{}),
                url(r'^icon/(\S+)', views.getIcon,{}),
                url(r'^liveMap.kml$', views.getKmlNetworkLink,{}),
                url(r'^latest.kml$', views.getKmlLatest,{}),

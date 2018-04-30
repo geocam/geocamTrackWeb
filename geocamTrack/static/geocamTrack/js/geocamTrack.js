@@ -57,7 +57,7 @@ var geocamTrack = {
 
     updateResourcePositions: function() {
         $.getJSON(geocamCore.settings.SCRIPT_NAME +
-                  'tracking/resources.json',
+                  'tracking/rest/getVehiclePositions.json',
                   geocamTrack.handleResourcePositionsResponse);
     },
 
