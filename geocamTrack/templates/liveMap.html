@@ -226,7 +226,7 @@
   }
 
   function updateResourcePositions() {
-    $.getJSON("{{ SCRIPT_NAME }}geocamTrack/resources.json",
+    $.getJSON("{{ SCRIPT_NAME }}geocamTrack/rest/vehiclePositions.json",
               handleResourcePositionsResponse);
   }
 

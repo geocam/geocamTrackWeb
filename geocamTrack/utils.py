@@ -16,7 +16,7 @@ TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 
 
-def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=settings.GEOCAM_TRACK_CLOSEST_POSITION_MAX_DIFFERENCE_SECONDS, resource=None):
+def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=settings.GEOCAM_TRACK_CLOSEST_POSITION_MAX_DIFFERENCE_SECONDS, vehicle=None):
     """
     Look up the closest location, with a 1 minute default maximum difference.
     Track is optional but it will be a more efficient query if you limit it by track
@@ -30,8 +30,8 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
     try:
         if not track:
             foundPositions = PAST_POSITION_MODEL.get().objects.filter(timestamp=timestamp)
-        elif resource:
-            foundPositions = PAST_POSITION_MODEL.get().objects.filter(track__resource=resource, timestamp=timestamp)
+        elif vehicle:
+            foundPositions = PAST_POSITION_MODEL.get().objects.filter(track__vehicle=vehicle, timestamp=timestamp)
         else:
             foundPositions = PAST_POSITION_MODEL.get().objects.filter(track=track, timestamp=timestamp)
         # take the first one.
@@ -47,12 +47,12 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
         if track:
             query = query + " where " + "track_id = '" + str(track.pk) + "'"
             operand = ' and'
-        elif resource:
+        elif vehicle:
             query = query + ", " + TRACK_MODEL.get()._meta.db_table + " track"
             query = query + " where"
 #             query = query + " pos.track_id is not null and"
             query = query + " pos.track_id=track." + TRACK_MODEL.get()._meta.pk.name
-            query = query + " and track.resource_id = '" + str(resource.pk) + "'"
+            query = query + " and track.vehicle_id = '" + str(vehicle.pk) + "'"
             operand = ' and'
             
         # limit time to range

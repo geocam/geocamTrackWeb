@@ -16,38 +16,25 @@
 
 from django.conf import settings
 from geocamUtil.loader import LazyGetModelByName
-from geocamUtil.forms.AbstractImportForm import AbstractImportForm
 from geocamUtil.extFileField import ExtFileField
-from xgds_core.forms import SearchForm
+from xgds_core.forms import SearchForm, AbstractImportVehicleForm
 
-Resource = LazyGetModelByName(settings.GEOCAM_TRACK_RESOURCE_MODEL)
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
+VEHICLE_MODEL = LazyGetModelByName(settings.XGDS_CORE_VEHICLE_MODEL)
+
 
 from django.forms.models import ModelChoiceField
 from django.forms import CharField
 
 
-class AbstractImportTrackedForm(AbstractImportForm):
-    resource = ModelChoiceField(required=False, queryset=Resource.get().objects.filter(primary=True), label=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME)
-    
-    def getResource(self):
-        if self.cleaned_data['resource']:
-            return self.cleaned_data['resource']
-        else:
-            return None
-    
-    class meta:
-        abstract=True
-
-
-class ImportTrackForm(AbstractImportTrackedForm):
+class ImportTrackForm(AbstractImportVehicleForm):
     sourceFile = ExtFileField(ext_whitelist=(".gpx", ), required=True)
 
 
 class SearchTrackForm(SearchForm):
     name = CharField(required=False)
-    resource = ModelChoiceField(required=False, queryset=Resource.get().objects.filter(primary=True), label=settings.GEOCAM_TRACK_RESOURCE_VERBOSE_NAME)
+    vehicle = ModelChoiceField(required=False, queryset=VEHICLE_MODEL.get().objects.filter(primary=True), label=settings.XGDS_CORE_VEHICLE_MONIKER)
 
     class Meta:
         model = TRACK_MODEL.get()
