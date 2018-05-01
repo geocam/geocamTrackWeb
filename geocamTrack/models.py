@@ -25,7 +25,7 @@ from geocamUtil.models.UuidField import UuidModel
 from geocamUtil.loader import LazyGetModelByName
 
 from geocamUtil.usng import usng
-from xgds_core.models import SearchableModel, HasVehicle
+from xgds_core.models import SearchableModel, HasVehicle, HasFlight
 
 # pylint: disable=C1001
 latestRequestG = None
@@ -41,26 +41,6 @@ def getModClass(name):
     except ValueError:
         return name, ''
     return name[:dot], name[dot + 1:]
-
-
-# class AbstractResource(UuidModel):
-#     name = models.CharField(max_length=128, db_index=True)
-#     user = models.ForeignKey(User, null=True, blank=True)
-#     extras = ExtrasDotField()
-#     primary = models.NullBooleanField(null=True, default=False)  # to be used for 'primary vehicles' which show up in the import dropdown
-#
-#     def __unicode__(self):
-#         return '%s %s' % (self.__class__.__name__, self.name)
-#
-#     def get_content_type(self):
-#         return ContentType.objects.get_for_model(self).pk
-#
-#     class Meta:
-#         abstract = True
-#
-#
-# class Resource(AbstractResource):
-#     pass
 
 
 class IconStyle(UuidModel):
@@ -208,7 +188,11 @@ def getKmlUrl(trackName=None,
     return reverse(urlPattern) + queryParams
 
 
-# TODO update this if you are not using Vehicle
+# TODO update these if you are not using defaults
+DEFAULT_FLIGHT_FIELD = lambda: models.ForeignKey('xgds_core.Flight',
+                                                  related_name='track',
+                                                  verbose_name=settings.XGDS_CORE_FLIGHT_MONIKER, blank=True,
+                                                  null=True)
 DEFAULT_VEHICLE_FIELD = lambda: models.ForeignKey('xgds_core.Vehicle',
                                                   related_name='%(app_label)s_%(class)s_related',
                                                   verbose_name=settings.XGDS_CORE_VEHICLE_MONIKER, blank=True,
@@ -219,7 +203,7 @@ DEFAULT_LINE_STYLE_FIELD = lambda: models.ForeignKey(LineStyle, null=True, blank
                                                      related_name='%(app_label)s_%(class)s_related')
 
 
-class AbstractTrack(SearchableModel, UuidModel, HasVehicle):
+class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
     """ This is for an abstract track with a FIXED vehicle model, ie all the tracks have like vehicles.
     """
     name = models.CharField(max_length=40, blank=True)
@@ -596,6 +580,8 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle):
 class Track(AbstractTrack, HasVehicle):
     iconStyle = DEFAULT_ICON_STYLE_FIELD()
     lineStyle = DEFAULT_LINE_STYLE_FIELD()
+    flight = DEFAULT_FLIGHT_FIELD()
+    vehicle = DEFAULT_VEHICLE_FIELD()
 
     def __unicode__(self):
         return '%s %s' % (self.__class__.__name__, self.name)
