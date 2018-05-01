@@ -42,6 +42,8 @@ class SearchTrackForm(SearchForm):
 
 
 class SearchPositionForm(SearchForm):
+    track__vehicle = ModelChoiceField(required=False, queryset=VEHICLE_MODEL.get().objects.filter(primary=True),
+                                      label=settings.XGDS_CORE_VEHICLE_MONIKER)
 
     class Meta:
         model = POSITION_MODEL.get()
