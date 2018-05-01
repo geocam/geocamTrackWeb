@@ -669,7 +669,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
 
     @classmethod
     def getSearchFormFields(cls):
-        return ['track', 'timestamp', 'latitude', 'longitude']
+        return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude']
 
     @classmethod
     def cls_type(cls):
