@@ -552,6 +552,11 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
 
     def toMapDict(self):
         result = super(AbstractTrack, self).toMapDict()
+        if 'vehicle' in result:
+            if self.vehicle:
+                result['vehicle'] = self.vehicle.name
+            else:
+                del result['vehicle']
         self.buildTimeCoords()
         if self.timesGroups:
             result['times'] = self.timesGroups
