@@ -57,7 +57,7 @@ def calculate_trackname(vehicle, row):
     return get_next_available_track_name(the_time.strftime('%Y%m%d'), vehicle.name)
 
 
-def do_import(yaml_file_path, csv_file_path, vehicle_name=None, flight_name=None, defaults={}, track_name=None):
+def do_import(yaml_file_path, csv_file_path, vehicle_name=None, flight_name=None, defaults={}, track_name=None, force=False):
     """
     Do an import with a path to a configuration yaml file and a path to a csv file
     :param yaml_file_path: The path to the yaml configuration file for import
@@ -69,7 +69,7 @@ def do_import(yaml_file_path, csv_file_path, vehicle_name=None, flight_name=None
     :return: the imported items
     """
 
-    config = csvImporter.configure(yaml_file_path, csv_file_path, vehicle_name, flight_name, defaults)
+    config = csvImporter.configure(yaml_file_path, csv_file_path, vehicle_name, flight_name, defaults, force)
 
     if not track_name:
         if flight_name:
@@ -80,6 +80,7 @@ def do_import(yaml_file_path, csv_file_path, vehicle_name=None, flight_name=None
             else:
                 # try to make the flight
                 row = list(config['csv_reader'])[0]
+                config['csv_file'].seek(0)
                 config['flight'] = csvImporter.get_or_make_flight(config['vehicle'], row)
                 if config['flight']:
                     track_name = config['flight'].name
