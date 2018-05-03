@@ -619,25 +619,25 @@ class TrackMixin(models.Model):
 
     @property
     def track_name(self):
-        if self.has_track():
+        if self.has_track:
             return self.track.name
         return None
 
     @property
     def track_pk(self):
-        if self.has_track():
+        if self.has_track:
             return self.track.pk
         return None
 
     @property
     def track_color(self):
-        if self.has_track():
+        if self.has_track:
             return self.track.getLineStyleColor()
         return None
 
     @property
     def track_hexcolor(self):
-        if self.has_track():
+        if self.has_track:
             kc = self.track.getLineStyleColor()
             nc = '%s%s%s' % (kc[6:], kc[4:6], kc[2:4])
             return nc
@@ -743,7 +743,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
         timezone = pytz.timezone(settings.TIME_ZONE)
         localTime = timezone.localize(self.timestamp)
         props0 = dict(subtype='ResourcePosition',
-                      displayName=self.track.name if self.has_track() else 'Pos',
+                      displayName=self.track.name if self.has_track else 'Pos',
                       timestamp=localTime.isoformat(),
                       unixstamp=localTime.strftime("%s"))
         props = dict(((k, v) for k, v in props0.iteritems()
@@ -784,7 +784,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
 </Placemark>
 '''
                 % dict(id=self.pk,
-                       displayName=self.track.name if self.has_track() else 'Pos',
+                       displayName=self.track.name if self.has_track else 'Pos',
                        coords=coords,
                        icon=self.getIconForIndex(index)))
 
@@ -793,13 +793,13 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
 
     @property
     def displayName(self):
-        if self.has_track():
+        if self.has_track:
             return self.track.name
         return str(self)
 
     @property
     def tz(self):
-        if self.has_track() and hasattr(self.track, 'timezone'):
+        if self.has_track and hasattr(self.track, 'timezone'):
             return self.track.timezone
         return settings.TIME_ZONE
 
@@ -815,7 +815,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
     #         return result
 
     def __unicode__(self):
-        if self.has_track():
+        if self.has_track:
             return ('%s %s %s %s %s'
                     % (self.__class__.__name__,
                        self.track.name,
