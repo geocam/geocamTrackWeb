@@ -17,7 +17,6 @@
 """
 Utilities for loading track csv data, including creation of the track if necessary
 """
-import pydevd
 
 from dateutil.parser import parse as dateparser
 from django.utils import timezone
@@ -69,8 +68,6 @@ def do_import(yaml_file_path, csv_file_path, vehicle_name=None, flight_name=None
     :param track_name: The name of the track
     :return: the imported items
     """
-
-    pydevd.settrace('192.168.0.113', port=8888,  stdoutToServer=True, stderrToServer=True)
 
     config = csvImporter.configure(yaml_file_path, csv_file_path, vehicle_name, flight_name, defaults)
 
