@@ -189,14 +189,14 @@ def getKmlUrl(trackName=None,
 
 
 # TODO update these if you are not using defaults
-DEFAULT_FLIGHT_FIELD = lambda: models.ForeignKey('xgds_core.Flight',
-                                                  related_name='track',
-                                                  verbose_name=settings.XGDS_CORE_FLIGHT_MONIKER, blank=True,
-                                                  null=True)
-DEFAULT_VEHICLE_FIELD = lambda: models.ForeignKey('xgds_core.Vehicle',
-                                                  related_name='%(app_label)s_%(class)s_related',
-                                                  verbose_name=settings.XGDS_CORE_VEHICLE_MONIKER, blank=True,
-                                                  null=True)
+DEFAULT_FLIGHT_FIELD = lambda: models.OneToOneField('xgds_core.Flight',
+                                                    related_name='track',
+                                                    verbose_name=settings.XGDS_CORE_FLIGHT_MONIKER, blank=True,
+                                                    null=True)
+DEFAULT_VEHICLE_FIELD = lambda: models.OneToOneField('xgds_core.Vehicle',
+                                                    related_name='%(app_label)s_%(class)s_related',
+                                                    verbose_name=settings.XGDS_CORE_VEHICLE_MONIKER, blank=True,
+                                                    null=True)
 DEFAULT_ICON_STYLE_FIELD = lambda: models.ForeignKey(IconStyle, null=True, blank=True,
                                                      related_name='%(app_label)s_%(class)s_related')
 DEFAULT_LINE_STYLE_FIELD = lambda: models.ForeignKey(LineStyle, null=True, blank=True,
@@ -606,8 +606,37 @@ class TrackMixin(models.Model):
     Mix this in to your model if it points to a track.
     Note that if you are not using geocamTrack.Track, you will have to redefine this member in your class.
     """
-    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True,
-                              related_name='%(app_label)s_%(class)s_related')
+    track = DEFAULT_TRACK_FIELD()
+
+    @property
+    def has_track(self):
+        return hasattr(self, 'track')
+
+    @property
+    def track_name(self):
+        if self.has_track():
+            return self.track.name
+        return None
+
+    @property
+    def track_pk(self):
+        if self.has_track():
+            return self.track.pk
+        return None
+
+    @property
+    def track_color(self):
+        if self.has_track():
+            return self.track.getLineStyleColor()
+        return None
+
+    @property
+    def track_hexcolor(self):
+        if self.has_track():
+            kc = self.track.getLineStyleColor()
+            nc = '%s%s%s' % (kc[6:], kc[4:6], kc[2:4])
+            return nc
+        return None
 
     class Meta:
         abstract = True
@@ -626,32 +655,6 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
     class Meta:
         abstract = True
         ordering = ('-timestamp',)
-
-    @property
-    def track_name(self):
-        if self.track:
-            return self.track.name
-        return None
-
-    @property
-    def track_pk(self):
-        if self.track:
-            return self.track.pk
-        return None
-
-    @property
-    def track_color(self):
-        if self.track:
-            return self.track.getLineStyleColor()
-        return None
-
-    @property
-    def track_hexcolor(self):
-        if self.track:
-            kc = self.track.getLineStyleColor()
-            nc = '%s%s%s' % (kc[6:], kc[4:6], kc[2:4])
-            return nc
-        return None
 
     @classmethod
     def getSearchFormFields(cls):
@@ -720,7 +723,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
         timezone = pytz.timezone(settings.TIME_ZONE)
         localTime = timezone.localize(self.timestamp)
         props0 = dict(subtype='ResourcePosition',
-                      displayName=self.track.name if self.track else 'Pos',
+                      displayName=self.track.name if self.has_track() else 'Pos',
                       timestamp=localTime.isoformat(),
                       unixstamp=localTime.strftime("%s"))
         props = dict(((k, v) for k, v in props0.iteritems()
@@ -761,7 +764,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
 </Placemark>
 '''
                 % dict(id=self.pk,
-                       displayName=self.track.name if self.track else 'Pos',
+                       displayName=self.track.name if self.has_track() else 'Pos',
                        coords=coords,
                        icon=self.getIconForIndex(index)))
 
@@ -770,13 +773,13 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
 
     @property
     def displayName(self):
-        if self.track:
+        if self.has_track():
             return self.track.name
         return str(self)
 
     @property
     def tz(self):
-        if self.track and hasattr(self.track, 'timezone'):
+        if self.has_track() and hasattr(self.track, 'timezone'):
             return self.track.timezone
         return settings.TIME_ZONE
 
@@ -792,7 +795,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
     #         return result
 
     def __unicode__(self):
-        if self.track:
+        if self.has_track():
             return ('%s %s %s %s %s'
                     % (self.__class__.__name__,
                        self.track.name,
