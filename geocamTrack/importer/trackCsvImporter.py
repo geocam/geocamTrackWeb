@@ -19,14 +19,14 @@ Utilities for loading track csv data, including creation of the track if necessa
 Supports transformation from UTM to Lat Long, which is our native storage format
 """
 
-from dateutil.parser import parse as dateparser
+
+from pyproj import Proj
+
 from django.conf import settings
 
 from xgds_core.importer import csvImporter
 from geocamTrack.trackUtil import get_or_create_track, get_next_available_track_name
 from geocamUtil.loader import LazyGetModelByName
-from pyproj import Proj
-
 
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 
@@ -34,7 +34,7 @@ TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 class TrackCsvImporter(csvImporter.CsvImporter):
 
     def __init__(self, yaml_file_path, csv_file_path, vehicle_name=None, flight_name=None, defaults=None,
-                 track_name=None, utm=False, utm_zone=None, utm_south=False, force=False, stateKey=None):
+                 track_name=None, utm=False, utm_zone=None, utm_south=False, force=False):
         """
          Initialize with a path to a configuration yaml file and a path to a csv file
          :param yaml_file_path: The path to the yaml configuration file for import
@@ -50,7 +50,7 @@ class TrackCsvImporter(csvImporter.CsvImporter):
          :return: the imported items
          """
         super(TrackCsvImporter, self).__init__(yaml_file_path, csv_file_path, vehicle_name, flight_name, defaults,
-                                               force, stateKey)
+                                               force)
         self.track = None
         self.utm = utm
         self.utm_zone = utm_zone
@@ -61,6 +61,8 @@ class TrackCsvImporter(csvImporter.CsvImporter):
                 south = '+south'
             self.projection = Proj("+proj=utm +zone=%s, %s +ellps=WGS84 +datum=WGS84 +units=m +no_defs" % (utm_zone, south))
 
+        if not self.flight:
+            self.get_or_create_flight(self.get_first_row())
         self.get_or_create_track(track_name)
 
     def get_or_create_track(self, track_name=None):
@@ -69,9 +71,10 @@ class TrackCsvImporter(csvImporter.CsvImporter):
         :param track_name: the name of the track
         """
         if not track_name:
-            if not self.start_time:
-                self.start_time = self.get_time(self.get_first_row())
-            track_name = get_next_available_track_name(self.start_time.strftime('%Y%m%d'), self.vehicle.name)
+            if self.flight:
+                track_name = self.flight.name
+            else:
+                track_name = get_next_available_track_name(self.get_start_time().strftime('%Y%m%d'), self.vehicle.name)
         self.track = get_or_create_track(track_name, self.vehicle, self.flight)
         if self.track:
             self.config['defaults'].update({'track_id': self.track.id})

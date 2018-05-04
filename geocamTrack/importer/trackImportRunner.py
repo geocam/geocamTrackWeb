@@ -31,6 +31,8 @@ def main():
     parser.add_option('-f', '--flight', help='name of flight')
     parser.add_option('-t', '--track', help='name of track')
     parser.add_option("-r", '--reload', action="store_true", dest="reload", default=False)
+    parser.add_option("-s", '--south', action="store_true", dest="south", default=False)
+    parser.add_option('-z', '--zone', help='utm zone, including this will set the utm on')
 
     opts, args = parser.parse_args()
 
@@ -39,8 +41,13 @@ def main():
     if not opts.input:
         parser.error('input is required')
 
+    if opts.zone:
+        opts.utm = True
+    else:
+        opts.utm = False
     importer = trackCsvImporter.TrackCsvImporter(opts.config, opts.input, opts.vehicle, opts.flight,
-                                                 track_name=opts.track, force=opts.reload)
+                                                 track_name=opts.track, utm=opts.utm, utm_zone=opts.zone,
+                                                 utm_south=opts.south, force=opts.reload)
     result = importer.load_csv()
     print 'loaded %d ' % len(result)
 
