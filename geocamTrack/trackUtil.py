@@ -77,7 +77,7 @@ def get_next_available_track_name(prefix, vehicle_name):
     return prefix + character  # should never happen
 
 
-def create_track(name, vehicle, flight=None, parameters={}, extras=''):
+def get_or_create_track(name, vehicle, flight=None, parameters={}, extras=''):
     """
     Find or create a track.  If the track already exists it will not be modified.
     :param name: The name of the track

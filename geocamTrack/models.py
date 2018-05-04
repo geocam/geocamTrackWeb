@@ -193,10 +193,10 @@ DEFAULT_FLIGHT_FIELD = lambda: models.OneToOneField('xgds_core.Flight',
                                                     related_name='track',
                                                     verbose_name=settings.XGDS_CORE_FLIGHT_MONIKER, blank=True,
                                                     null=True)
-DEFAULT_VEHICLE_FIELD = lambda: models.OneToOneField('xgds_core.Vehicle',
-                                                    related_name='%(app_label)s_%(class)s_related',
-                                                    verbose_name=settings.XGDS_CORE_VEHICLE_MONIKER, blank=True,
-                                                    null=True)
+DEFAULT_VEHICLE_FIELD = lambda: models.ForeignKey('xgds_core.Vehicle',
+                                                  related_name='%(app_label)s_%(class)s_related',
+                                                  verbose_name=settings.XGDS_CORE_VEHICLE_MONIKER, blank=True,
+                                                  null=True)
 DEFAULT_ICON_STYLE_FIELD = lambda: models.ForeignKey(IconStyle, null=True, blank=True,
                                                      related_name='%(app_label)s_%(class)s_related')
 DEFAULT_LINE_STYLE_FIELD = lambda: models.ForeignKey(LineStyle, null=True, blank=True,

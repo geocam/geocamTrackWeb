@@ -15,85 +15,102 @@
 # __END_LICENSE__
 
 """
-Utilities for loading track csv data, including creation of the track if necessary
+Utilities for loading track csv data, including creation of the track if necessary.
+Supports transformation from UTM to Lat Long, which is our native storage format
 """
 
 from dateutil.parser import parse as dateparser
-from django.utils import timezone
 from django.conf import settings
 
 from xgds_core.importer import csvImporter
-from geocamTrack.trackUtil import create_track, get_next_available_track_name
+from geocamTrack.trackUtil import get_or_create_track, get_next_available_track_name
 from geocamUtil.loader import LazyGetModelByName
+from pyproj import Proj
+
 
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 
 
-def lookup_track_name(track_name, vehicle, flight):
-    """ Look up the track by name
-    :param track_name: The name of the track
-    :return: the found track, or None
-    """
-    track = create_track(track_name, vehicle, flight)
-    if track_name:
-        try:
-            track = TRACK_MODEL.get().objects.get(name=track_name)
-        except:
-            pass
-    return track
+class TrackCsvImporter(csvImporter.CsvImporter):
 
-
-def calculate_trackname(vehicle, row):
-    """
-        Use the timestamp in the row to look up or create a flight.
-        :param vehicle: the vehicle
-        :param row: the first row of the csv
-        :return: the flight
+    def __init__(self, yaml_file_path, csv_file_path, vehicle_name=None, flight_name=None, defaults=None,
+                 track_name=None, utm=False, utm_zone=None, utm_south=False, force=False, stateKey=None):
         """
-    if 'timestamp' in row:
-        the_time = dateparser(row['timestamp'])
-    else:
-        the_time = timezone.now()
-    return get_next_available_track_name(the_time.strftime('%Y%m%d'), vehicle.name)
+         Initialize with a path to a configuration yaml file and a path to a csv file
+         :param yaml_file_path: The path to the yaml configuration file for import
+         :param csv_file_path: The path to the csv file to import
+         :param vehicle_name: The name of the vehicle
+         :param flight_name: The name of the flight
+         :param defaults: Optional additional defaults to add to objects
+         :param track_name: The name of the track
+         :param utm: True to import the coordinates in utm, False otherwise
+         :param utm_zone: The name of the UTM zone, ie '10S'
+         :param utm_south: True if the UTM zone is southern hemisphere.
+         :param force: True to force import even if the data was already imported.  This will duplicate data.
+         :return: the imported items
+         """
+        super(TrackCsvImporter, self).__init__(yaml_file_path, csv_file_path, vehicle_name, flight_name, defaults,
+                                               force, stateKey)
+        self.track = None
+        self.utm = utm
+        self.utm_zone = utm_zone
+        if self.utm:
+            # convert northing easting to latitude longitude
+            south = ''
+            if utm_south:
+                south = '+south'
+            self.projection = Proj("+proj=utm +zone=%s, %s +ellps=WGS84 +datum=WGS84 +units=m +no_defs" % (utm_zone, south))
 
+        self.get_or_create_track(track_name)
 
-def do_import(yaml_file_path, csv_file_path, vehicle_name=None, flight_name=None, defaults={}, track_name=None, force=False):
-    """
-    Do an import with a path to a configuration yaml file and a path to a csv file
-    :param yaml_file_path: The path to the yaml configuration file for import
-    :param csv_file_path: The path to the csv file to import
-    :param vehicle_name: The name of the vehicle
-    :param flight_name: The name of the flight
-    :param defaults: Optional additional defaults to add to objects
-    :param track_name: The name of the track
-    :return: the imported items
-    """
-
-    config = csvImporter.configure(yaml_file_path, csv_file_path, vehicle_name, flight_name, defaults, force)
-
-    if not track_name:
-        if flight_name:
-            track_name = flight_name
+    def get_or_create_track(self, track_name=None):
+        """
+        Use the timestamp in the row to look up or create a track name.
+        :param track_name: the name of the track
+        """
+        if not track_name:
+            if not self.start_time:
+                self.start_time = self.get_time(self.get_first_row())
+            track_name = get_next_available_track_name(self.start_time.strftime('%Y%m%d'), self.vehicle.name)
+        self.track = get_or_create_track(track_name, self.vehicle, self.flight)
+        if self.track:
+            self.config['defaults'].update({'track_id': self.track.id})
         else:
-            if config['flight']:
-                track_name = config['flight'].name
-            else:
-                # try to make the flight
-                row = list(config['csv_reader'])[0]
-                config['csv_file'].seek(0)
-                config['flight'] = csvImporter.get_or_make_flight(config['vehicle'], row)
-                if config['flight']:
-                    track_name = config['flight'].name
-                else:
-                    # calculate it from the csv file timestamp.
-                    track_name = calculate_trackname(config['vehicle'], row)
+            raise Exception('Could not create track')
 
-    track = create_track(track_name, config['vehicle'], config['flight'])
-    if track:
-        config['defaults'].update({'track_id': track.id})
-        return csvImporter.load_csv(config, config['vehicle'], config['flight'], config['csv_file'], config['csv_reader'])
-    else:
-        raise Exception('Could not create track for some reason')
+    def update_row(self, row):
+        """
+        Update the row, in this case converting utm to lat long if necessary
+        :param row:
+        :return:
+        """
+        row = super(TrackCsvImporter, self).update_row(row)
+        if self.utm and self.projection:
+            easting = None
+            if 'easting' in row:
+                easting = row['easting']
+                del row['easting']
+            elif 'east' in row:
+                easting = row['east']
+                del row['east']
+            elif 'longitude' in row:
+                easting = row['longitude']
+            northing = None
+            if 'northing' in row:
+                northing = row['northing']
+                del row['northing']
+            elif 'north' in row:
+                northing = row['north']
+                del row['north']
+            elif 'latitude' in row:
+                northing = row['latitude']
+
+            row['longitude'], row['latitude'] = self.projection(easting, northing, inverse=True)
+        return row
+
+
+
+
 
 
 

@@ -39,7 +39,9 @@ def main():
     if not opts.input:
         parser.error('input is required')
 
-    result = trackCsvImporter.do_import(opts.config, opts.input, opts.vehicle, opts.flight, track_name=opts.track, force=opts.reload)
+    importer = trackCsvImporter.TrackCsvImporter(opts.config, opts.input, opts.vehicle, opts.flight,
+                                                 track_name=opts.track, force=opts.reload)
+    result = importer.load_csv()
     print 'loaded %d ' % len(result)
 
 
