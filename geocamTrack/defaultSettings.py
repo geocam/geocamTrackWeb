@@ -59,10 +59,10 @@ GEOCAM_TRACK_URL_PORT = None
 XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
 XGDS_MAP_SERVER_JS_MAP[GEOCAM_TRACK_TRACK_MONIKIER] = {'ol': 'geocamTrack/js/olTrackMap.js',
                                                        'model': GEOCAM_TRACK_TRACK_MODEL,
-                                                       'columns': ['name','vehicle_name', 'type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
+                                                       'columns': ['name','vehicle', 'type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
                                                        'hiddenColumns': ['type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
                                                        'columnTitles': ['Name', 'Resource',''],
-                                                       'searchableColumns': ['name',  'vehicle_name'],
+                                                       'searchableColumns': ['name',  'vehicle'],
                                                        'search_form_class': 'geocamTrack.forms.SearchTrackForm'}
 
 XGDS_MAP_SERVER_JS_MAP['Position'] = {'ol': 'geocamTrack/js/olPositionMap.js',
@@ -71,10 +71,10 @@ XGDS_MAP_SERVER_JS_MAP['Position'] = {'ol': 'geocamTrack/js/olPositionMap.js',
 
 XGDS_MAP_SERVER_JS_MAP['Position'] = {'ol': 'geocamTrack/js/olPositionMap.js',
                                       'model': GEOCAM_TRACK_PAST_POSITION_MODEL,
-                                      'columns': ['timestamp', 'displayName', 'type', 'lat', 'lon', 'altitude', 'heading', 'pk', 'app_label', 'model_type', 'track_name','track_pk', 'displayName', 'DT_RowId'],
-                                      'hiddenColumns': ['type', 'pk', 'app_label', 'model_type', 'track_pk', 'displayName', 'DT_RowId'],
-                                      'columnTitles': ['Time', 'TZ', 'Name', 'Latitude', 'Longitude', 'Altitude', 'Heading', 'Track', ''],
-                                      'searchableColumns': ['displayName', 'timestamp', 'lat', 'lon', 'altitude', 'heading', 'track_name'],
+                                      'columns': ['timestamp', 'latitude', 'longitude', 'altitude', 'heading', 'pk', 'app_label', 'model_type', 'track_name','track_pk', 'displayName', 'DT_RowId'],
+                                      'hiddenColumns': ['pk', 'app_label', 'model_type', 'track_pk', 'displayName', 'DT_RowId'],
+                                      'columnTitles': ['Time', 'TZ', 'Latitude', 'Longitude', 'Altitude', 'Heading', 'Track', ''],
+                                      'searchableColumns': ['timestamp', 'latitude', 'longitude', 'altitude', 'heading', 'track_name'],
                                       'search_form_class': 'geocamTrack.forms.SearchPositionForm'}
 
 

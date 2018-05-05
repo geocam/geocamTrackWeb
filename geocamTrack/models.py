@@ -189,10 +189,10 @@ def getKmlUrl(trackName=None,
 
 
 # TODO update these if you are not using defaults
-DEFAULT_FLIGHT_FIELD = lambda: models.ForeignKey('xgds_core.Flight',
-                                                  related_name='track',
-                                                  verbose_name=settings.XGDS_CORE_FLIGHT_MONIKER, blank=True,
-                                                  null=True)
+DEFAULT_FLIGHT_FIELD = lambda: models.OneToOneField('xgds_core.Flight',
+                                                    related_name='track',
+                                                    verbose_name=settings.XGDS_CORE_FLIGHT_MONIKER, blank=True,
+                                                    null=True)
 DEFAULT_VEHICLE_FIELD = lambda: models.ForeignKey('xgds_core.Vehicle',
                                                   related_name='%(app_label)s_%(class)s_related',
                                                   verbose_name=settings.XGDS_CORE_VEHICLE_MONIKER, blank=True,
@@ -552,6 +552,11 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
 
     def toMapDict(self):
         result = super(AbstractTrack, self).toMapDict()
+        if 'vehicle' in result:
+            if self.vehicle:
+                result['vehicle'] = self.vehicle.name
+            else:
+                del result['vehicle']
         self.buildTimeCoords()
         if self.timesGroups:
             result['times'] = self.timesGroups
@@ -575,7 +580,6 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
     @classmethod
     def getSearchFormFields(cls):
         return ['name', 'vehicle']
-
 
 class Track(AbstractTrack, HasVehicle):
     iconStyle = DEFAULT_ICON_STYLE_FIELD()
@@ -606,8 +610,37 @@ class TrackMixin(models.Model):
     Mix this in to your model if it points to a track.
     Note that if you are not using geocamTrack.Track, you will have to redefine this member in your class.
     """
-    track = models.ForeignKey('geocamTrack.Track', db_index=True, null=True, blank=True,
-                              related_name='%(app_label)s_%(class)s_related')
+    track = DEFAULT_TRACK_FIELD()
+
+    @property
+    def has_track(self):
+        return hasattr(self, 'track')
+
+    @property
+    def track_name(self):
+        if self.has_track:
+            return self.track.name
+        return None
+
+    @property
+    def track_pk(self):
+        if self.has_track:
+            return self.track.pk
+        return None
+
+    @property
+    def track_color(self):
+        if self.has_track:
+            return self.track.getLineStyleColor()
+        return None
+
+    @property
+    def track_hexcolor(self):
+        if self.has_track:
+            kc = self.track.getLineStyleColor()
+            nc = '%s%s%s' % (kc[6:], kc[4:6], kc[2:4])
+            return nc
+        return None
 
     class Meta:
         abstract = True
@@ -619,38 +652,27 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
     geocamTrack supports.  Other apps building on geocamTrack may want
     to derive their position model from this.
     """
-    timestamp = models.DateTimeField(db_index=True)
-    latitude = models.FloatField(db_index=True)
-    longitude = models.FloatField(db_index=True)
+    timestamp = models.DateTimeField(db_index=True, blank=True)
+    latitude = models.FloatField(db_index=True, blank=True)
+    longitude = models.FloatField(db_index=True, blank=True)
 
     class Meta:
         abstract = True
         ordering = ('-timestamp',)
 
     @property
-    def track_name(self):
-        if self.track:
-            return self.track.name
-        return None
+    def lat(self):
+        """ latitude """
+        return self.latitude
 
     @property
-    def track_pk(self):
-        if self.track:
-            return self.track.pk
-        return None
+    def lon(self):
+        """ longitude """
+        return self.longitude
 
     @property
-    def track_color(self):
-        if self.track:
-            return self.track.getLineStyleColor()
-        return None
-
-    @property
-    def track_hexcolor(self):
-        if self.track:
-            kc = self.track.getLineStyleColor()
-            nc = '%s%s%s' % (kc[6:], kc[4:6], kc[2:4])
-            return nc
+    def head(self):
+        """ heading """
         return None
 
     @classmethod
@@ -720,7 +742,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
         timezone = pytz.timezone(settings.TIME_ZONE)
         localTime = timezone.localize(self.timestamp)
         props0 = dict(subtype='ResourcePosition',
-                      displayName=self.track.name if self.track else 'Pos',
+                      displayName=self.track.name if self.has_track else 'Pos',
                       timestamp=localTime.isoformat(),
                       unixstamp=localTime.strftime("%s"))
         props = dict(((k, v) for k, v in props0.iteritems()
@@ -761,7 +783,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
 </Placemark>
 '''
                 % dict(id=self.pk,
-                       displayName=self.track.name if self.track else 'Pos',
+                       displayName=self.track.name if self.has_track else 'Pos',
                        coords=coords,
                        icon=self.getIconForIndex(index)))
 
@@ -770,13 +792,13 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
 
     @property
     def displayName(self):
-        if self.track:
+        if self.has_track:
             return self.track.name
         return str(self)
 
     @property
     def tz(self):
-        if self.track and hasattr(self.track, 'timezone'):
+        if self.has_track and hasattr(self.track, 'timezone'):
             return self.track.timezone
         return settings.TIME_ZONE
 
@@ -792,7 +814,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
     #         return result
 
     def __unicode__(self):
-        if self.track:
+        if self.has_track:
             return ('%s %s %s %s %s'
                     % (self.__class__.__name__,
                        self.track.name,
@@ -807,17 +829,22 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
                        self.longitude))
 
 
-class AbstractResourcePositionWithHeading(AbstractResourcePosition):
+class HeadingMixin(models.Model):
     """
     Adds heading support to AbstractResourcePosition.
     """
     heading = models.FloatField(null=True, blank=True, db_index=True)
 
+    @property
+    def head(self):
+        """ heading """
+        return self.heading
+
     def getHeading(self):
         return self.heading
 
     def getProperties(self):
-        props = super(AbstractResourcePositionWithHeading, self).getProperties()
+        props = super(HeadingMixin, self).getProperties()
         props['heading'] = self.heading
         return props
 
@@ -841,7 +868,7 @@ class AbstractResourcePositionWithHeading(AbstractResourcePosition):
 
     @classmethod
     def getInterpolatedPosition(cls, utcDt, beforeWeight, beforePos, afterWeight, afterPos):
-        result = (super(AbstractResourcePositionWithHeading, cls)
+        result = (super(HeadingMixin, cls)
                   .getInterpolatedPosition(utcDt,
                                            beforeWeight, beforePos,
                                            afterWeight, afterPos))
@@ -857,14 +884,19 @@ class AltitudeMixin(models.Model):
     """
     This mixin includes altitude, typically in meters
     """
-    altitude = models.FloatField(null=True, db_index=True)
+    altitude = models.FloatField(blank=True, null=True, db_index=True)
+
+    @property
+    def alt(self):
+        """ altitude """
+        return self.altitude
 
     class Meta:
         abstract = True
 
 
-class AltitudeResourcePosition(AbstractResourcePositionWithHeading, AltitudeMixin):
-    precisionMeters = models.FloatField(null=True, db_index=True)  # estimated position error
+class AltitudeResourcePosition(AbstractResourcePosition, HeadingMixin, AltitudeMixin):
+    precisionMeters = models.FloatField(blank=True, null=True, db_index=True)  # estimated position error
 
     class Meta:
         abstract = True
@@ -874,12 +906,17 @@ class YPRMixin(models.Model):
     """
     This mixin includes yaw pitch and roll
     """
-    yaw = models.FloatField(null=True, db_index=True)
-    pitch = models.FloatField(null=True, db_index=True)
-    roll = models.FloatField(null=True, db_index=True)
+    yaw = models.FloatField(blank=True, null=True, db_index=True)
+    pitch = models.FloatField(blank=True, null=True, db_index=True)
+    roll = models.FloatField(blank=True, null=True, db_index=True)
 
     @property
     def heading(self):
+        return self.yaw
+
+    @property
+    def head(self):
+        """ altitude """
         return self.yaw
 
     class Meta:
@@ -890,7 +927,7 @@ class DepthMixin(models.Model):
     """
     This mixin includes depth.  Typically this is a positive value, in meters (ie +10.5 = 10.5 meters deep.
     """
-    depth = models.FloatField(null=True, db_index=True)
+    depth = models.FloatField(blank=True, null=True, db_index=True)
 
     class Meta:
         abstract = True
@@ -901,7 +938,10 @@ class ResourcePosition(AltitudeResourcePosition, TrackMixin):
 
 
 class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
-    pass
+
+    @classmethod
+    def getSearchFormFields(cls):
+        return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude']
 
 
 class ResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
@@ -909,7 +949,10 @@ class ResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin
 
 
 class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
-    pass
+
+    @classmethod
+    def getSearchFormFields(cls):
+        return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude', 'yaw', 'pitch', 'roll']
 
 
 class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
@@ -917,8 +960,15 @@ class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, Track
 
 
 class PastResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
-    pass
 
+    @classmethod
+    def getSearchFormFields(cls):
+        return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'depth', 'yaw', 'pitch', 'roll']
+
+
+PAST_POSITION_FIELD = lambda: models.ForeignKey(PastResourcePosition,
+                                                related_name='%(app_label)s_%(class)s_related',
+                                                blank=True, null=True)
 
 PAST_POSITION_FIELD = lambda: models.ForeignKey(PastResourcePosition,
                                                 related_name='%(app_label)s_%(class)s_related',
