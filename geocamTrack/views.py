@@ -33,8 +33,7 @@ from geocamUtil.KmlUtil import wrapKmlDjango, djangoResponse, wrapKml, buildNetw
 from geocamUtil.loader import getClassByName
 from forms import ImportTrackForm
 
-from geocamTrack.models import ResourcePosition, PastResourcePosition, Centroid, \
-    HeadingMixin
+from geocamTrack.models import ResourcePosition, PastResourcePosition, Centroid, HeadingMixin
 import geocamTrack.models
 from geocamTrack.avatar import renderAvatar
 from django.conf import settings

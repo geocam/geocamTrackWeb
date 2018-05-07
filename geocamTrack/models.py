@@ -581,7 +581,6 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
     def getSearchFormFields(cls):
         return ['name', 'vehicle']
 
-
 class Track(AbstractTrack, HasVehicle):
     iconStyle = DEFAULT_ICON_STYLE_FIELD()
     lineStyle = DEFAULT_LINE_STYLE_FIELD()
@@ -971,6 +970,9 @@ PAST_POSITION_FIELD = lambda: models.ForeignKey(PastResourcePosition,
                                                 related_name='%(app_label)s_%(class)s_related',
                                                 blank=True, null=True)
 
+PAST_POSITION_FIELD = lambda: models.ForeignKey(PastResourcePosition,
+                                                related_name='%(app_label)s_%(class)s_related',
+                                                blank=True, null=True)
 
 class AbstractTrackedAsset(models.Model):
     """ Abstract class allowing you to have an asset which has a position.
