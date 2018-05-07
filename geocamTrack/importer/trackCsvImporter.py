@@ -49,8 +49,6 @@ class TrackCsvImporter(csvImporter.CsvImporter):
          :param force: True to force import even if the data was already imported.  This will duplicate data.
          :return: the imported items
          """
-        super(TrackCsvImporter, self).__init__(yaml_file_path, csv_file_path, vehicle_name, flight_name, defaults,
-                                               force)
         self.track = None
         self.utm = utm
         self.utm_zone = utm_zone
@@ -61,6 +59,8 @@ class TrackCsvImporter(csvImporter.CsvImporter):
                 south = '+south'
             self.projection = Proj("+proj=utm +zone=%s, %s +ellps=WGS84 +datum=WGS84 +units=m +no_defs" % (utm_zone, south))
 
+        super(TrackCsvImporter, self).__init__(yaml_file_path, csv_file_path, vehicle_name, flight_name, defaults,
+                                               force)
         if not self.flight:
             self.get_or_create_flight(self.get_first_row())
         self.get_or_create_track(track_name)

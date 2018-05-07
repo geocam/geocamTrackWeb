@@ -827,6 +827,7 @@ def getGpxTrackSet(docroot, ns):
 
 
 def doImportGpxTrack(request, f, tz, vehicle):
+    #TODO we are not using timezone here
     gpxData = ''.join([chunk for chunk in f.chunks()])
     root = et.fromstring(gpxData)
     ns = {"ns": root.tag.split('}')[0].strip('{')}
