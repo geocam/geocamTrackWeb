@@ -211,6 +211,11 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
     lineStyle = 'set this to DEFAULT_LINE_STYLE_FIELD() or similar in derived classes'
     extras = ExtrasDotField()
 
+    def __init__(self, *args, **kwargs):
+        super(AbstractTrack, self).__init__(*args, **kwargs)
+        self.pastposition_set = PAST_POSITION_MODEL.get().objects.filter(track_id=self.id)
+
+
     class Meta:
         abstract = True
         ordering = ('name',)
@@ -580,6 +585,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
     @classmethod
     def getSearchFormFields(cls):
         return ['name', 'vehicle']
+
 
 class Track(AbstractTrack, HasVehicle):
     iconStyle = DEFAULT_ICON_STYLE_FIELD()

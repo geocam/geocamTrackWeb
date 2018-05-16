@@ -322,7 +322,10 @@ def getPositionCountForDay(day, track=None):
 def getTrackIndexKml(request):
     geocamTrack.models.latestRequestG = request
     #     dates = reversed(getDatesWithPositionData())
-    tracks = TRACK_MODEL.get().objects.exclude(pastposition__isnull=True).order_by('-name')
+    track_pk_dicts = PAST_POSITION_MODEL.get().objects.order_by('track').values('track').distinct()
+    track_pks = [t['track'] for t in track_pk_dicts]
+    tracks = TRACK_MODEL.get().objects.filter(pk__in=track_pks).order_by('-name')
+
     today = datetime.datetime.now(pytz.timezone(settings.GEOCAM_TRACK_OPS_TIME_ZONE)).date()
     todaystring = today.strftime("%Y%m%d")
 
