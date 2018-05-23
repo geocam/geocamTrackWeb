@@ -33,7 +33,8 @@ def main():
     parser.add_option("-r", '--reload', action="store_true", dest="reload", default=False)
     parser.add_option("-s", '--south', action="store_true", dest="south", default=False)
     parser.add_option('-o', '--zone', help='utm zone, including this will set the utm on')
-    parser.add_option('-z', '--timezone', help='timezone, including this will ensure times are correctly localized')
+    parser.add_option('-z', '--timezone', help='timezone, including this will ensure times are correctly localized',
+                      default='UTC')
 
     opts, args = parser.parse_args()
 
@@ -46,6 +47,7 @@ def main():
         opts.utm = True
     else:
         opts.utm = False
+
     importer = trackCsvImporter.TrackCsvImporter(opts.config, opts.input, opts.vehicle, opts.flight,
                                                  track_name=opts.track, utm=opts.utm, utm_zone=opts.zone,
                                                  utm_south=opts.south, timezone_name=opts.timezone, force=opts.reload)

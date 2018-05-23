@@ -34,7 +34,7 @@ TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 class TrackCsvImporter(csvImporter.CsvImporter):
 
     def __init__(self, yaml_file_path, csv_file_path, vehicle_name=None, flight_name=None, defaults=None,
-                 track_name=None, utm=False, utm_zone=None, utm_south=False, force=False):
+                 track_name=None, utm=False, utm_zone=None, utm_south=False, timezone_name='UTC', force=False):
         """
          Initialize with a path to a configuration yaml file and a path to a csv file
          :param yaml_file_path: The path to the yaml configuration file for import
@@ -46,6 +46,7 @@ class TrackCsvImporter(csvImporter.CsvImporter):
          :param utm: True to import the coordinates in utm, False otherwise
          :param utm_zone: The name of the UTM zone, ie '10S'
          :param utm_south: True if the UTM zone is southern hemisphere.
+         :param timezone_name: The name of the timezone, ie America/Los_Angeles
          :param force: True to force import even if the data was already imported.  This will duplicate data.
          :return: the imported items
          """
@@ -59,8 +60,8 @@ class TrackCsvImporter(csvImporter.CsvImporter):
                 south = '+south'
             self.projection = Proj("+proj=utm +zone=%s, %s +ellps=WGS84 +datum=WGS84 +units=m +no_defs" % (utm_zone, south))
 
-        super(TrackCsvImporter, self).__init__(yaml_file_path, csv_file_path, vehicle_name, flight_name, defaults,
-                                               force)
+        super(TrackCsvImporter, self).__init__(yaml_file_path, csv_file_path, vehicle_name, flight_name,
+                                               timezone_name, defaults, force)
         if not self.flight:
             self.get_or_create_flight(self.get_first_row())
         self.get_or_create_track(track_name)
