@@ -30,6 +30,8 @@ $(function() {
 
     app.views.TrackView = Marionette.View.extend({
         template: _.noop,
+        flat_times: [],
+        flat_coords: [],
         playback : {
                 lastUpdate: undefined,
                 invalid: false,
@@ -72,7 +74,8 @@ $(function() {
             var foundIndex = this.findClosestTimeIndex(input_time.valueOf());
             if (foundIndex >= 0){
                 var new_coords = this.flat_coords[foundIndex];
-                console.log('MOVE THE VEHICLE TO: ' + new_coords);
+                var locationDict = {location:transform(new_coords), rotation:null};
+                app.vent.trigger('vehicle:change', locationDict);
             }
         },
         findClosestTimeIndex: function(input_time){
@@ -83,8 +86,6 @@ $(function() {
         },
         organizeData: function() {
             // this.data[0].times[0][0]
-            this.flat_times = [];
-            this.flat_coords = [];
             var context = this;
             _.forEach(this.data, function(track){
                 _.forEach(track.times, function(time_array){
@@ -107,7 +108,9 @@ $(function() {
             this.data = this.trackNode.objectsJson;
             this.organizeData();
             this.playback.context = this;
+            this.createVehicle();
             playback.addListener(this.playback);
+            app.vent.trigger('mapSearch:fit');
         },
         initialize: function(options){
             this.key = options.key;
@@ -118,7 +121,24 @@ $(function() {
             this.track_metadata = options;
             options.selected = true;  // setting this to true forces render immediately
             app.vent.trigger('mapNode:create', options);  // this will actually render it on the map
-        }
+        },
+        getFirstCoords: function() {
+            if (this.flat_coords.length > 0){
+                  return transform(this.flat_coords[0]);
+            }
+            return undefined;
+        },
+        createVehicle: function() {
+            if (this.vehicleView === undefined){
+                if (this.flat_coords.length > 0){
+                    var vehicleJson = {name:this.track.name,
+                                       startPoint:this.getFirstCoords()};
+                    this.vehicleView = new app.views.OLVehicleView({featureJson:vehicleJson});
+                    app.map.map.addLayer(this.vehicleView.vectorLayer);
+                }
+            }
+        },
+
     });
 
 
