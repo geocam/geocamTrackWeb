@@ -247,6 +247,20 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
         # This is a total hack to get tracks to show on the map after they were searched.
         return 1
 
+    def getTreeJson(self):
+        result = {"title": self.name,
+                  "key": self.uuid,
+                  "tooltip": "%s for %s" % (settings.GEOCAM_TRACK_TRACK_MONIKER, self.name),
+                  "data": {
+                      "json": reverse('geocamTrack_mapJsonTrack', kwargs={'uuid': str(self.uuid)}),
+                      "kmlFile": reverse('geocamTrack_trackKml', kwargs={'trackName': self.name}),
+                      "sseUrl": "",
+                      "type": 'MapLink',
+                  }
+                  }
+
+        return result
+
     def getIconStyle(self, pos):
         if hasattr(self, '_currentIcon'):
             return self._currentIcon
@@ -497,7 +511,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
 
     @classmethod
     def cls_type(cls):
-        return settings.GEOCAM_TRACK_TRACK_MONIKIER
+        return settings.GEOCAM_TRACK_TRACK_MONIKER
 
     @property
     def color(self):

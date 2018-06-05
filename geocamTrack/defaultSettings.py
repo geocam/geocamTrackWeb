@@ -11,7 +11,7 @@ from geocamUtil.SettingsUtil import getOrCreateDict, getOrCreateArray
 # data replication will take care of propagating that.
 GEOCAM_TRACK_SERVER_TRACK_PROVIDER = False  
 
-GEOCAM_TRACK_TRACK_MONIKIER = 'Track'
+GEOCAM_TRACK_TRACK_MONIKER = 'Track'
 GEOCAM_TRACK_TRACK_MODEL = 'geocamTrack.Track'
 GEOCAM_TRACK_POSITION_MODEL = 'geocamTrack.ResourcePosition'
 GEOCAM_TRACK_PAST_POSITION_MODEL = 'geocamTrack.PastResourcePosition'
@@ -57,7 +57,7 @@ GEOCAM_TRACK_FEED_NAME = 'GeoCam Track'
 GEOCAM_TRACK_URL_PORT = None
 
 XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
-XGDS_MAP_SERVER_JS_MAP[GEOCAM_TRACK_TRACK_MONIKIER] = {'ol': 'geocamTrack/js/olTrackMap.js',
+XGDS_MAP_SERVER_JS_MAP[GEOCAM_TRACK_TRACK_MONIKER] = {'ol': 'geocamTrack/js/olTrackMap.js',
                                                        'model': GEOCAM_TRACK_TRACK_MODEL,
                                                        'columns': ['name','vehicle', 'type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
                                                        'hiddenColumns': ['type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
