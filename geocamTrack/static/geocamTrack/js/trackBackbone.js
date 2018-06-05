@@ -124,7 +124,7 @@ $(function() {
         },
         getFirstCoords: function() {
             if (this.flat_coords.length > 0){
-                  return transform(this.flat_coords[0]);
+                  return transform(this.flat_coords[this.flat_coords.length - 1]);
             }
             return undefined;
         },
