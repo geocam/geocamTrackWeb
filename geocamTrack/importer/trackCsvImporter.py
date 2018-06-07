@@ -63,7 +63,7 @@ class TrackCsvImporter(csvImporter.CsvImporter):
         super(TrackCsvImporter, self).__init__(yaml_file_path, csv_file_path, vehicle_name, flight_name,
                                                timezone_name, defaults, force)
         if not self.flight:
-            self.get_or_create_flight(self.get_first_row())
+            get_or_create_flight(self.get_start_time(), self.vehicle)
         self.get_or_create_track(track_name)
 
     def get_or_create_track(self, track_name=None):
