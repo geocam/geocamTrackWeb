@@ -213,8 +213,8 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
 
     def __init__(self, *args, **kwargs):
         super(AbstractTrack, self).__init__(*args, **kwargs)
-        self.pastposition_set = PAST_POSITION_MODEL.get().objects.filter(track_id=self.id)
-
+        if self.id:
+            self.pastposition_set = PAST_POSITION_MODEL.get().objects.filter(track_id=self.id)
 
     class Meta:
         abstract = True
