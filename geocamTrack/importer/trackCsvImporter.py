@@ -65,7 +65,7 @@ class TrackCsvImporter(csvImporter.CsvImporter):
         super(TrackCsvImporter, self).__init__(yaml_file_path, csv_file_path, vehicle_name, flight_name,
                                                timezone_name, defaults, force)
         if not self.flight:
-            get_or_create_flight(self.get_start_time(), self.vehicle)
+            self.flight = get_or_create_flight(self.get_start_time(), self.vehicle)
         self.get_or_create_track(track_name)
 
     def get_or_create_track(self, track_name=None):
@@ -113,6 +113,17 @@ class TrackCsvImporter(csvImporter.CsvImporter):
 
             row['longitude'], row['latitude'] = self.projection(easting, northing, inverse=True)
         return row
+
+    def handle_last_row(self, row):
+        """
+        Update the end time for the flight
+        :param row: the last row
+        :return:
+        """
+        if not self.flight.end_time:
+            self.flight.end_time = row.timestamp
+            self.flight.save()
+
 
 
 
