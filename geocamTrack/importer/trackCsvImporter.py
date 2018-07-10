@@ -24,7 +24,9 @@ from pyproj import Proj
 
 from django.conf import settings
 
+from xgds_core.flightUtils import get_or_create_flight
 from xgds_core.importer import csvImporter
+
 from geocamTrack.trackUtil import get_or_create_track, get_next_available_track_name
 from geocamUtil.loader import LazyGetModelByName
 
