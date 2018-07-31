@@ -16,6 +16,7 @@ from django.db import models
 import pytz
 
 from django.conf import settings
+from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from geocamUtil import TimeUtil
@@ -634,7 +635,8 @@ class TrackMixin(models.Model):
 
     @property
     def has_track(self):
-        return hasattr(self, 'track')
+        # track field must exist and not be None
+        return hasattr(self, 'track') and self.track
 
     @property
     def track_name(self):
@@ -670,9 +672,12 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
     """
     AbstractResourcePosition is the most minimal position model
     geocamTrack supports.  Other apps building on geocamTrack may want
-    to derive their position model from this.
+    to derive their position model from this. Server timestamp is intended to
+    store time data arrived at server vs. timestamp which is ideally logged
+    by the device collecting data in the field.
     """
     timestamp = models.DateTimeField(db_index=True, blank=True)
+    serverTimestamp = models.DateTimeField(db_index=True, blank=True, default=timezone.now())
     latitude = models.FloatField(db_index=True, blank=True)
     longitude = models.FloatField(db_index=True, blank=True)
 
