@@ -677,7 +677,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
     by the device collecting data in the field.
     """
     timestamp = models.DateTimeField(db_index=True, blank=True)
-    serverTimestamp = models.DateTimeField(db_index=True, blank=True, default=timezone.now())
+    serverTimestamp = models.DateTimeField(db_index=True, blank=True, default=timezone.now)
     latitude = models.FloatField(db_index=True, blank=True)
     longitude = models.FloatField(db_index=True, blank=True)
 
