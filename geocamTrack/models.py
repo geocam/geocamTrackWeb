@@ -868,6 +868,9 @@ class HeadingMixin(models.Model):
     def getHeading(self):
         return self.heading
 
+    def setHeading(self, heading):
+        self.heading = heading
+
     def getProperties(self):
         props = super(HeadingMixin, self).getProperties()
         props['heading'] = self.heading
@@ -934,6 +937,14 @@ class YPRMixin(models.Model):
     yaw = models.FloatField(blank=True, null=True, db_index=True)
     pitch = models.FloatField(blank=True, null=True, db_index=True)
     roll = models.FloatField(blank=True, null=True, db_index=True)
+
+    def setHeading(self, heading):
+        """
+        Set the heading, in this case yaw
+        :param heading:
+        :return:
+        """
+        self.yaw = heading
 
     @property
     def heading(self):
