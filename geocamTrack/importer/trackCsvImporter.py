@@ -36,7 +36,8 @@ TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 class TrackCsvImporter(csvImporter.CsvImporter):
 
     def __init__(self, yaml_file_path, csv_file_path, vehicle_name=None, flight_name=None, defaults=None,
-                 track_name=None, utm=False, utm_zone=None, utm_south=False, timezone_name='UTC', force=False):
+                 track_name=None, utm=False, utm_zone=None, utm_south=False, timezone_name='UTC', force=False,
+                 replace=False):
         """
          Initialize with a path to a configuration yaml file and a path to a csv file
          :param yaml_file_path: The path to the yaml configuration file for import
@@ -50,11 +51,13 @@ class TrackCsvImporter(csvImporter.CsvImporter):
          :param utm_south: True if the UTM zone is southern hemisphere.
          :param timezone_name: The name of the timezone, ie America/Los_Angeles
          :param force: True to force import even if the data was already imported.  This will duplicate data.
+         :param replace: True to replace existing data.
          :return: the imported items
          """
         self.track = None
         self.utm = utm
         self.utm_zone = utm_zone
+        self.replace = replace
         if self.utm:
             # convert northing easting to latitude longitude
             south = ''
@@ -63,7 +66,7 @@ class TrackCsvImporter(csvImporter.CsvImporter):
             self.projection = Proj("+proj=utm +zone=%s, %s +ellps=WGS84 +datum=WGS84 +units=m +no_defs" % (utm_zone, south))
 
         super(TrackCsvImporter, self).__init__(yaml_file_path, csv_file_path, vehicle_name, flight_name,
-                                               timezone_name, defaults, force)
+                                               timezone_name, defaults, force, replace)
         if not self.flight:
             self.flight = get_or_create_flight(self.get_start_time(), self.vehicle)
         self.get_or_create_track(track_name)
@@ -113,6 +116,26 @@ class TrackCsvImporter(csvImporter.CsvImporter):
 
             row['longitude'], row['latitude'] = self.projection(easting, northing, inverse=True)
         return row
+
+    def update_stored_data(self, the_model):
+        """
+        # search for matching data based on each row, and update it.
+        :return:
+        """
+        self.reset_csv()
+        for row in self.csv_reader:
+            # TODO right now we use timestamp.
+            found = the_model.objects.filter(timestamp=row['timestamp'])
+            if self.flight:
+                found = found.filter(track=self.flight.track)
+                if found.count() != 1:
+                    print "ERROR: DID NOT FIND MATCH FOR %s" % str(row['timestamp'])
+                else:
+                    item = found[0]
+                    for key, value in row.iteritems():
+                        setattr(item, key, value)
+                    print 'UPDATED: %s ' % str(item)
+                    item.save()
 
 
 

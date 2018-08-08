@@ -30,7 +30,8 @@ def main():
     parser.add_option('-v', '--vehicle', help='name of vehicle')
     parser.add_option('-f', '--flight', help='name of flight')
     parser.add_option('-t', '--track', help='name of track')
-    parser.add_option("-r", '--reload', action="store_true", dest="reload", default=False)
+    parser.add_option("-r", '--reload', action="store_true", dest="reload", default=False, help="force reload")
+    parser.add_option("-p", '--replace', action="store_true", dest="replace", default=False, help="replace existing data")
     parser.add_option("-s", '--south', action="store_true", dest="south", default=False)
     parser.add_option('-o', '--zone', help='utm zone, including this will set the utm on')
     parser.add_option('-z', '--timezone', help='timezone, including this will ensure times are correctly localized',
@@ -50,7 +51,8 @@ def main():
 
     importer = trackCsvImporter.TrackCsvImporter(opts.config, opts.input, opts.vehicle, opts.flight,
                                                  track_name=opts.track, utm=opts.utm, utm_zone=opts.zone,
-                                                 utm_south=opts.south, timezone_name=opts.timezone, force=opts.reload)
+                                                 utm_south=opts.south, timezone_name=opts.timezone, force=opts.reload,
+                                                 replace=opts.replace)
     result = importer.load_csv()
     print 'loaded %d ' % len(result)
 
