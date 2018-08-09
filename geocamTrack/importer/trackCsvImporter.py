@@ -117,13 +117,14 @@ class TrackCsvImporter(csvImporter.CsvImporter):
             row['longitude'], row['latitude'] = self.projection(easting, northing, inverse=True)
         return row
 
-    def update_stored_data(self, the_model):
+    def update_stored_data(self, the_model, rows):
         """
         # search for matching data based on each row, and update it.
+        :param the_model: the model we are working with
+        :param rows: the cleaned up rows
         :return:
         """
-        self.reset_csv()
-        for row in self.csv_reader:
+        for row in rows:
             # TODO right now we use timestamp.
             found = the_model.objects.filter(timestamp=row['timestamp'])
             if self.flight:
