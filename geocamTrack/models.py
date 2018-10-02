@@ -701,6 +701,13 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
         return None
 
     @classmethod
+    def getFlattenedFields(cls):
+        """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
+        This method must be defined on each non abstract position class.
+        """
+        return ['lat', 'lon']
+
+    @classmethod
     def getSearchFormFields(cls):
         return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude']
 
@@ -970,7 +977,13 @@ class DepthMixin(models.Model):
 
 
 class ResourcePosition(AltitudeResourcePosition, TrackMixin):
-    pass
+
+    @classmethod
+    def getFlattenedFields(cls):
+        """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
+        This method must be defined on each non abstract position class.
+        """
+        return ['lat', 'lon', 'alt']
 
 
 class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
@@ -979,9 +992,22 @@ class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
     def getSearchFormFields(cls):
         return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude']
 
+    @classmethod
+    def getFlattenedFields(cls):
+        """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
+        This method must be defined on each non abstract position class.
+        """
+        return ['lat', 'lon', 'alt']
+
 
 class ResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
-    pass
+
+    @classmethod
+    def getFlattenedFields(cls):
+        """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
+        This method must be defined on each non abstract position class.
+        """
+        return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll']
 
 
 class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
@@ -990,16 +1016,36 @@ class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackM
     def getSearchFormFields(cls):
         return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude', 'yaw', 'pitch', 'roll']
 
+    @classmethod
+    def getFlattenedFields(cls):
+        """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
+        This method must be defined on each non abstract position class.
+        """
+        return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll']
+
 
 class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
-    pass
+
+    @classmethod
+    def getFlattenedFields(cls):
+        """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
+        This method must be defined on each non abstract position class.
+        """
+        return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll', 'depth']
 
 
 class PastResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
 
     @classmethod
     def getSearchFormFields(cls):
-        return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'depth', 'yaw', 'pitch', 'roll']
+        return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude', 'depth', 'yaw', 'pitch', 'roll']
+
+    @classmethod
+    def getFlattenedFields(cls):
+        """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
+        This method must be defined on each non abstract position class.
+        """
+        return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll', 'depth']
 
 
 PAST_POSITION_FIELD = lambda: models.ForeignKey(PastResourcePosition,
@@ -1009,6 +1055,7 @@ PAST_POSITION_FIELD = lambda: models.ForeignKey(PastResourcePosition,
 PAST_POSITION_FIELD = lambda: models.ForeignKey(PastResourcePosition,
                                                 related_name='%(app_label)s_%(class)s_related',
                                                 blank=True, null=True)
+
 
 class AbstractTrackedAsset(models.Model):
     """ Abstract class allowing you to have an asset which has a position.
