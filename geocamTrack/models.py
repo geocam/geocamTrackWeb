@@ -983,7 +983,7 @@ class ResourcePosition(AltitudeResourcePosition, TrackMixin):
         """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
         This method must be defined on each non abstract position class.
         """
-        return ['lat', 'lon', 'alt']
+        return ['lat', 'lon', 'alt', 'head']
 
 
 class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
@@ -997,7 +997,7 @@ class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
         """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
         This method must be defined on each non abstract position class.
         """
-        return ['lat', 'lon', 'alt']
+        return ['lat', 'lon', 'alt', 'head']
 
 
 class ResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
