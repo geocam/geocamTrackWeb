@@ -248,7 +248,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
         # This is a total hack to get tracks to show on the map after they were searched.
         return 1
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         result = {"title": self.name,
                   "key": self.uuid,
                   "tooltip": "%s for %s" % (settings.GEOCAM_TRACK_TRACK_MONIKER, self.name),
