@@ -12,7 +12,7 @@ import os
 import logging
 import tempfile
 
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.core.urlresolvers import reverse
 
 try:
@@ -23,7 +23,7 @@ except ImportError:
     pykml = None
 
 
-class TestGeocamTrackViews(TestCase):
+class TestGeocamTrackViews(TransactionTestCase):
     def assertKmlValid(self, response):
         self.assertEqual(response.status_code, 200)
         self.assert_(response['Content-Type'].startswith('application/vnd.google-earth.kml+xml'))
