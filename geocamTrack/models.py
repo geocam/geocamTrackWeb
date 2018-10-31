@@ -525,6 +525,24 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
     def alpha(self):
         return self.getLineStyle().getAlpha()
 
+    @property
+    def icon_url(self):
+        if self.iconStyle:
+            return self.iconStyle.url
+        return None
+
+    @property
+    def icon_color(self):
+        if self.iconStyle:
+            return self.iconStyle.color
+        return None
+
+    @property
+    def icon_scale(self):
+        if self.iconStyle:
+            return self.iconStyle.scale
+        return 1
+
     def buildTimeCoords(self):
         self.coordGroups = []
         self.timesGroups = []

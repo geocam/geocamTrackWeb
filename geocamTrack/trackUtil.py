@@ -56,7 +56,10 @@ def get_icon_style(name):
     try:
         icon_style = ICON_STYLE_MODEL.get().objects.get(name=name)
     except ObjectDoesNotExist:
-        icon_style = ICON_STYLE_MODEL.get().objects.get(name='default')
+        try:
+            icon_style = ICON_STYLE_MODEL.get().objects.get(name__icontains=name)
+        except ObjectDoesNotExist:
+            icon_style = ICON_STYLE_MODEL.get().objects.get(name='default')
     return icon_style
 
 

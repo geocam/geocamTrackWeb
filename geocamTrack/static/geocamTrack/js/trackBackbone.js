@@ -108,6 +108,7 @@ $(function() {
             this.data = this.trackNode.objectsJson;
             this.organizeData();
             this.playback.context = this;
+            this.track.vehicle = this.data[0].vehicle;
             this.createVehicle();
             playback.addListener(this.playback);
             app.vent.trigger('mapSearch:fit');
@@ -132,7 +133,13 @@ $(function() {
             if (this.vehicleView === undefined){
                 if (this.flat_coords.length > 0){
                     var vehicleJson = {name:this.track.name,
+                                       vehicle:this.track.vehicle,
                                        startPoint:this.getFirstCoords()};
+                    if ('icon_url' in this.data[0]) {
+                        vehicleJson['icon_url'] = this.data[0].icon_url;
+                        vehicleJson['icon_color'] = this.data[0].icon_color;
+                        vehicleJson['icon_scale'] = this.data[0].icon_scale;
+                    }
                     this.vehicleView = new app.views.OLVehicleView({featureJson:vehicleJson});
                     app.map.map.addLayer(this.vehicleView.vectorLayer);
                 }

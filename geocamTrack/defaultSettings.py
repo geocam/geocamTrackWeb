@@ -59,9 +59,9 @@ GEOCAM_TRACK_URL_PORT = None
 XGDS_MAP_SERVER_JS_MAP = getOrCreateDict('XGDS_MAP_SERVER_JS_MAP')
 XGDS_MAP_SERVER_JS_MAP[GEOCAM_TRACK_TRACK_MONIKER] = {'ol': 'geocamTrack/js/olTrackMap.js',
                                                        'model': GEOCAM_TRACK_TRACK_MODEL,
-                                                       'columns': ['name','vehicle', 'type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
-                                                       'hiddenColumns': ['type', 'color', 'alpha', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
-                                                       'columnTitles': ['Name', 'Resource',''],
+                                                       'columns': ['name','vehicle', 'type', 'color', 'alpha', 'icon_url', 'icon_color', 'icon_scale', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
+                                                       'hiddenColumns': ['type', 'color', 'alpha', 'icon_url', 'icon_color', 'icon_scale', 'pk', 'app_label', 'model_type', 'times', 'coords', 'lat', 'DT_RowId'],
+                                                       'columnTitles': ['Name', 'Vehicle',''],
                                                        'searchableColumns': ['name',  'vehicle'],
                                                        'search_form_class': 'geocamTrack.forms.SearchTrackForm'}
 
