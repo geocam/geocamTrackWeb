@@ -60,6 +60,13 @@ $(function() {
             this.data = data;
             this.vehicle = data[0].vehicle;
             this.organizeData();
+            var coords_array_order = this.data[0].coords_array_order;
+            this.set('coords_array_order', coords_array_order);
+            var heading_index = coords_array_order.indexOf('heading');
+            if (heading_index == -1){
+                heading_index = coords_array_order.indexOf('yaw');
+            }
+            this.set('heading_index', heading_index);
         },
         findClosestTimeIndex: function(input_time){
             var foundIndex = _.findIndex(this.get('flat_times'), function(value){
@@ -71,7 +78,14 @@ $(function() {
             var foundIndex = this.findClosestTimeIndex(input_time.valueOf());
             if (foundIndex >= 0){
                 var new_coords = this.get('flat_coords')[foundIndex];
-                var locationDict = {location:transform(new_coords), rotation:null};
+                var heading_index = this.get('heading_index');
+                var heading = null;
+                if (heading_index > -1){
+                    heading = new_coords[heading_index];
+                    //TODO figure out what units these are coming in
+                    heading = new_coords[heading_index] * (Math.PI / 180);
+                }
+                var locationDict = {location:transform(new_coords), rotation:heading};
                 var key = this.vehicle + ':change';
                 app.vent.trigger(key, locationDict)
             }
@@ -150,7 +164,7 @@ $(function() {
                 if (this.track.get('flat_coords').length > 0){
                     var vehicleJson = {name:this.track.name,
                                        vehicle:this.track.vehicle,
-                                       startPoint:this.track.getFirstCoords()};
+                                       startPoint:this.track.getFirstCoords()}; //TODO include heading
                     if ('icon_url' in this.track.data[0]) {
                         vehicleJson['icon_url'] = this.track.data[0].icon_url;
                         vehicleJson['icon_color'] = this.track.data[0].icon_color;
