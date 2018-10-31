@@ -590,6 +590,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
 
     def toMapDict(self):
         result = super(AbstractTrack, self).toMapDict()
+        result['coords_array_order'] = PAST_POSITION_MODEL.get().coords_array_order()
         if 'vehicle' in result:
             if self.vehicle:
                 result['vehicle'] = self.vehicle.name
@@ -852,6 +853,14 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
             return self.track.timezone
         return settings.TIME_ZONE
 
+    @classmethod
+    def coords_array_order(cls):
+        """
+        Get the order of the values in the coords array
+        :return:
+        """
+        return ['longitude', 'latitude']
+
     @property
     def coords_array(self):
         """
@@ -994,6 +1003,14 @@ class DepthMixin(models.Model):
 
 class ResourcePosition(AltitudeResourcePosition, TrackMixin):
 
+    @classmethod
+    def coords_array_order(cls):
+        """
+        Get the order of the values in the coords array
+        :return:
+        """
+        return ['longitude', 'latitude', 'altitude', 'heading']
+
     @property
     def coords_array(self):
         """
@@ -1018,6 +1035,14 @@ class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
     def getSearchFormFields(cls):
         return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude']
 
+    @classmethod
+    def coords_array_order(cls):
+        """
+        Get the order of the values in the coords array
+        :return:
+        """
+        return ['longitude', 'latitude', 'altitude', 'heading']
+
     @property
     def coords_array(self):
         """
@@ -1036,6 +1061,14 @@ class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
 
 
 class ResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
+
+    @classmethod
+    def coords_array_order(cls):
+        """
+        Get the order of the values in the coords array
+        :return:
+        """
+        return ['longitude', 'latitude', 'altitude', 'yaw', 'pitch', 'roll']
 
     @property
     def coords_array(self):
@@ -1060,6 +1093,14 @@ class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackM
     def getSearchFormFields(cls):
         return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude', 'yaw', 'pitch', 'roll']
 
+    @classmethod
+    def coords_array_order(cls):
+        """
+        Get the order of the values in the coords array
+        :return:
+        """
+        return ['longitude', 'latitude', 'altitude', 'yaw', 'pitch', 'roll']
+
     @property
     def coords_array(self):
         """
@@ -1078,6 +1119,14 @@ class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackM
 
 
 class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
+
+    @classmethod
+    def coords_array_order(cls):
+        """
+        Get the order of the values in the coords array
+        :return:
+        """
+        return ['longitude', 'latitude', 'altitude', 'yaw', 'pitch', 'roll', 'depth']
 
     @property
     def coords_array(self):
@@ -1101,6 +1150,14 @@ class PastResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, T
     @classmethod
     def getSearchFormFields(cls):
         return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude', 'depth', 'yaw', 'pitch', 'roll']
+
+    @classmethod
+    def coords_array_order(cls):
+        """
+        Get the order of the values in the coords array
+        :return:
+        """
+        return ['longitude', 'latitude', 'altitude', 'yaw', 'pitch', 'roll', 'depth']
 
     @property
     def coords_array(self):

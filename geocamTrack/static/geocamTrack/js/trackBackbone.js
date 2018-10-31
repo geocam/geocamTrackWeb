@@ -25,120 +25,136 @@ $(function() {
             this.set('name', data.title);
             this.set('url', data.data.json);
             this.set('uuid', data.key);
+            this.set('flat_coords', []);
+            this.set('flat_times', []);
+            this.set('interval_seconds', 1);
+        },
+        organizeData: function() {
+            var context = this;
+            var flat_coords = this.get('flat_coords');
+            var flat_times = this.get('flat_times');
+            _.forEach(this.data, function(track){
+                _.forEach(track.times, function(time_array){
+                  _.forEach(time_array, function(time_string){
+                      flat_times.push(Date.parse(time_string));
+                  });
+                });
+                _.forEach(track.coords, function(coords_array){
+                  _.forEach(coords_array, function(coords){
+                      flat_coords.push(coords);
+                  });
+                })
+            }, this);
+            if (flat_times.length > 1){
+                this.set('interval_seconds', Math.abs(flat_times[1] - flat_times[0])/1000.0);
+            }
+        },
+        getFirstCoords: function() {
+            if (this.get('flat_coords').length > 0){
+                  return transform(this.get('flat_coords')[this.get('flat_coords').length - 1]);
+            }
+            return undefined;
+        },
+        dataExists: function(data) {
+            // callback for when we know the actual track json data is loaded.
+            this.data = data;
+            this.vehicle = data[0].vehicle;
+            this.organizeData();
+        },
+        findClosestTimeIndex: function(input_time){
+            var foundIndex = _.findIndex(this.get('flat_times'), function(value){
+				return Math.abs((input_time - value)/1000) < this.get('interval_seconds');
+			}, this);
+            return foundIndex;
+        },
+        updateVehiclePosition: function(input_time){
+            var foundIndex = this.findClosestTimeIndex(input_time.valueOf());
+            if (foundIndex >= 0){
+                var new_coords = this.get('flat_coords')[foundIndex];
+                var locationDict = {location:transform(new_coords), rotation:null};
+                var key = this.vehicle + ':change';
+                app.vent.trigger(key, locationDict)
+            }
+        },
+    });
+
+    app.models.PlaybackModel = Backbone.Model.extend({
+        invalid: false,
+        lastUpdate: undefined,
+
+        initialized: false,
+        initialize: function(arguments, options) {
+            if (this.initialized){
+                return;
+            }
+            if (!_.isUndefined(arguments) && 'context' in arguments) {
+                this.context = arguments.context;
+            }
+            this.initialized = true;
+        },
+        doSetTime: function(currentTime){
+            if (currentTime === undefined){
+                return;
+            }
+            this.lastUpdate = moment(currentTime);
+            this.context.track.updateVehiclePosition(currentTime);
+        },
+        start: function(currentTime){
+            this.doSetTime(currentTime);
+        },
+        update: function(currentTime){
+            if (this.lastUpdate === undefined){
+                this.doSetTime(currentTime);
+                return;
+            }
+            var delta = currentTime.diff(this.lastUpdate);
+            if (Math.abs(delta) >= 100) {
+                this.doSetTime(currentTime);
+            }
+        },
+        pause: function() {
+            // noop
         }
     });
 
     app.views.TrackView = Marionette.View.extend({
         template: _.noop,
-        flat_times: [],
-        flat_coords: [],
-        playback : {
-                lastUpdate: undefined,
-                invalid: false,
-                initialized: false,
-                initialize: function() {
-                    if (this.initialized){
-                        return;
-                    }
-                    this.initialized = true;
-                },
-                doSetTime: function(currentTime){
-                    if (currentTime === undefined){
-                        return;
-                    }
-                    this.lastUpdate = moment(currentTime);
-                    this.context.updateVehiclePosition(currentTime);
-//                    app.vent.trigger('updateVehicleTime', currentTime);
-                },
-                start: function(currentTime){
-                    this.doSetTime(currentTime);
-                },
-                update: function(currentTime){
-                    if (this.lastUpdate === undefined){
-                        this.doSetTime(currentTime);
-                        return;
-                    }
-                    var delta = currentTime.diff(this.lastUpdate);
-                    if (Math.abs(delta) >= 100) {
-                        this.doSetTime(currentTime);
-                    }
-                },
-                pause: function() {
-                    // noop
-                }
-            },
-        storeNode: function(){
-            this.trackNode = app.nodeMap[this.key];
+        vehicle: undefined,
+        storeNode: function(key){
+            this.trackNode = app.nodeMap[key];
         },
-        updateVehiclePosition: function(input_time){
-            var foundIndex = this.findClosestTimeIndex(input_time.valueOf());
-            if (foundIndex >= 0){
-                var new_coords = this.flat_coords[foundIndex];
-                var locationDict = {location:transform(new_coords), rotation:null};
-                app.vent.trigger('vehicle:change', locationDict);
-            }
-        },
-        findClosestTimeIndex: function(input_time){
-            var foundIndex = _.findIndex(this.flat_times, function(value){
-				return Math.abs((input_time - value)/1000) < this.intervalSeconds;
-			}, this);
-            return foundIndex;
-        },
-        organizeData: function() {
-            // this.data[0].times[0][0]
-            var context = this;
-            _.forEach(this.data, function(track){
-                _.forEach(track.times, function(time_array){
-                  _.forEach(time_array, function(time_string){
-                      context.flat_times.push(Date.parse(time_string));
-                  });
-                });
-                _.forEach(track.coords, function(coords_array){
-                  _.forEach(coords_array, function(coords){
-                      context.flat_coords.push(coords);
-                  });
-                })
-            }, this);
-            if (this.flat_times.length > 1){
-                this.intervalSeconds = Math.abs(this.flat_times[1] - this.flat_times[0])/1000.0;
-            }
-        },
-        dataExists: function() {
-            // callback for when we know the actual track json data is loaded.
-            this.data = this.trackNode.objectsJson;
-            this.organizeData();
-            this.playback.context = this;
-            this.track.vehicle = this.data[0].vehicle;
-            this.createVehicle();
-            playback.addListener(this.playback);
-            app.vent.trigger('mapSearch:fit');
-        },
+
         initialize: function(options){
             this.key = options.key;
             this.data = undefined;
-            this.listenTo(app.vent, 'app.nodeMap:exists', function(key) { if (key === this.key) {this.storeNode();}});
-            this.listenTo(app.vent, 'cacheJSON', function(key) { if (key == this.key) {this.dataExists()}});
             this.track = new app.models.TrackModel(options);
-            this.track_metadata = options;
+            this.listenTo(app.vent, 'app.nodeMap:exists', function(key) { if (key === this.key) {this.storeNode(key);}});
+            this.listenTo(app.vent, 'cacheJSON', function(key) {
+                if (key == this.key) {
+                    this.setupWithData(key);
+                }
+            });
             options.selected = true;  // setting this to true forces render immediately
             app.vent.trigger('mapNode:create', options);  // this will actually render it on the map
         },
-        getFirstCoords: function() {
-            if (this.flat_coords.length > 0){
-                  return transform(this.flat_coords[this.flat_coords.length - 1]);
-            }
-            return undefined;
+        setupWithData: function(key){
+            this.track.dataExists(this.trackNode.objectsJson);
+            this.vehicle = this.track.vehicle;
+            this.createVehicle();
+            this.playback = new app.models.PlaybackModel({context:this});
+            playback.addListener(this.playback);
+            app.vent.trigger('mapSearch:fit');
         },
         createVehicle: function() {
             if (this.vehicleView === undefined){
-                if (this.flat_coords.length > 0){
+                if (this.track.get('flat_coords').length > 0){
                     var vehicleJson = {name:this.track.name,
                                        vehicle:this.track.vehicle,
-                                       startPoint:this.getFirstCoords()};
-                    if ('icon_url' in this.data[0]) {
-                        vehicleJson['icon_url'] = this.data[0].icon_url;
-                        vehicleJson['icon_color'] = this.data[0].icon_color;
-                        vehicleJson['icon_scale'] = this.data[0].icon_scale;
+                                       startPoint:this.track.getFirstCoords()};
+                    if ('icon_url' in this.track.data[0]) {
+                        vehicleJson['icon_url'] = this.track.data[0].icon_url;
+                        vehicleJson['icon_color'] = this.track.data[0].icon_color;
+                        vehicleJson['icon_scale'] = this.track.data[0].icon_scale;
                     }
                     this.vehicleView = new app.views.OLVehicleView({featureJson:vehicleJson});
                     app.map.map.addLayer(this.vehicleView.vectorLayer);
