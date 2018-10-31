@@ -550,7 +550,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
                         coords = []
                         self.timesGroups.append(times)
                         times = []
-                coords.append([pos.longitude, pos.latitude])
+                coords.append(pos.coords_array)
                 times.append(pos.timestamp)
             lastPos = pos
         self.coordGroups.append(coords)
@@ -834,16 +834,14 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
             return self.track.timezone
         return settings.TIME_ZONE
 
-    #     def toMapDict(self):
-    #         result = {}
-    #         result['type'] = "Position"
-    #         result['id'] = self.pk
-    #         result['lat'] = self.latitude
-    #         result['lon'] = self.longitude
-    #         result.update(self.getProperties())
-    #         del(result['unixstamp'])
-    #         del(result['subtype'])
-    #         return result
+    @property
+    def coords_array(self):
+        """
+        Get the coordinates as an array.  Must be in expected order.
+        Classes that extend this class and add other coordinates (altitude, depth, etc) must provide those coords.
+        :return: [longitude, latitude]
+        """
+        return [self.longitude, self.latitude]
 
     def __unicode__(self):
         if self.has_track:
@@ -978,6 +976,16 @@ class DepthMixin(models.Model):
 
 class ResourcePosition(AltitudeResourcePosition, TrackMixin):
 
+    @property
+    def coords_array(self):
+        """
+        Get the coordinates as an array.  Must be in expected order.
+        Classes that extend this class and add other coordinates (altitude, depth, etc) must provide those coords.
+        :return: [longitude, latitude, altitude, heading]
+        """
+        return [self.longitude, self.latitude, self.altitude, self.heading]
+
+
     @classmethod
     def getFlattenedFields(cls):
         """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
@@ -992,6 +1000,15 @@ class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
     def getSearchFormFields(cls):
         return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude']
 
+    @property
+    def coords_array(self):
+        """
+        Get the coordinates as an array.  Must be in expected order.
+        Classes that extend this class and add other coordinates (altitude, depth, etc) must provide those coords.
+        :return: [longitude, latitude, altitude, heading]
+        """
+        return [self.longitude, self.latitude, self.altitude, self.heading]
+
     @classmethod
     def getFlattenedFields(cls):
         """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
@@ -1001,6 +1018,15 @@ class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
 
 
 class ResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
+
+    @property
+    def coords_array(self):
+        """
+        Get the coordinates as an array.  Must be in expected order.
+        Classes that extend this class and add other coordinates (altitude, depth, etc) must provide those coords.
+        :return: [longitude, latitude, altitude, yaw, pitch, roll]
+        """
+        return [self.longitude, self.latitude, self.altitude, self.yaw, self.pitch, self.roll]
 
     @classmethod
     def getFlattenedFields(cls):
@@ -1016,6 +1042,15 @@ class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackM
     def getSearchFormFields(cls):
         return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude', 'yaw', 'pitch', 'roll']
 
+    @property
+    def coords_array(self):
+        """
+        Get the coordinates as an array.  Must be in expected order.
+        Classes that extend this class and add other coordinates (altitude, depth, etc) must provide those coords.
+        :return: [longitude, latitude, altitude, yaw, pitch, roll]
+        """
+        return [self.longitude, self.latitude, self.altitude, self.yaw, self.pitch, self.roll]
+
     @classmethod
     def getFlattenedFields(cls):
         """Return the names of the fields to be used in a json dictionary.  These must have methods with the same name.
@@ -1025,6 +1060,15 @@ class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackM
 
 
 class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
+
+    @property
+    def coords_array(self):
+        """
+        Get the coordinates as an array.  Must be in expected order.
+        Classes that extend this class and add other coordinates (altitude, depth, etc) must provide those coords.
+        :return: [longitude, latitude, altitude, yaw, pitch, roll, depth]
+        """
+        return [self.longitude, self.latitude, self.altitude, self.yaw, self.pitch, self.roll, self.depth]
 
     @classmethod
     def getFlattenedFields(cls):
@@ -1039,6 +1083,15 @@ class PastResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, T
     @classmethod
     def getSearchFormFields(cls):
         return ['track', 'track__vehicle', 'timestamp', 'latitude', 'longitude', 'altitude', 'depth', 'yaw', 'pitch', 'roll']
+
+    @property
+    def coords_array(self):
+        """
+        Get the coordinates as an array.  Must be in expected order.
+        Classes that extend this class and add other coordinates (altitude, depth, etc) must provide those coords.
+        :return: [longitude, latitude, altitude, yaw, pitch, roll, depth]
+        """
+        return [self.longitude, self.latitude, self.altitude, self.yaw, self.pitch, self.roll, self.depth]
 
     @classmethod
     def getFlattenedFields(cls):

@@ -40,7 +40,10 @@ def get_line_style(name):
     try:
         line_style = LINE_STYLE_MODEL.get().objects.get(name=name)
     except ObjectDoesNotExist:
-        line_style = LINE_STYLE_MODEL.get().objects.get(name='default')
+        try:
+            line_style = LINE_STYLE_MODEL.get().objects.get(name__icontains=name)
+        except ObjectDoesNotExist:
+            line_style = LINE_STYLE_MODEL.get().objects.get(name='default')
     return line_style
 
 
