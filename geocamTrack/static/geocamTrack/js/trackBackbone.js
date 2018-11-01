@@ -49,9 +49,16 @@ $(function() {
                 this.set('interval_seconds', Math.abs(flat_times[1] - flat_times[0])/1000.0);
             }
         },
-        getFirstCoords: function() {
+        getCoords: function(index) {
             if (this.get('flat_coords').length > 0){
-                  return transform(this.get('flat_coords')[this.get('flat_coords').length - 1]);
+                var coords = this.get('flat_coords')[index];
+                var heading_index = this.get('heading_index');
+                var heading = null;
+                if (heading_index > -1){
+                    //TODO figure out what units these are coming in
+                    heading = coords[heading_index] * (Math.PI / 180);
+                }
+                return {location:transform(coords), rotation:heading};
             }
             return undefined;
         },
@@ -77,15 +84,7 @@ $(function() {
         updateVehiclePosition: function(input_time){
             var foundIndex = this.findClosestTimeIndex(input_time.valueOf());
             if (foundIndex >= 0){
-                var new_coords = this.get('flat_coords')[foundIndex];
-                var heading_index = this.get('heading_index');
-                var heading = null;
-                if (heading_index > -1){
-                    heading = new_coords[heading_index];
-                    //TODO figure out what units these are coming in
-                    heading = new_coords[heading_index] * (Math.PI / 180);
-                }
-                var locationDict = {location:transform(new_coords), rotation:heading};
+                var locationDict = this.getCoords(foundIndex);
                 var key = this.vehicle + ':change';
                 app.vent.trigger(key, locationDict)
             }
@@ -161,10 +160,11 @@ $(function() {
         },
         createVehicle: function() {
             if (this.vehicleView === undefined){
-                if (this.track.get('flat_coords').length > 0){
+                var length = this.track.get('flat_coords').length;
+                if (length > 0){
                     var vehicleJson = {name:this.track.name,
                                        vehicle:this.track.vehicle,
-                                       startPoint:this.track.getFirstCoords()}; //TODO include heading
+                                       startPoint:this.track.getCoords(length - 1)};
                     if ('icon_url' in this.track.data[0]) {
                         vehicleJson['icon_url'] = this.track.data[0].icon_url;
                         vehicleJson['icon_color'] = this.track.data[0].icon_color;
