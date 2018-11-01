@@ -149,6 +149,11 @@ $(function() {
             });
             options.selected = true;  // setting this to true forces render immediately
             app.vent.trigger('mapNode:create', options);  // this will actually render it on the map
+            this.listenTo(app.vent, 'olNode:rendered', function(key) {
+                if (key==this.key) {
+                    app.vent.trigger('mapSearch:fit', this.trackNode.node.mapView.mapElement);
+                }
+            });
         },
         setupWithData: function(key){
             this.track.dataExists(this.trackNode.objectsJson);
@@ -156,7 +161,6 @@ $(function() {
             this.createVehicle();
             this.playback = new app.models.PlaybackModel({context:this});
             playback.addListener(this.playback);
-            app.vent.trigger('mapSearch:fit');
         },
         createVehicle: function() {
             if (this.vehicleView === undefined){
