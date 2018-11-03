@@ -17,8 +17,9 @@ import pytz
 
 from django.conf import settings
 from django.utils import timezone
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.db.models import ExpressionWrapper, IntegerField
+from django.db.models.functions import ExtractSecond, ExtractMinute
+
 from geocamUtil import TimeUtil
 from geocamUtil import geomath
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
@@ -213,6 +214,8 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
     extras = ExtrasDotField()
 
     def __init__(self, *args, **kwargs):
+        self.coordGroups = []
+        self.timesGroups = []
         super(AbstractTrack, self).__init__(*args, **kwargs)
         if self.id:
             self.pastposition_set = PAST_POSITION_MODEL.get().objects.filter(track_id=self.id)
@@ -231,8 +234,22 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
         """
         return pytz.timezone(settings.TIME_ZONE)
 
-    def getPositions(self):
-        return PAST_POSITION_MODEL.get().objects.filter(track=self)
+    def getPositions(self, downsample=False):
+        result = PAST_POSITION_MODEL.get().objects.filter(track=self)
+        if downsample:
+            # reduce by modding by the number of seconds set in settings.
+            skip_seconds = settings.GEOCAM_TRACK_DOWNSAMPLE_POSITIONS_SECONDS
+            skip_minutes = None
+            if skip_seconds >= 60:
+                skip_minutes = int(skip_seconds/60)
+                skip_seconds = None
+            if skip_seconds:
+                result = result.annotate(sec_mod=ExpressionWrapper(ExtractSecond('timestamp') % skip_seconds,
+                                                                   output_field=IntegerField())).filter(sec_mod=0)
+            elif skip_minutes:
+                result = result.annotate(min_mod=ExpressionWrapper(ExtractMinute('timestamp') % skip_minutes,
+                                                                   output_field=IntegerField())).filter(min_mod=0)
+        return result
 
     def getCurrentPositions(self):
         return POSITION_MODEL.get().objects.filter(track=self)
@@ -543,9 +560,8 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
             return self.iconStyle.scale
         return 1
 
-    def buildTimeCoords(self):
-        self.coordGroups = []
-        self.timesGroups = []
+    def buildTimeCoords(self, downsample=False):
+
         currentPositions = self.getPositions()
         if currentPositions.count() < 2:
             return
@@ -588,7 +604,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
             return self.timesGroups
         return None
 
-    def toMapDict(self):
+    def toMapDict(self, downsample=False):
         result = super(AbstractTrack, self).toMapDict()
         result['coords_array_order'] = PAST_POSITION_MODEL.get().coords_array_order()
         if 'vehicle' in result:
@@ -596,7 +612,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
                 result['vehicle'] = self.vehicle.name
             else:
                 del result['vehicle']
-        self.buildTimeCoords()
+        self.buildTimeCoords(downsample)
         if self.timesGroups:
             result['times'] = self.timesGroups
 

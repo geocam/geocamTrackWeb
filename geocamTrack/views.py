@@ -708,11 +708,11 @@ def getActiveTrackPKs(request):
     return JsonResponse(result, encoder=DatetimeJsonEncoder)
 
 
-def mapJsonTrack(request, uuid):
+def mapJsonTrack(request, uuid, downsample=False):
     TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
     try:
         track = TRACK_MODEL.get().objects.get(uuid=uuid)
-        json_data = json.dumps([track.toMapDict()], cls=DatetimeJsonEncoder)
+        json_data = json.dumps([track.toMapDict(downsample)], cls=DatetimeJsonEncoder)
         return HttpResponse(content=json_data,
                             content_type="application/json")
     except:

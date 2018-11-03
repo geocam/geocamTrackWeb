@@ -101,3 +101,8 @@ GEOCAM_TRACK_PRELOAD_TRACK_IMAGES = ["/static/geocamTrack/icons/1_pointer.png",
 # Typically they will be broadcast per vehicle, so for example if you have
 # tracked vehicles A and B, it will be ['A','B']
 XGDS_SSE_TRACK_CHANNELS = []
+
+# this will modtime the seconds to downsample positions for tracks by this amount.
+# If it's >= 60, it must be a multiple of 60 to skip minutes.
+# Does not support skipping > 59 minutes.
+GEOCAM_TRACK_DOWNSAMPLE_POSITIONS_SECONDS = 5
