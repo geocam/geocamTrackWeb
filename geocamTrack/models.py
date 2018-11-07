@@ -17,8 +17,6 @@ import pytz
 
 from django.conf import settings
 from django.utils import timezone
-from django.db.models import ExpressionWrapper, IntegerField
-from django.db.models.functions import ExtractSecond, ExtractMinute
 
 from geocamUtil import TimeUtil
 from geocamUtil import geomath
@@ -27,7 +25,7 @@ from geocamUtil.models.UuidField import UuidModel
 from geocamUtil.loader import LazyGetModelByName
 
 from geocamUtil.usng import usng
-from xgds_core.models import SearchableModel, HasVehicle, HasFlight
+from xgds_core.models import SearchableModel, HasVehicle, HasFlight, downsample_queryset
 
 # pylint: disable=C1001
 latestRequestG = None
@@ -237,18 +235,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
     def getPositions(self, downsample=False):
         result = PAST_POSITION_MODEL.get().objects.filter(track=self)
         if downsample:
-            # reduce by modding by the number of seconds set in settings.
-            skip_seconds = settings.GEOCAM_TRACK_DOWNSAMPLE_POSITIONS_SECONDS
-            skip_minutes = None
-            if skip_seconds >= 60:
-                skip_minutes = int(skip_seconds/60)
-                skip_seconds = None
-            if skip_seconds:
-                result = result.annotate(sec_mod=ExpressionWrapper(ExtractSecond('timestamp') % skip_seconds,
-                                                                   output_field=IntegerField())).filter(sec_mod=0)
-            elif skip_minutes:
-                result = result.annotate(min_mod=ExpressionWrapper(ExtractMinute('timestamp') % skip_minutes,
-                                                                   output_field=IntegerField())).filter(min_mod=0)
+            result = downsample_queryset(result, settings.GEOCAM_TRACK_DOWNSAMPLE_POSITIONS_SECONDS)
         return result
 
     def getCurrentPositions(self):
@@ -270,7 +257,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
                   "key": self.uuid,
                   "tooltip": "%s for %s" % (settings.GEOCAM_TRACK_TRACK_MONIKER, self.name),
                   "data": {
-                      "json": reverse('geocamTrack_mapJsonTrack', kwargs={'uuid': str(self.uuid)}),
+                      "json": reverse('geocamTrack_mapJsonTrack_downsample', kwargs={'uuid': str(self.uuid)}),
                       "kmlFile": reverse('geocamTrack_trackKml', kwargs={'trackName': self.name}),
                       "sseUrl": "",
                       "type": 'MapLink',
@@ -562,7 +549,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
 
     def buildTimeCoords(self, downsample=False):
 
-        currentPositions = self.getPositions()
+        currentPositions = self.getPositions(downsample)
         if currentPositions.count() < 2:
             return
         if self.coordGroups:
