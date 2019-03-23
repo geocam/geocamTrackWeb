@@ -873,6 +873,8 @@ def importTrack(request):
         {
             'form': ImportTrackForm(),
             'errorstring': errors,
+            'help_content_path': 'geocamTrack/help/import.rst',
+            'title': 'Import ' + settings.GEOCAM_TRACK_TRACK_MONIKER,
             'tracks': json.dumps(jsonTracks, cls=DatetimeJsonEncoder)
         },
     )
