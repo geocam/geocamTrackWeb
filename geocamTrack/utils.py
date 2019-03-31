@@ -14,6 +14,8 @@ from geocamUtil.loader import LazyGetModelByName
 
 TRACK_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_TRACK_MODEL)
 PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
+ICON_STYLE_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_ICON_STYLE_MODEL)
+LINE_STYLE_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_LINE_STYLE_MODEL)
 
 
 def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=settings.GEOCAM_TRACK_CLOSEST_POSITION_MAX_DIFFERENCE_SECONDS, vehicle=None):
@@ -77,3 +79,29 @@ def getClosestPosition(track=None, timestamp=None, max_time_difference_seconds=s
         else:
             foundPosition = None
     return foundPosition
+
+
+def get_or_create_track(track_name, vehicle=None, flight=None):
+    """
+    Get or create a track
+    :param track_name: the name of the track
+    :param vehicle: the vehicle, can be None
+    :param flight: the flight, can be None
+    :return: the track, new or existing
+    """
+    try:
+        track = TRACK_MODEL.get().objects.get(name=track_name)
+        if vehicle and track.vehicle != vehicle:
+            raise Exception('Existing track %s with different vehicle %s' % (track.name, vehicle.name))
+        if flight and track.flight != flight:
+            raise Exception('Existing track %s with different flight' % (track.name))
+        return track
+    except ObjectDoesNotExist:
+        track = TRACK_MODEL.get()(name=track_name,
+                                  vehicle=vehicle,
+                                  iconStyle=ICON_STYLE_MODEL.get().objects.get(uuid=vehicle.name),
+                                  lineStyle=LINE_STYLE_MODEL.get().objects.get(uuid=vehicle.name),
+                                  flight=flight)
+        track.save()
+        return track
+
