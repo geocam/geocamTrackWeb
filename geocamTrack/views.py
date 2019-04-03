@@ -49,6 +49,7 @@ POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_POSITION_MODEL)
 PAST_POSITION_MODEL = LazyGetModelByName(settings.GEOCAM_TRACK_PAST_POSITION_MODEL)
 RECENT_TIME_FUNCTION = getClassByName(settings.GEOCAM_TRACK_RECENT_TIME_FUNCTION)
 VEHICLE_MODEL = LazyGetModelByName(settings.XGDS_CORE_VEHICLE_MODEL)
+ACTIVE_FLIGHT_MODEL = LazyGetModelByName(settings.XGDS_CORE_ACTIVE_FLIGHT_MODEL)
 
 
 class ExampleError(Exception):
@@ -687,15 +688,19 @@ def getActivePositionsJSON(request):
     result = {}
     if active_positions:
         for position in active_positions:
-            if (position.track in active_tracks):
+            if position.track in active_tracks:
                 result[position.track.name] = position.toMapDict()
 
     return JsonResponse(result, encoder=DatetimeJsonEncoder)
 
 
 def getActiveTracks():
-    """ look up the active tracks from the GEOCAM_TRACK_POSITION_MODEL """
-    return TRACK_MODEL.get().objects.filter(currentposition__isnull=False)
+    found_active_flights = ACTIVE_FLIGHT_MODEL.get().objects.all()
+    result = []
+    for active_flight in found_active_flights:
+        if active_flight.flight.track:
+            result.append(active_flight.flight.track)
+    return result
 
 
 def getActiveTrackPKs(request):
