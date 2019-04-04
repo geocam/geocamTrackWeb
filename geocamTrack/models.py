@@ -9,12 +9,14 @@ import datetime
 import logging
 from math import pi, cos, sin
 import urllib
+import pytz
+import json
 
-from django.contrib.auth.models import User
+
 from django.core.urlresolvers import reverse
 from django.db import models
-import pytz
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.conf import settings
 from django.utils import timezone
 
@@ -23,9 +25,13 @@ from geocamUtil import geomath
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
 from geocamUtil.models.UuidField import UuidModel
 from geocamUtil.loader import LazyGetModelByName
+from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 
 from geocamUtil.usng import usng
-from xgds_core.models import SearchableModel, HasVehicle, HasFlight, downsample_queryset
+from xgds_core.models import SearchableModel, HasVehicle, HasFlight, downsample_queryset, BroadcastMixin
+
+if settings.XGDS_CORE_REDIS:
+    from xgds_core.redisUtil import publishRedisSSE
 
 # pylint: disable=C1001
 latestRequestG = None
@@ -690,7 +696,7 @@ class TrackMixin(models.Model):
         abstract = True
 
 
-class AbstractResourcePosition(SearchableModel, TrackMixin):
+class AbstractResourcePosition(SearchableModel, TrackMixin, BroadcastMixin):
     """
     AbstractResourcePosition is the most minimal position model
     geocamTrack supports.  Other apps building on geocamTrack may want
@@ -888,6 +894,14 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
                        self.latitude,
                        self.longitude))
 
+    def getBroadcastChannel(self):
+        if self.track:
+            return self.track.vehicle.name.lower()
+        return 'sse'
+
+    def getSseType(self):
+        return settings.GEOCAM_TRACK_CURRENT_POSITION_SSE_TYPE
+
 
 class HeadingMixin(models.Model):
     """
@@ -1062,6 +1076,9 @@ class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
         """
         return ['lat', 'lon', 'alt', 'head']
 
+    def getSseType(self):
+        return settings.GEOCAM_TRACK_PAST_POSITION_SSE_TYPE
+
 
 class ResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
 
@@ -1120,6 +1137,9 @@ class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackM
         """
         return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll']
 
+    def getSseType(self):
+        return settings.GEOCAM_TRACK_PAST_POSITION_SSE_TYPE
+
 
 class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
 
@@ -1146,6 +1166,12 @@ class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, Track
         This method must be defined on each non abstract position class.
         """
         return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll', 'depth']
+
+
+# if settings.XGDS_CORE_REDIS and settings.XGDS_SSE:
+#     @receiver(post_save, sender=ResourcePoseDepth)
+#     def publishAfterSave(sender, instance, **kwargs):
+#         instance.broadcast()
 
 
 class PastResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
@@ -1177,6 +1203,14 @@ class PastResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, T
         This method must be defined on each non abstract position class.
         """
         return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll', 'depth']
+
+    def getSseType(self):
+        return settings.GEOCAM_TRACK_PAST_POSITION_SSE_TYPE
+
+# if settings.XGDS_CORE_REDIS and settings.XGDS_SSE:
+#     @receiver(post_save, sender=PastResourcePoseDepth)
+#     def publishAfterSave(sender, instance, **kwargs):
+#         instance.broadcast()
 
 
 PAST_POSITION_FIELD = lambda: models.ForeignKey(PastResourcePosition,

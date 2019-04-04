@@ -99,8 +99,11 @@ GEOCAM_TRACK_PRELOAD_TRACK_IMAGES = ["/static/geocamTrack/icons/1_pointer.png",
 
 # TODO override this to expose the sse channels for tracking
 # Typically they will be broadcast per vehicle, so for example if you have
-# tracked vehicles A and B, it will be ['A','B']
+# tracked vehicles A and B, it will be ['A','B'], they should match the vehicle names
 XGDS_SSE_TRACK_CHANNELS = []
+
+GEOCAM_TRACK_PAST_POSITION_SSE_TYPE = 'position:past'
+GEOCAM_TRACK_CURRENT_POSITION_SSE_TYPE = 'position:current'
 
 # this will modtime the seconds to downsample positions for tracks by this amount.
 # If it's >= 60, it must be a multiple of 60 to skip minutes.
