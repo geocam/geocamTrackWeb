@@ -69,6 +69,7 @@ $.extend(trackSse, {
 			nonSse = false;
 		}
 		trackSse.positions[channel] = data;
+		trackSse.last_times[channel] = data.timestamp;
 		trackSse.setupPositionIcon(channel);
 		data.displayName = channel;
 		var elements = Position.constructElements([data], true);
@@ -80,10 +81,12 @@ $.extend(trackSse, {
 		}
 	},
 	modifyPosition: function(channel, data, disconnected){
+
 		var position = trackSse.olPositions[channel];
 		if (position != undefined) {
 			if (data != undefined){
-				trackSse.positions[channel] = data;
+					trackSse.last_times[channel] = trackSse.positions[channel].timestamp;
+					trackSse.positions[channel] = data;
 			}
 			var features = position.getSource().getFeatures();
 			var f = features[0];

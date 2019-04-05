@@ -21,7 +21,6 @@ $.extend(trackSse, {
 	initialize: function() {
 		trackSse.getCurrentPositions();
 		trackSse.subscribe();
-		// sse.allChannels(trackSse.subscribe, trackSse.getChannels());
 		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, trackSse.STALE_TIMEOUT);
 	},
 	subscribe: function() {
@@ -53,9 +52,19 @@ $.extend(trackSse, {
 	checkStale: function(channel) {
 		var connected = false
 		if (trackSse.positions[channel] != undefined){
-			var nowmoment =  moment();
-			var diff = moment.duration(nowmoment.diff(trackSse.positions[channel].timestamp));
-			if (diff.asSeconds() <= 10) {
+			var nowmoment = moment(trackSse.positions[channel].timestamp);
+			var lastmoment = undefined;
+			if (trackSse.last_times[channel] != undefined) {
+				lastmoment = moment(trackSse.last_times[channel])
+				trackSse.last_times[channel] = undefined;
+			} else {
+				lastmoment = moment();
+			}
+			var diff = moment.duration(nowmoment.diff(lastmoment));
+			var diff_seconds = diff.asSeconds();
+			if (_.isNaN(diff_seconds)) {
+				connected = false;
+			} else if (Math.abs(diff_seconds) <= (trackSse.STALE_TIMEOUT / 1000)) {
 				connected = true;
 			}
 		}
@@ -77,16 +86,16 @@ $.extend(trackSse, {
 		trackSse.updateTrack(channel, data);
 	},
 	positions: {},
+	last_times: {},
 	tracks: {},
 	createPosition: function(channel, data, nonSse){
-		// if (nonSse == undefined){
-		// 	nonSse = false;
-		// }
 		// in this example we just store the data
 		trackSse.positions[channel] = data;
+		trackSse.last_times[channel] = data.timestamp;
 		trackSse.getTrack(channel, data);
 	},
 	modifyPosition: function(channel, data, disconnected){
+		trackSse.last_times[channel] = trackSse.positions[channel].timestamp;
 		trackSse.positions[channel] = data;
 	},
 	updatePosition: function(channel, data){
