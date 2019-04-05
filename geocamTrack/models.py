@@ -696,7 +696,7 @@ class TrackMixin(models.Model):
         abstract = True
 
 
-class AbstractResourcePosition(SearchableModel, TrackMixin, BroadcastMixin):
+class AbstractResourcePosition(SearchableModel, TrackMixin):
     """
     AbstractResourcePosition is the most minimal position model
     geocamTrack supports.  Other apps building on geocamTrack may want
@@ -754,14 +754,17 @@ class AbstractResourcePosition(SearchableModel, TrackMixin, BroadcastMixin):
         if len(oldCpos) > 1:
             logging.warning('more than one position for track %s',
                             self.track)
-
+        new_instance = False
         if oldCpos:
             oldCposPk = oldCpos[0].pk
         else:
+            new_instance = True
             oldCposPk = None
         self.pk = oldCposPk
 
         self.save()
+        if not new_instance:
+            self.broadcast()
 
     def getHeading(self):
         return None
@@ -972,7 +975,7 @@ class AltitudeMixin(models.Model):
         abstract = True
 
 
-class AltitudeResourcePosition(AbstractResourcePosition, HeadingMixin, AltitudeMixin):
+class AltitudeResourcePosition(AbstractResourcePosition, HeadingMixin, AltitudeMixin, BroadcastMixin):
     precisionMeters = models.FloatField(blank=True, null=True, db_index=True)  # estimated position error
 
     class Meta:
@@ -1018,7 +1021,7 @@ class DepthMixin(models.Model):
         abstract = True
 
 
-class ResourcePosition(AltitudeResourcePosition, TrackMixin):
+class ResourcePosition(AltitudeResourcePosition, TrackMixin, BroadcastMixin):
 
     @classmethod
     def coords_array_order(cls):
@@ -1080,7 +1083,7 @@ class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
         return settings.GEOCAM_TRACK_PAST_POSITION_SSE_TYPE
 
 
-class ResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin):
+class ResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, BroadcastMixin):
 
     @classmethod
     def coords_array_order(cls):
@@ -1141,7 +1144,7 @@ class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackM
         return settings.GEOCAM_TRACK_PAST_POSITION_SSE_TYPE
 
 
-class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
+class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin, BroadcastMixin):
 
     @classmethod
     def coords_array_order(cls):
@@ -1166,6 +1169,9 @@ class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, Track
         This method must be defined on each non abstract position class.
         """
         return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll', 'depth']
+
+    def getSseType(self):
+        return settings.GEOCAM_TRACK_CURRENT_POSITION_SSE_TYPE
 
 
 # if settings.XGDS_CORE_REDIS and settings.XGDS_SSE:

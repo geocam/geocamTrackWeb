@@ -103,7 +103,7 @@ GEOCAM_TRACK_PRELOAD_TRACK_IMAGES = ["/static/geocamTrack/icons/1_pointer.png",
 XGDS_SSE_TRACK_CHANNELS = []
 
 GEOCAM_TRACK_PAST_POSITION_SSE_TYPE = 'position:past'
-GEOCAM_TRACK_CURRENT_POSITION_SSE_TYPE = 'position:current'
+GEOCAM_TRACK_CURRENT_POSITION_SSE_TYPE = 'position'
 
 # this will modtime the seconds to downsample positions for tracks by this amount.
 # If it's >= 60, it must be a multiple of 60 to skip minutes.
