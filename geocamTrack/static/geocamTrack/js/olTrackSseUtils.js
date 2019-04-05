@@ -149,8 +149,14 @@ $.extend(Position, {
 			if (disconnected){
 				styles[0] = channel.stop;
 			} else {
-				if (!_.isEmpty(positionJson.heading)){
+				if (_.isNumber(positionJson.heading)){
+					var heading = positionJson.heading;
+					if (HEADING_UNITS === 'degrees') {
+						heading = positionJson.heading * (Math.PI / 180);
+					}
 	    			styles[0] = channel.pointer;
+					styles[0].getImage().setRotation(heading);
+        			//this.vectorLayer.changed();
 	    		} else {
 	    			styles[0] = channel.circle;
 	    		}

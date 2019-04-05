@@ -105,3 +105,6 @@ GEOCAM_TRACK_CURRENT_POSITION_SSE_TYPE = 'position'
 # If it's >= 60, it must be a multiple of 60 to skip minutes.
 # Does not support skipping > 59 minutes.
 GEOCAM_TRACK_DOWNSAMPLE_POSITIONS_SECONDS = 5
+
+# if you are using degrees, override this and set to degrees
+GEOCAM_TRACK_HEADING_UNITS = 'radians'

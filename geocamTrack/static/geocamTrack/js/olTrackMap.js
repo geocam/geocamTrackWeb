@@ -12,7 +12,7 @@ var Track = {
                     });
                 this.styles['dot'] = new ol.style.Style({
                     image: new ol.style.Circle({
-                        	radius: 5,
+                        	radius: 3,
                         	fill: new ol.style.Fill({
                         	    color: '67fb09'
                         	})
@@ -54,7 +54,7 @@ var Track = {
                     });
                 dotstyle = new ol.style.Style({
                     image: new ol.style.Circle({
-                	radius: 5,
+                	radius: 3,
                 	fill: new ol.style.Fill({
                 	    color: color
                 	})

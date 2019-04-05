@@ -55,8 +55,11 @@ $(function() {
                 var heading_index = this.get('heading_index');
                 var heading = null;
                 if (heading_index > -1){
-                    //TODO figure out what units these are coming in
-                    heading = coords[heading_index] * (Math.PI / 180);
+                    if (HEADING_UNITS === 'degrees') {
+                        heading = coords[heading_index] * (Math.PI / 180);
+                    } else {
+                        heading = coords[heading_index];
+                    }
                 }
                 return {location:transform(coords), rotation:heading};
             }
