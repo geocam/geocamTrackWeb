@@ -79,17 +79,18 @@ $.extend(trackSse, {
 	positions: {},
 	tracks: {},
 	createPosition: function(channel, data, nonSse){
-		if (nonSse == undefined){
-			nonSse = false;
-		}
+		// if (nonSse == undefined){
+		// 	nonSse = false;
+		// }
 		// in this example we just store the data
 		trackSse.positions[channel] = data;
 		trackSse.getTrack(channel, data);
 	},
-	modifyPosition: function(position, data, disconnected){
+	modifyPosition: function(channel, data, disconnected){
 		trackSse.positions[channel] = data;
 	},
 	updatePosition: function(channel, data){
+		data.displayName = channel;
 		if (!(channel in trackSse.positions)){
 			trackSse.createPosition(channel, data);
 		} else {
@@ -107,8 +108,9 @@ $.extend(trackSse, {
 		return app.options.searchModels['Track'].model;
 	},
 	convertTrackNameToChannel: function(track_name){
-		// override 
-		return track_name; 
+		var splits = track_name.split('_');
+        var last = splits[splits.length - 1];
+        return last.toLowerCase();
 	},
 	getCurrentPositions: function() {
 		var trackPKUrl = '/track/position/active/json'

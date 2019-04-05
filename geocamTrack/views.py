@@ -682,7 +682,11 @@ def getActivePositions(trackId=None):
 
 
 def getActivePositionsJSON(request):
-    ''' return JSON of the current active positions '''
+    """
+    return JSON of the current active positions
+    :param request:
+    :return:
+    """
     active_positions = getActivePositions()
     active_tracks = getActiveTracks()
     result = {}
