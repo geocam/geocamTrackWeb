@@ -24,7 +24,7 @@ $.extend(trackSse, {
 		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, trackSse.STALE_TIMEOUT);
 	},
 	subscribe: function() {
-		sse.subscribe('position', trackSse.handlePositionEvent,  trackSse.getChannels());
+		sse.subscribe('position', trackSse.handlePositionEvent, "handlePositionEvent", trackSse.getChannels());
 	},
 	getChannels: function() {
 		// get the active channels over AJAX
