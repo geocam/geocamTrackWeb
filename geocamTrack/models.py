@@ -259,6 +259,10 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
         return 1
 
     def get_tree_json(self):
+        vehicle_name = ""
+        if hasattr(self, 'vehicle') and self.vehicle:
+            vehicle_name = self.vehicle.name
+
         result = {"title": self.name,
                   "key": self.uuid,
                   "tooltip": "%s for %s" % (settings.GEOCAM_TRACK_TRACK_MONIKER, self.name),
@@ -267,6 +271,7 @@ class AbstractTrack(SearchableModel, UuidModel, HasVehicle, HasFlight):
                       "kmlFile": reverse('geocamTrack_trackKml', kwargs={'trackName': self.name}),
                       "sseUrl": "",
                       "type": 'MapLink',
+                      "vehicle": vehicle_name
                   }
                   }
 

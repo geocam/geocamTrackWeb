@@ -28,6 +28,8 @@ $.extend(trackSse, {
 		app.map.map.getLayers().push(trackSse.positionsGroup);
 		trackSse.subscribe()
 		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, trackSse.STALE_TIMEOUT);
+		app.vent.on('live:pause', function() {trackSse.handle_pause()});
+		app.vent.on('live:play', function() {trackSse.handle_play()});
 	},
 	lookupImage: function(url){
 		var result = undefined;
@@ -123,7 +125,9 @@ $.extend(trackSse, {
 				// append
 				var coords = geom.getCoordinates();
 				coords.push(newCoords);
-				geom.setCoordinates(coords);
+				if (trackSse.playing) {
+					geom.setCoordinates(coords);
+				}
 			} else {
 				// remove the last point and create a linestring
 			}

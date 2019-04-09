@@ -18,10 +18,19 @@ trackSse = {}; //namespace
 
 $.extend(trackSse, {
 	STALE_TIMEOUT: 5000,
+	playing: true,
 	initialize: function() {
 		trackSse.getCurrentPositions();
 		trackSse.subscribe();
 		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, trackSse.STALE_TIMEOUT);
+		app.vent.on('live:pause', function() {trackSse.handle_pause()});
+		app.vent.on('live:play', function() {trackSse.handle_play()});
+	},
+	handle_pause: function() {
+		this.playing = false;
+	},
+	handle_play: function() {
+		this.playing = true;
 	},
 	subscribe: function() {
 		sse.subscribe('position', trackSse.handlePositionEvent, "handlePositionEvent", trackSse.getChannels());
@@ -103,7 +112,9 @@ $.extend(trackSse, {
 		if (!(channel in trackSse.positions)){
 			trackSse.createPosition(channel, data);
 		} else {
-			trackSse.modifyPosition(channel, data, false);
+			if (this.playing) {
+				trackSse.modifyPosition(channel, data, false);
+			}
 			trackSse.updateTrack(channel, data);
 		}
 	},
