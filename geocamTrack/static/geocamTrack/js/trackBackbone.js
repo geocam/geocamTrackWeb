@@ -30,7 +30,6 @@ $(function() {
             this.set('interval_seconds', 1);
         },
         organizeData: function() {
-            var context = this;
             var flat_coords = this.get('flat_coords');
             var flat_times = this.get('flat_times');
             _.forEach(this.data, function(track){
@@ -49,21 +48,46 @@ $(function() {
                 this.set('interval_seconds', Math.abs(flat_times[1] - flat_times[0])/1000.0);
             }
         },
-        getCoords: function(index) {
-            if (this.get('flat_coords').length > 0){
-                var coords = this.get('flat_coords')[index];
-                var heading_index = this.get('heading_index');
-                var heading = null;
-                if (heading_index > -1){
-                    if (HEADING_UNITS === 'degrees') {
-                        heading = coords[heading_index] * (Math.PI / 180);
-                    } else {
-                        heading = coords[heading_index];
-                    }
+        addData: function(data) {
+          // add new data to the cache
+            var flat_coords = this.get('flat_coords');
+            var flat_times = this.get('flat_times');
+            flat_times.push(Date.parse(data.timestamp));
+            var coords = [data.lon, data.lat];
+            if (this.get('heading_index') > -1) {
+                // TODO for some reason we are not sending the correct position data
+                var heading = data.heading;
+                if (HEADING_UNITS === 'degrees') {
+                    heading = data.heading * (Math.PI / 180);
                 }
-                return {location:transform(coords), rotation:heading};
+                while (coords.length < this.get('heading_index')){
+                    coords.push(null);
+                }
+                coords.push(heading);
+            }
+            flat_coords.push(coords);
+        },
+        buildCoords: function(coords) {
+            var heading_index = this.get('heading_index');
+            var heading = null;
+            if (heading_index > -1){
+                heading = coords[heading_index];
+                if (HEADING_UNITS === 'degrees') {
+                    heading = coords[heading_index] * (Math.PI / 180);
+                }
+            }
+            var ll = [coords[0], coords[1]];
+            return {location:transform(ll), rotation:heading};
+        },
+        getCoords: function(index) {
+            if (this.get('flat_coords').length > 0 && index > -1){
+                var coords = this.get('flat_coords')[index];
+                return this.buildCoords(coords);
             }
             return undefined;
+        },
+        getLastCoords: function() {
+            return this.getCoords(this.get('flat_coords').length - 1);
         },
         dataExists: function(data) {
             // callback for when we know the actual track json data is loaded.
@@ -143,20 +167,42 @@ $(function() {
         initialize: function(options){
             this.key = options.key;
             this.data = undefined;
+            this.hide_track = false;
+            if ('hide_track' in options) {
+                this.hide_track = options.hide_track;
+            }
+            this.vehicle_name = options.data.vehicle.toLowerCase();
             this.track = new app.models.TrackModel(options);
             this.listenTo(app.vent, 'app.nodeMap:exists', function(key) { if (key === this.key) {this.storeNode(key);}});
+
             this.listenTo(app.vent, 'cacheJSON', function(key) {
                 if (key == this.key) {
                     this.setupWithData(key);
+                    var context = this;
+                    app.vent.on(this.vehicle_name + ':position', function(data) {
+                        context.addTrackData(data);
+                    });
                 }
             });
-            options.selected = true;  // setting this to true forces render immediately
-            app.vent.trigger('mapNode:create', options);  // this will actually render it on the map
-            this.listenTo(app.vent, 'olNode:rendered', function(key) {
-                if (key==this.key) {
-                    app.vent.trigger('mapSearch:fit', this.trackNode.node.mapView.mapElement);
-                }
-            });
+
+            if (!this.hide_track) {
+                options.selected = true;  // setting this to true forces render immediately
+                app.vent.trigger('mapNode:create', options);  // this will actually render it on the map
+                this.listenTo(app.vent, 'olNode:rendered', function (key) {
+                    if (key == this.key) {
+                        app.vent.trigger('mapSearch:fit', this.trackNode.node.mapView.mapElement);
+                    }
+                });
+            }
+
+        },
+        updateTrackOnMap: function(coordinate) {
+          if (!_.isUndefined(this.trackNode)) {
+              // TODO this is not how to do this, it throws an invalid array length
+              var mapped_track = this.trackNode.node.mapView.mapElement;
+              var line_string = mapped_track.getLayersArray()[0].getSource().getFeatures()[0].getGeometry();
+              line_string.appendCoordinate(coordinate);
+          }
         },
         setupWithData: function(key){
             this.track.dataExists(this.trackNode.objectsJson);
@@ -182,6 +228,15 @@ $(function() {
                 }
             }
         },
+        addTrackData: function(data){
+            this.track.addData(data);
+            if (data.update){
+                var coords = this.track.getLastCoords();
+                var key = this.vehicle + ':change';
+                app.vent.trigger(key, coords)
+                //this.updateTrackOnMap(coords.location);
+            }
+        }
 
     });
 
