@@ -57,9 +57,6 @@ $(function() {
             if (this.get('heading_index') > -1) {
                 // TODO for some reason we are not sending the correct position data
                 var heading = data.heading;
-                if (HEADING_UNITS === 'degrees') {
-                    heading = data.heading * (Math.PI / 180);
-                }
                 while (coords.length < this.get('heading_index')){
                     coords.push(null);
                 }
@@ -72,9 +69,6 @@ $(function() {
             var heading = null;
             if (heading_index > -1){
                 heading = coords[heading_index];
-                if (HEADING_UNITS === 'degrees') {
-                    heading = coords[heading_index] * (Math.PI / 180);
-                }
             }
             var ll = [coords[0], coords[1]];
             return {location:transform(ll), rotation:heading};
