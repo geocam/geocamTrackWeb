@@ -907,7 +907,8 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
             return self.track.vehicle.name.lower()
         return 'sse'
 
-    def getSseType(self):
+    @classmethod
+    def getSseType(cls):
         return settings.GEOCAM_TRACK_CURRENT_POSITION_SSE_TYPE.lower()
 
 
@@ -1084,7 +1085,8 @@ class PastResourcePosition(AltitudeResourcePosition, TrackMixin):
         """
         return ['lat', 'lon', 'alt', 'head']
 
-    def getSseType(self):
+    @classmethod
+    def getSseType(cls):
         return settings.GEOCAM_TRACK_PAST_POSITION_SSE_TYPE.lower()
 
 
@@ -1145,7 +1147,8 @@ class PastResourcePose(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackM
         """
         return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll']
 
-    def getSseType(self):
+    @classmethod
+    def getSseType(cls):
         return settings.GEOCAM_TRACK_PAST_POSITION_SSE_TYPE.lower()
 
 
@@ -1175,7 +1178,8 @@ class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, Track
         """
         return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll', 'depth']
 
-    def getSseType(self):
+    @classmethod
+    def getSseType(cls):
         return settings.GEOCAM_TRACK_CURRENT_POSITION_SSE_TYPE.lower()
 
 
@@ -1215,7 +1219,8 @@ class PastResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, T
         """
         return ['lat', 'lon', 'alt', 'yaw', 'pitch', 'roll', 'depth']
 
-    def getSseType(self):
+    @classmethod
+    def getSseType(cls):
         return settings.GEOCAM_TRACK_PAST_POSITION_SSE_TYPE.lower()
 
 # if settings.XGDS_CORE_REDIS and settings.XGDS_SSE:
