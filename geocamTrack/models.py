@@ -716,7 +716,7 @@ class AbstractResourcePosition(SearchableModel, TrackMixin):
 
     class Meta:
         abstract = True
-        ordering = ('-timestamp',)
+        ordering = ('timestamp',)
 
     @property
     def lat(self):

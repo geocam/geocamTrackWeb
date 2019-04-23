@@ -196,26 +196,24 @@ $(function() {
               var features = source.getFeatures();
               var feature = features[features.length - 1];
               var line_string = feature.getGeometry();
+
+              //TODO on the back end when we retrieve the json data for a track we are separating based on
+              // a maximum distance.  We ought to do the same thing on the front end.
+              // see https://github.com/geocam/geocamTrackWeb/blob/55416781f1b1281a8550320ce2cb0a6bbc0ac4b4/geocamTrack/models.py#L572
+
               if (line_string.getType() !== 'LineString') {
                   // the last one is a point, add a linestring
                   var key = this.track.get('name') + '_line';
                   var style = Track.styles[key];
 
-                  feature = Track.constructLineString(this.track.get('name') + '_' + features.length, [line_string.getCoordinates(), coordinate], style);
-                  source.addFeature(feature);
-                  source.refresh();
+                  var first_coord = line_string.getCoordinates();
+                  var second_coord = transform(coordinate);
+                  var new_feature = Track.constructLineString(this.track.get('name') + '_' + features.length, [first_coord, second_coord], style);
+                  source.addFeature(new_feature);
                   source.changed();
-                  line_string = feature.getGeometry();
               } else {
-                  line_string.appendCoordinate(coordinate);
+                  line_string.appendCoordinate(transform(coordinate));
               }
-              //TODO this is not really drawing?
-              // feature.changed();
-              // layer.changed();
-              // source.refresh();
-              // app.map.map.render();
-
-              // line_string.dispatchEvent(ol.render.Event);
           }
         },
         setupWithData: function(key){
@@ -246,8 +244,7 @@ $(function() {
             var coords = this.track.addData(data);
             if (data.update){
                 app.vent.trigger(this.vehicle + ':change', this.track.getLastCoords());
-                //TODO this does not yet draw the update
-                //this.updateTrackOnMap(coords);
+                this.updateTrackOnMap(coords);
             }
         }
 
