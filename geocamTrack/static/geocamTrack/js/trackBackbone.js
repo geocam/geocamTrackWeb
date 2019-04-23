@@ -53,16 +53,14 @@ $(function() {
             var flat_coords = this.get('flat_coords');
             var flat_times = this.get('flat_times');
             flat_times.push(Date.parse(data.timestamp));
-            var coords = [data.lon, data.lat];
-            if (this.get('heading_index') > -1) {
-                // TODO for some reason we are not sending the correct position data
-                var heading = data.heading;
-                while (coords.length < this.get('heading_index')){
-                    coords.push(null);
-                }
-                coords.push(heading);
-            }
+
+            var columns = appOptions.searchModels.Position.coords_array_order;
+            var coords = [];
+            _.each(columns, function(col) {
+                coords.push(data[col]);
+            });
             flat_coords.push(coords);
+            return coords;
         },
         buildCoords: function(coords) {
             var heading_index = this.get('heading_index');
@@ -160,7 +158,7 @@ $(function() {
 
         initialize: function(options){
             this.key = options.key;
-            this.data = undefined;
+            //this.data = undefined;
             this.hide_track = false;
             if ('hide_track' in options) {
                 this.hide_track = options.hide_track;
@@ -191,11 +189,33 @@ $(function() {
 
         },
         updateTrackOnMap: function(coordinate) {
-          if (!_.isUndefined(this.trackNode)) {
-              // TODO this is not how to do this, it throws an invalid array length
-              var mapped_track = this.trackNode.node.mapView.mapElement;
-              var line_string = mapped_track.getLayersArray()[0].getSource().getFeatures()[0].getGeometry();
-              line_string.appendCoordinate(coordinate);
+          if (!_.isUndefined(this.trackNode) && !_.isUndefined(this.track.data)) {
+              var mapped_track = this.trackNode.mapElement;
+              var layer = mapped_track.getLayersArray()[0];
+              var source = layer.getSource();
+              var features = source.getFeatures();
+              var feature = features[features.length - 1];
+              var line_string = feature.getGeometry();
+              if (line_string.getType() !== 'LineString') {
+                  // the last one is a point, add a linestring
+                  var key = this.track.get('name') + '_line';
+                  var style = Track.styles[key];
+
+                  feature = Track.constructLineString(this.track.get('name') + '_' + features.length, [line_string.getCoordinates(), coordinate], style);
+                  source.addFeature(feature);
+                  source.refresh();
+                  source.changed();
+                  line_string = feature.getGeometry();
+              } else {
+                  line_string.appendCoordinate(coordinate);
+              }
+              //TODO this is not really drawing?
+              // feature.changed();
+              // layer.changed();
+              // source.refresh();
+              // app.map.map.render();
+
+              // line_string.dispatchEvent(ol.render.Event);
           }
         },
         setupWithData: function(key){
@@ -223,12 +243,11 @@ $(function() {
             }
         },
         addTrackData: function(data){
-            this.track.addData(data);
+            var coords = this.track.addData(data);
             if (data.update){
-                var coords = this.track.getLastCoords();
-                var key = this.vehicle + ':change';
-                app.vent.trigger(key, coords)
-                //this.updateTrackOnMap(coords.location);
+                app.vent.trigger(this.vehicle + ':change', this.track.getLastCoords());
+                //TODO this does not yet draw the update
+                //this.updateTrackOnMap(coords);
             }
         }
 

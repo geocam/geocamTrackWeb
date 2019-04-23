@@ -1183,12 +1183,6 @@ class ResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, Track
         return settings.GEOCAM_TRACK_CURRENT_POSITION_SSE_TYPE.lower()
 
 
-# if settings.XGDS_CORE_REDIS and settings.XGDS_SSE:
-#     @receiver(post_save, sender=ResourcePoseDepth)
-#     def publishAfterSave(sender, instance, **kwargs):
-#         instance.broadcast()
-
-
 class PastResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, TrackMixin, DepthMixin):
 
     @classmethod
@@ -1222,11 +1216,6 @@ class PastResourcePoseDepth(AbstractResourcePosition, AltitudeMixin, YPRMixin, T
     @classmethod
     def getSseType(cls):
         return settings.GEOCAM_TRACK_PAST_POSITION_SSE_TYPE.lower()
-
-# if settings.XGDS_CORE_REDIS and settings.XGDS_SSE:
-#     @receiver(post_save, sender=PastResourcePoseDepth)
-#     def publishAfterSave(sender, instance, **kwargs):
-#         instance.broadcast()
 
 
 PAST_POSITION_FIELD = lambda: models.ForeignKey(PastResourcePosition,

@@ -37,6 +37,52 @@ var Track = {
             });  
             return vectorLayer;
         },
+        constructLineString: function(name, coords, style) {
+            var lineFeature = new ol.Feature({
+                            name: name,
+                            geometry: new ol.geom.LineString(coords).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
+                        });
+            lineFeature.setStyle(style);
+            return lineFeature;
+        },
+        constructPoint: function(name, coords, style) {
+            var pointFeature = new ol.Feature({
+                name: name,
+                geometry: new ol.geom.Point(coords).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
+            });
+            pointFeature.setStyle(style);
+            return pointFeature;
+        },
+        constructPointStyle: function(name, color, alpha){
+            //TODO deal with alpha
+            var key = name + '_point';
+            if (!(key in this.styles)) {
+                var pointStyle = new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 3,
+                        fill: new ol.style.Fill({
+                            color: color
+                        })
+                    })
+                });
+                this.styles[key] = pointStyle;
+            }
+            return this.styles[key];
+        },
+        constructLineStyle: function(name, color, alpha) {
+            var key = name + '_line';
+            if (!(key in this.styles)) {
+                var lineStyle = new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: color,
+                        alpha: alpha,
+                        width: 2
+                    })
+                });
+                this.styles[key] = lineStyle;
+            }
+            return this.styles[key];
+        },
         construct: function(trackJson){
             var allFeatures = [];
             var coords = trackJson.coords;
@@ -45,41 +91,20 @@ var Track = {
             var dotstyle = this.styles['dot'];
             if (!_.isUndefined(trackJson.color)){
                 color = "#" + trackJson.color;
-                lsstyle = new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: color,
-                        alpha: trackJson.alpha,
-                        width: 2
-                      })
-                    });
-                dotstyle = new ol.style.Style({
-                    image: new ol.style.Circle({
-                	radius: 3,
-                	fill: new ol.style.Fill({
-                	    color: color
-                	})
-                    })
-              });
+                lsstyle = this.constructLineStyle(trackJson.name, color, trackJson.alpha);
+                dotstyle = this.constructPointStyle(trackJson.name, color, trackJson.alpha);
             }
             
             for (var c = 0; c < coords.length; c++){
-        	if (coords[c].length > 1){
-                    var lineFeature = new ol.Feature({
-                        name: trackJson.id + "_" + c,
-                        geometry: new ol.geom.LineString(coords[c]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
-                    });
-                    lineFeature.setStyle(lsstyle);
-                    this.setupLinePopup(lineFeature, trackJson);
-                    allFeatures.push(lineFeature);
-        	} else if (coords[c].length == 1) {
-                    var feature = new ol.Feature({
-                        name: trackJson.id + "_" + c,
-                    	geometry: new ol.geom.Point(coords[c][0]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
-                    });
-                    feature.setStyle(dotstyle);
-                    this.setupLinePopup(feature, trackJson);
-                    allFeatures.push(feature);
-        	}
+                if (coords[c].length > 1){
+                        var lineFeature = this.constructLineString(trackJson.id + "_" + c, coords[c], lsstyle)
+                        this.setupLinePopup(lineFeature, trackJson);
+                        allFeatures.push(lineFeature);
+                } else if (coords[c].length == 1) {
+                        var pointFeature = this.constructPoint(trackJson.id + "_" + c, coords[c][0], dotstyle);
+                        this.setupLinePopup(pointFeature, trackJson);
+                        allFeatures.push(pointFeature);
+                }
             }
             return allFeatures;
         },

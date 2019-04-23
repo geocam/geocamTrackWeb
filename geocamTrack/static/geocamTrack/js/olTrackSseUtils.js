@@ -160,7 +160,6 @@ $.extend(Position, {
 					}
 	    			styles[0] = channel.pointer;
 					styles[0].getImage().setRotation(heading);
-        			//this.vectorLayer.changed();
 	    		} else {
 	    			styles[0] = channel.circle;
 	    		}

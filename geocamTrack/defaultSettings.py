@@ -71,7 +71,8 @@ XGDS_MAP_SERVER_JS_MAP['Position'] = {'ol': 'geocamTrack/js/olPositionMap.js',
                                       'hiddenColumns': ['pk', 'app_label', 'model_type', 'track_pk', 'displayName', 'DT_RowId'],
                                       'columnTitles': ['Time', 'TZ', 'Latitude', 'Longitude', 'Altitude', 'Heading', 'Track', ''],
                                       'searchableColumns': ['timestamp', 'lat', 'lon', 'altitude', 'heading', 'track_name'],
-                                      'search_form_class': 'geocamTrack.forms.SearchPositionForm'}
+                                      'search_form_class': 'geocamTrack.forms.SearchPositionForm',
+                                      'coords_array_order': ['lon', 'lat', 'altitude', 'heading']}
 
 
 XGDS_DATA_MASKED_FIELDS = getOrCreateDict('XGDS_DATA_MASKED_FIELDS')
