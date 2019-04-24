@@ -188,7 +188,7 @@ $(function() {
             }
 
         },
-        updateTrackOnMap: function(coordinate) {
+        updateTrack: function(coordinate) {
           if (!_.isUndefined(this.trackNode) && !_.isUndefined(this.track.data)) {
               var mapped_track = this.trackNode.mapElement;
               var layer = mapped_track.getLayersArray()[0];
@@ -244,7 +244,7 @@ $(function() {
             var coords = this.track.addData(data);
             if (data.update){
                 app.vent.trigger(this.vehicle + ':change', this.track.getLastCoords());
-                this.updateTrackOnMap(coords);
+                this.updateTrack(coords);
             }
         }
 

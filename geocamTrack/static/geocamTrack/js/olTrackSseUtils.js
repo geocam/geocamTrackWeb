@@ -115,27 +115,41 @@ $.extend(trackSse, {
 		if (elements == undefined){
 			return;
 		}
-		var newCoords = transform([data.lon, data.lat]);
-		var features = elements.getSource().getFeatures();
+		 var columns = appOptions.searchModels.Position.coords_array_order;
+		var newCoords = [];
+		_.each(columns, function(col) {
+			newCoords.push(data[col]);
+		});
+		newCoords = transform(newCoords);
+		var source = elements.getSource();
+		var features = source.getFeatures();
 		// TODO check the time of the last update; if the current one is close in time then we continue
 		if (features.length > 0){
 			var lastFeature = features[features.length - 1];
 			var geom = lastFeature.getGeometry();
 			if (geom.getType() == 'LineString'){
 				// append
-				var coords = geom.getCoordinates();
-				coords.push(newCoords);
-				if (trackSse.playing) {
-					geom.setCoordinates(coords);
-				}
+				geom.appendCoordinate(newCoords);
+				// var coords = geom.getCoordinates();
+				// coords.push(newCoords);
+				// if (trackSse.playing) {
+				// 	geom.setCoordinates(coords);
+				// }
 			} else {
 				// remove the last point and create a linestring
+				// the last one is a point, add a linestring
+                  var key = this.track.get('name') + '_line';
+                  var style = Track.styles[key];
+
+                  var first_coord = geom.getCoordinates();
+                  var new_feature = Track.constructLineString(this.track.get('name') + '_' + features.length, [first_coord, newCoords], style);
+                  source.addFeature(new_feature);
+                  source.changed();
 			}
 		} else {
 			// maybe best to get the track from scratch ...
 		}
 			
-		//TODO add data to the end of the track as a new position or linestring.
 	}
 });
 
