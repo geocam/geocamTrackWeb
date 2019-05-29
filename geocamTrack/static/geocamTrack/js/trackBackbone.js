@@ -78,7 +78,7 @@ $(function() {
             var ll = [coords[0], coords[1]];
             return {location:transform(ll), rotation:heading};
         },
-        getDataForIndex: function(requested_index, use_last){
+        getDataForIndex: function(requested_index, use_last, timestamp){
             // iterate through the arrays of coords until we can find the one with the right index
             if (_.isUndefined(use_last)) {
                 use_last = false;
@@ -93,12 +93,16 @@ $(function() {
                     // get the value and return
                     var local_index = requested_index - max_index;
                     var raw_data = this_array[local_index];
+                    var result = undefined;
                     if (!_.isUndefined(raw_data)){
-                        return _.object(this.get('coords_array_order'), raw_data);
+                        result = _.object(this.get('coords_array_order'), raw_data);
                     } else if (use_last){
-                        return _.object(this.get('coords_array_order'), this_array[this_array.length - 1]);
+                        result = _.object(this.get('coords_array_order'), this_array[this_array.length - 1]);
                     }
-                    return undefined;
+                    if (!_.isUndefined(result)){
+                        result.timestamp = timestamp;
+                    }
+                    return result;
                 }
                 max_index += this_array.length;
                 last_array = this_array;
@@ -140,7 +144,7 @@ $(function() {
                 var key = this.vehicle + ':change';
                 app.vent.trigger(key, locationDict);
 
-                var full_data = this.getDataForIndex(foundIndex, true);
+                var full_data = this.getDataForIndex(foundIndex, true, moment(input_time));
                 app.vent.trigger(this.vehicle + ":position_data", full_data);
 
             }
