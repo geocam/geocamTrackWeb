@@ -57,6 +57,9 @@ $(function() {
             var columns = appOptions.searchModels.Position.coords_array_order;
             var coords = [];
             _.each(columns, function(col) {
+                if (col === ""){
+                    col = null;
+                }
                 coords.push(data[col]);
             });
             flat_coords.push(coords);
@@ -75,8 +78,12 @@ $(function() {
             var ll = [coords[0], coords[1]];
             return {location:transform(ll), rotation:heading};
         },
-        getDataForIndex: function(requested_index){
+        getDataForIndex: function(requested_index, use_last){
             // iterate through the arrays of coords until we can find the one with the right index
+            if (_.isUndefined(use_last)) {
+                use_last = false;
+            }
+
             var coords_arrays = this.data[0].coords;
             var last_array = coords_arrays[0];
             var max_index = 0;
@@ -88,6 +95,8 @@ $(function() {
                     var raw_data = this_array[local_index];
                     if (!_.isUndefined(raw_data)){
                         return _.object(this.get('coords_array_order'), raw_data);
+                    } else if (use_last){
+                        return _.object(this.get('coords_array_order'), this_array[this_array.length - 1]);
                     }
                     return undefined;
                 }
@@ -131,7 +140,7 @@ $(function() {
                 var key = this.vehicle + ':change';
                 app.vent.trigger(key, locationDict);
 
-                var full_data = this.getDataForIndex(foundIndex);
+                var full_data = this.getDataForIndex(foundIndex, true);
                 app.vent.trigger(this.vehicle + ":position_data", full_data);
 
             }
