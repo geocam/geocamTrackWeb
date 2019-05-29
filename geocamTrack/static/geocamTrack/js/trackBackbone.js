@@ -60,6 +60,10 @@ $(function() {
                 coords.push(data[col]);
             });
             flat_coords.push(coords);
+
+            // add to unflattened
+            var coords_array = this.data[0].coords[this.data[0].coords.length - 1];
+            coords_array.push(coords);
             return coords;
         },
         buildCoords: function(coords) {
