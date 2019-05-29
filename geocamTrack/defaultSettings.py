@@ -109,3 +109,7 @@ GEOCAM_TRACK_DOWNSAMPLE_POSITIONS_SECONDS = 5
 
 # if you are using degrees, override this and set to degrees
 GEOCAM_TRACK_HEADING_UNITS = 'radians'
+
+# turn tracks on or off by default in maps
+GEOCAM_TRACK_HIDE_TRACKS = False
+

@@ -71,6 +71,26 @@ $(function() {
             var ll = [coords[0], coords[1]];
             return {location:transform(ll), rotation:heading};
         },
+        getDataForIndex: function(requested_index){
+            // iterate through the arrays of coords until we can find the one with the right index
+            var coords_arrays = this.data[0].coords;
+            var last_array = coords_arrays[0];
+            var max_index = 0;
+            for (var i=0; i<coords_arrays.length; i++){
+                var this_array = coords_arrays[i];
+                if ((max_index + this_array.length) > requested_index){
+                    // get the value and return
+                    var local_index = requested_index - max_index;
+                    var raw_data = this_array[local_index];
+                    if (!_.isUndefined(raw_data)){
+                        return _.object(this.get('coords_array_order'), raw_data);
+                    }
+                    return undefined;
+                }
+                max_index += this_array.length;
+                last_array = this_array;
+            }
+        },
         getCoords: function(index) {
             if (this.get('flat_coords').length > 0 && index > -1){
                 var coords = this.get('flat_coords')[index];
@@ -105,7 +125,11 @@ $(function() {
             if (foundIndex >= 0){
                 var locationDict = this.getCoords(foundIndex);
                 var key = this.vehicle + ':change';
-                app.vent.trigger(key, locationDict)
+                app.vent.trigger(key, locationDict);
+
+                var full_data = this.getDataForIndex(foundIndex);
+                app.vent.trigger(this.vehicle + ":position_data", full_data);
+
             }
         },
     });
@@ -159,9 +183,9 @@ $(function() {
         initialize: function(options){
             this.key = options.key;
             //this.data = undefined;
-            this.hide_track = false;
-            if ('hide_track' in options) {
-                this.hide_track = options.hide_track;
+            this.hide_tracks = false;
+            if ('hide_tracks' in options) {
+                this.hide_tracks = options.hide_tracks;
             }
             this.vehicle_name = options.data.vehicle.toLowerCase();
             this.track = new app.models.TrackModel(options);
@@ -177,7 +201,7 @@ $(function() {
                 }
             });
 
-            if (!this.hide_track) {
+            if (!this.hide_tracks) {
                 options.selected = true;  // setting this to true forces render immediately
                 app.vent.trigger('mapNode:create', options);  // this will actually render it on the map
                 this.listenTo(app.vent, 'olNode:rendered', function (key) {
