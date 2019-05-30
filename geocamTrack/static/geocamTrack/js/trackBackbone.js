@@ -83,6 +83,15 @@ $(function() {
             if (_.isUndefined(use_last)) {
                 use_last = false;
             }
+            if (use_last && requested_index == -1){
+                var coords_arrays = this.data[0].coords;
+                var this_array = coords_arrays[coords_arrays.length - 1];
+                var result = _.object(this.get('coords_array_order'), this_array[this_array.length - 1]);
+                if (!_.isUndefined(result)){
+                    result.timestamp = timestamp;
+                }
+                return result;
+            }
 
             var coords_arrays = this.data[0].coords;
             var last_array = coords_arrays[0];
@@ -147,6 +156,9 @@ $(function() {
                 var full_data = this.getDataForIndex(foundIndex, true, moment(input_time));
                 app.vent.trigger(this.vehicle + ":position_data", full_data);
 
+            } else if (app.options.live) {
+                var full_data = this.getDataForIndex(foundIndex, true, moment(input_time));
+                app.vent.trigger(this.vehicle + ":position_data", full_data);
             }
         },
     });
