@@ -78,6 +78,13 @@ $(function() {
             var ll = [coords[0], coords[1]];
             return {location:transform(ll), rotation:heading};
         },
+        getLastTime: function() {
+          var flat_times = this.get('flat_times');
+          if (!_.isUndefined(flat_times)) {
+              return flat_times[flat_times.length - 1];
+          }
+          return undefined;
+        },
         getDataForIndex: function(requested_index, use_last, timestamp){
             // iterate through the arrays of coords until we can find the one with the right index
             if (_.isUndefined(use_last)) {
@@ -88,7 +95,7 @@ $(function() {
                 var this_array = coords_arrays[coords_arrays.length - 1];
                 var result = _.object(this.get('coords_array_order'), this_array[this_array.length - 1]);
                 if (!_.isUndefined(result)){
-                    result.timestamp = timestamp;
+                    result.timestamp = this.getLastTime();
                 }
                 return result;
             }
@@ -107,6 +114,7 @@ $(function() {
                         result = _.object(this.get('coords_array_order'), raw_data);
                     } else if (use_last){
                         result = _.object(this.get('coords_array_order'), this_array[this_array.length - 1]);
+                        timestamp = this.getLastTime();
                     }
                     if (!_.isUndefined(result)){
                         result.timestamp = timestamp;
