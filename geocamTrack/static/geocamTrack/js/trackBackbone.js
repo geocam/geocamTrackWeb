@@ -221,13 +221,17 @@ $(function() {
         },
 
         initialize: function(options){
+            app.track_fit_done = false;
             this.key = options.key;
             //this.data = undefined;
+            this.vehicle_name = options.data.vehicle.toLowerCase();
             this.hide_tracks = false;
             if ('hide_tracks' in options) {
-                this.hide_tracks = options.hide_tracks;
+                if (options.hide_tracks.indexOf(options.data.vehicle) >= 0) {
+                    this.hide_tracks = true;
+                }
             }
-            this.vehicle_name = options.data.vehicle.toLowerCase();
+
             this.track = new app.models.TrackModel(options);
             this.listenTo(app.vent, 'app.nodeMap:exists', function(key) { if (key === this.key) {this.storeNode(key);}});
 
@@ -241,15 +245,14 @@ $(function() {
                 }
             });
 
-            if (!this.hide_tracks) {
-                options.selected = true;  // setting this to true forces render immediately
-                app.vent.trigger('mapNode:create', options);  // this will actually render it on the map
-                this.listenTo(app.vent, 'olNode:rendered', function (key) {
-                    if (key == this.key) {
-                        app.vent.trigger('mapSearch:fit', this.trackNode.node.mapView.mapElement);
-                    }
-                });
-            }
+            options.selected = !this.hide_tracks;  // setting this to true forces render immediately
+            app.vent.trigger('mapNode:create', options);  // this will actually render it on the map
+            this.listenTo(app.vent, 'olNode:rendered', function (key) {
+                if (key == this.key) {
+                    app.track_fit_done = true;
+                    app.vent.trigger('mapSearch:fit', this.trackNode.node.mapView.mapElement);
+                }
+            });
 
         },
         updateTrack: function(coordinate) {
@@ -299,8 +302,17 @@ $(function() {
                         vehicleJson['icon_color'] = this.track.data[0].icon_color;
                         vehicleJson['icon_scale'] = this.track.data[0].icon_scale;
                     }
+
+                    // if we are not drawing tracks we need to focus on the vehicle
+                    app.vent.on('vehicle:constructed', function(vehicle_feature){
+                        if (!app.track_fit_done) {
+                            app.track_fit_done;
+                            app.vent.trigger('mapSearch:fit', vehicle_feature);
+                        }
+                    });
                     this.vehicleView = new app.views.OLVehicleView({featureJson:vehicleJson});
                     app.map.map.addLayer(this.vehicleView.vectorLayer);
+
                 }
             }
         },
