@@ -256,7 +256,7 @@ $(function() {
 
         },
         updateTrack: function(coordinate) {
-          if (!_.isUndefined(this.trackNode) && !_.isUndefined(this.track.data)) {
+          if (!this.hide_tracks && !_.isUndefined(this.trackNode) && !_.isUndefined(this.track.data)) {
               var mapped_track = this.trackNode.mapElement;
               var layer = mapped_track.getLayers().getArray()[0];
               var source = layer.getSource();
