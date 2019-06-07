@@ -20,6 +20,12 @@ $.extend(trackSse, {
 	STALE_TIMEOUT: 5000,
 	playing: true,
 	initialize: function() {
+		trackSse.hide_tracks = [];
+		// we know that we use lowercase for channels and uppercase for vehicles so we will lowercase everything
+		_.each(app.options.hide_tracks, function(ht){
+			trackSse.hide_tracks.push(ht.toLowerCase());
+		});
+
 		trackSse.getCurrentPositions();
 		trackSse.subscribe();
 		setInterval(function() {trackSse.allChannels(trackSse.checkStale);}, trackSse.STALE_TIMEOUT);
@@ -92,7 +98,10 @@ $.extend(trackSse, {
 		var data = JSON.parse(event.data);
 		var channel = sse.parseEventChannel(event);
 		trackSse.updatePosition(channel, data);
-		trackSse.updateTrack(channel, data);
+		if (trackSse.hide_tracks.indexOf(channel) == -1) {
+			// it's not hidden, draw it
+			trackSse.updateTrack(channel, data);
+		}
 	},
 	positions: {},
 	last_times: {},
@@ -115,7 +124,10 @@ $.extend(trackSse, {
 			if (this.playing) {
 				trackSse.modifyPosition(channel, data, false);
 			}
-			trackSse.updateTrack(channel, data);
+			if (trackSse.hide_tracks.indexOf(channel) == -1) {
+				// it's not hidden, update it
+				trackSse.updateTrack(channel, data);
+			}
 		}
 	},
 	renderTrack: function(channel, data){
@@ -173,7 +185,7 @@ $.extend(trackSse, {
 			return;
 		}
 		
-		var trackUrl = '/xgds_map_server/mapJson/' + trackSse.getTrackModel() + '/pk:' + data.track_pk
+		var trackUrl = '/xgds_map_server/mapJson/' + trackSse.getTrackModel() + '/pk:' + data.track_pk;
 		$.ajax({
             url: trackUrl,
             dataType: 'json',

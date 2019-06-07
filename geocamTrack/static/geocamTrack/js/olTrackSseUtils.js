@@ -20,6 +20,13 @@ $.extend(trackSse, {
 	olPositions: {},
 	olTracks: {},
 	initialize: function() {
+		trackSse.hide_tracks = [];
+		if ('hide_tracks' in app.options){
+			// we know that we use lowercase for channels and uppercase for vehicles so we will lowercase everything
+			_.each(app.options.hide_tracks, function(ht){
+				trackSse.hide_tracks.push(ht.toLowerCase());
+			});
+		}
 		trackSse.getCurrentPositions();
 		trackSse.tracksGroup = new ol.layer.Group({name:"liveTracks"});
 		trackSse.tracksGroup.setOpacity(0.45);
@@ -106,11 +113,19 @@ $.extend(trackSse, {
 		trackSse.modifyPosition(channel, null, true);
 	},
 	renderTrack: function(channel, data) {
+		if (trackSse.hide_tracks.indexOf(channel) != -1) {
+			// we want to hide the track, do not render it
+			return;
+		}
 		var elements = Track.constructElements([data]);
 		trackSse.tracksGroup.getLayers().push(elements);
 		trackSse.olTracks[channel] = elements;
 	},
 	updateTrack: function(channel, data) {
+		if (trackSse.hide_tracks.indexOf(channel) != -1) {
+			// we want to hide the track, do not update it
+			return;
+		}
 		var elements = trackSse.olTracks[channel];
 		if (elements == undefined){
 			return;
